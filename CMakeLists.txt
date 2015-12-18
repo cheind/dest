@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(deformable-shape-tracking)
+
+if (WIN32)
+    set(OpenCV_STATIC OFF)
+	set(OpenCV_SHARED ON)
+	add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
+endif()
+
+set(DEST_LINK_TARGETS)
+
+set(DEST_EIGEN_DIR "../eigen" CACHE PATH "Where is the include directory of Eigen located")
+set(DEST_WITH_OPENCV OFF CACHE BOOL "Build DEST with OpenCV support")
+if(DEST_WITH_OPENCV)
+	if (WIN32)
+    	set(OpenCV_STATIC OFF)
+		set(OpenCV_SHARED ON)
+	endif()
+	find_package(OpenCV REQUIRED)
+	include_directories(${OpenCV_INCLUDE_DIRS})
+	list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
+endif()
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc")
+
+# Library
+add_library(dest
+    inc/dest/dest.h
+    src/unused.cpp
+)
+	
+target_link_libraries(dest ${DEST_LINK_TARGETS})
+	
+# Samples
+
+add_executable(dest_facetrack examples/face_track.cpp)
+target_link_libraries(dest_facetrack dest ${DEST_LINK_TARGETS})
+
+# Tests
+
+add_executable(dest_tests
+    tests/catch.hpp
+    tests/gbdt.cpp
+)
+target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})
