@@ -15,4 +15,22 @@
  
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
+#ifndef DEST_SHAPE_H
+#define DEST_SHAPE_H
+
+#include <Eigen/Core>
+#include <vector>
+
+namespace dest {
+    namespace core {
+    
+        typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
+        
+        typedef std::vector<Shape> ShapeVector;
+        
+    }
+}
+
+#endif

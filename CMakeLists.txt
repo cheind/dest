@@ -27,7 +27,9 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc")
 # Library
 add_library(dest
     inc/dest/dest.h
-    src/unused.cpp
+    inc/dest/core/shape.h
+    inc/dest/face/database_importers.h
+    src/face/database_importers.cpp
 )
 	
 target_link_libraries(dest ${DEST_LINK_TARGETS})
