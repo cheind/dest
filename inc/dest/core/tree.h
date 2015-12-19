@@ -60,21 +60,18 @@ namespace dest {
             Tree();
             ~Tree();
             
-
-            
             bool fit(TreeTraining &t);
             
-            ShapeResidual predict(const std::vector<float> &intensities) const;
+            ShapeResidual predict(const PixelIntensities &intensities) const;
             
         private:
             struct TreeNode;
             struct PartitionPredicate;
-            
             struct NodeInfo;
+            struct SplitInfo;
+            
             bool splitNode(TreeTraining &t, const NodeInfo &parent, NodeInfo &left, NodeInfo &right);
             void makeLeaf(TreeTraining &t, NodeInfo &n);
-            
-            struct SplitInfo;
             void sampleSplitPositions(TreeTraining &t, std::vector<SplitInfo> &splits) const;
             float splitEnergy(TreeTraining &t, const NodeInfo &parent, const ShapeResidual &parentMeanResidual, const SplitInfo &split) const;
             

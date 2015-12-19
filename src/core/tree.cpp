@@ -90,15 +90,12 @@ namespace dest {
             
             depth = std::max<int>(t.maxDepth, 1);
             const int numNodes = (int)std::pow(2.0, depth) - 1;
-            
-            
             nodes.resize(numNodes);
 
-            // For each intermediate node in bfs
+            // Split recursively in BFS
             std::queue<NodeInfo> queue;
             queue.push(NodeInfo(0, 1, std::make_pair(t.samples.begin(), t.samples.end())));
             
-            // At this point only leaf nodes are in the queue.
             while (!queue.empty()) {
                 NodeInfo &nr = queue.front(); queue.pop();
                 
@@ -188,13 +185,12 @@ namespace dest {
             Tree::TreeNode &leaf = _data->nodes[ni.node];
             leaf.split.idx1 = -1;
             leaf.split.idx2 = -1;
-            leaf.mean = ShapeResidual::Zero(2, numLandmarks);
-            for (TreeTraining::SampleVector::iterator iter = ni.range.first; iter < ni.range.second; ++iter) {
-                leaf.mean += iter->residual;
-            }
             int numInLeaf = static_cast<int>(std::distance(ni.range.first, ni.range.second));
-            if (numInLeaf > 0)
-                leaf.mean /= numInLeaf;
+            if (numInLeaf > 0) {
+                leaf.mean = meanResidual(ni.range);
+            } else {
+                leaf.mean = ShapeResidual::Zero(2, numLandmarks);
+            }
         }
         
         void Tree::sampleSplitPositions(TreeTraining &t, std::vector<SplitInfo> &splits) const
@@ -219,12 +215,10 @@ namespace dest {
                 
                 } while (iter <= maxAttempts && split.idx1 == split.idx2 && (dr(t.rnd) < e));
                 
-                if (iter == maxAttempts)
-                    break;
-                
-                split.threshold = dr(t.rnd) * 256.f;
-                splits.push_back(split);
-            
+                if (iter <= maxAttempts) {
+                    split.threshold = dr(t.rnd) * 256.f;
+                    splits.push_back(split);
+                }
             }
         }
         
@@ -236,7 +230,6 @@ namespace dest {
             
             PartitionPredicate pred;
             pred.split = split;
-            
             
             for (TreeTraining::SampleVector::iterator iter = parent.range.first; iter != parent.range.second; ++iter) {
                 if (pred(*iter)) {
@@ -257,20 +250,20 @@ namespace dest {
         }
 
         
-        ShapeResidual Tree::predict(const std::vector<float> &intensities) const
+        ShapeResidual Tree::predict(const PixelIntensities &intensities) const
         {
             const TreeNode *nodes = &_data->nodes[0];
             
-            const int tests = _data->depth - 1;
+            const int maxTests = _data->depth - 1;
             
             int n = 0;
-            for (int i = 0; i < tests; ++i) {
+            for (int i = 0; i < maxTests; ++i) {
                 const TreeNode &node = nodes[n];
                 
                 if (node.split.idx1 < 0)
                     break; // premature leaf
                 
-                float val = intensities[node.split.idx1] - intensities[node.split.idx2];
+                float val = intensities(node.split.idx1) - intensities(node.split.idx2);
                 
                 n = val > 0.f ? 2 * n + 1 : 2 * n + 2;
             }
