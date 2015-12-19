@@ -46,11 +46,11 @@ namespace dest {
             };
             typedef std::vector<Sample> SampleVector;
             SampleVector samples;
-            
             std::mt19937 rnd;
             
             int maxDepth;
             int numSplitPositions;
+            int numLandmarks;
             float lambda;
         };
     
@@ -58,6 +58,7 @@ namespace dest {
         public:
             
             Tree();
+            Tree(const Tree &other);
             ~Tree();
             
             bool fit(TreeTraining &t);

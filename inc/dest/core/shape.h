@@ -28,6 +28,8 @@ namespace dest {
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
         typedef Shape ShapeResidual;
         
+        Eigen::Matrix3f estimateSimilarityTransform(const Shape &from, const Shape &to);
+        
     }
 }
 

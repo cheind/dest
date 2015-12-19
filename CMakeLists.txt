@@ -39,6 +39,8 @@ add_library(dest
     src/core/tracker.cpp
     src/core/regressor.cpp
     src/core/tree.cpp
+    src/core/shape.cpp
+    src/core/image.cpp
     src/face/database_importers.cpp
 )
 	

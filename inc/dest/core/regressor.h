@@ -24,20 +24,56 @@
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
 #include <memory>
+#include <random>
+#include <vector>
 
 namespace dest {
     namespace core {
+        
+        struct RegressorTraining {
+            typedef std::vector<Shape> ShapeVector;
+            typedef std::vector<Image> ImageVector;
+            
+            std::mt19937 rnd;
+            
+            struct Sample {
+                int idx;
+                Shape estimate;
+            };
+            typedef std::vector<Sample> SampleVector;
+            
+            ShapeVector shapes;
+            ImageVector images;
+            Shape meanShape;
+            SampleVector samples;
+            
+            int numLandmarks;
+            int maxTreeDepth;
+            int numTrees;
+            int numRandomSplitPositions;
+            int numPixelSamplePositions;
+            float exponentialLambda;
+            float learningRate;
+        };
     
         class Regressor {
         public:
             Regressor();
             ~Regressor();
             
-            bool fit(const std::vector<Image> &images, const std::vector<Triplet> &triplets);
+            bool fit(RegressorTraining &t);
             
-            Shape predict(const Image &img, const Shape &shape) const;
+            ShapeResidual predict(const Image &img, const Shape &shape) const;
             
         private:
+            
+            PixelCoordinates sampleCoordinates(RegressorTraining &t) const;
+            void relativePixelCoordinates(RegressorTraining &t, const PixelCoordinates &pcoords, PixelCoordinates &relcoords, Eigen::VectorXi &closestLandmarks) const;
+            
+            int closestLandmarkIndex(const Shape &s, const Eigen::Ref<const Eigen::Vector2f> &x) const;
+            
+            void readPixelIntensities(const Eigen::Matrix3f &t, const Shape &s, const Image &i, PixelIntensities &intensities) const;
+            
             struct data;
             std::unique_ptr<data> _data;
         };

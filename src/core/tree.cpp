@@ -52,16 +52,39 @@ namespace dest {
             {}
         };
         
-        inline ShapeResidual meanResidual(const SampleRange &r) {
-            if (r.first != r.second) {
-                ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+        inline int numElementsInRange(const SampleRange &r) {
+            return static_cast<int>(std::distance(r.first, r.second));
+        }
+        
+        inline ShapeResidual meanResidualOfRange(const SampleRange &r, int numLandmarks) {
+            ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+            
+            const int numElements = numElementsInRange(r);
+            if (numElements > 0) {
                 for (TreeTraining::SampleVector::iterator i = r.first; i != r.second; ++i) {
                     mean += i->residual;
                 }
-                mean /= static_cast<int>(std::distance(r.first, r.second));
-                return mean;
+                mean /= numElements;
             }
-            return ShapeResidual();
+            return mean;
+        }
+        
+        template<class UnaryPredicate>
+        inline std::pair<ShapeResidual, int> meanResidualOfRangeIf(const SampleRange &r, int numLandmarks, UnaryPredicate pred) {
+            ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+            
+            int numElements = 0;
+            for (TreeTraining::SampleVector::iterator i = r.first; i != r.second; ++i) {
+                if (pred(*i)) {
+                    mean += i->residual;
+                    ++numElements;
+                }
+            }
+            if (numElements > 0) {
+                mean /= numElements;
+            }
+            
+            return std::make_pair(mean, numElements);
         }
         
         struct Tree::data {
@@ -78,6 +101,10 @@ namespace dest {
         
         Tree::Tree()
         : _data(new data())
+        {}
+        
+        Tree::Tree(const Tree &other)
+        : _data(new data(*other._data))
         {}
         
         Tree::~Tree()
@@ -140,13 +167,13 @@ namespace dest {
             std::vector<SplitInfo> splits;
             sampleSplitPositions(t, splits);
             
-            const ShapeResidual meanResidualParent = meanResidual(parent.range);
+            const ShapeResidual meanResidualParent = meanResidualOfRange(parent.range, t.numLandmarks);
             
             // Choose best split according to minimization of residual energy
             float maxEnergy = -std::numeric_limits<float>::max();
             size_t bestSplit = std::numeric_limits<size_t>::max();
             
-            for (size_t i = 0; i <  splits.size(); ++i) {
+            for (size_t i = 0; i < splits.size(); ++i) {
                 float e = splitEnergy(t, parent, meanResidualParent, splits[i]);
                 if (e > maxEnergy) {
                     maxEnergy = e;
@@ -180,17 +207,11 @@ namespace dest {
         }
         
         void Tree::makeLeaf(TreeTraining &t, NodeInfo &ni) {
-            const int numLandmarks = t.samples.front().residual.cols();
             
             Tree::TreeNode &leaf = _data->nodes[ni.node];
             leaf.split.idx1 = -1;
             leaf.split.idx2 = -1;
-            int numInLeaf = static_cast<int>(std::distance(ni.range.first, ni.range.second));
-            if (numInLeaf > 0) {
-                leaf.mean = meanResidual(ni.range);
-            } else {
-                leaf.mean = ShapeResidual::Zero(2, numLandmarks);
-            }
+            leaf.mean = meanResidualOfRange(ni.range, t.numLandmarks);
         }
         
         void Tree::sampleSplitPositions(TreeTraining &t, std::vector<SplitInfo> &splits) const
@@ -223,30 +244,18 @@ namespace dest {
         }
         
         float Tree::splitEnergy(TreeTraining &t, const NodeInfo &parent, const ShapeResidual &parentMeanResidual, const SplitInfo &split) const {
-            const int numLandmarks = t.samples.front().residual.cols();
-            
-            int numLeft = 0;
-            ShapeResidual rLeft = ShapeResidual::Zero(2, numLandmarks);
             
             PartitionPredicate pred;
             pred.split = split;
             
-            for (TreeTraining::SampleVector::iterator iter = parent.range.first; iter != parent.range.second; ++iter) {
-                if (pred(*iter)) {
-                    rLeft += iter->residual;
-                    ++numLeft;
-                }
-            }
-            if (numLeft > 0) {
-                rLeft /= numLeft;
-            }
+            std::pair<ShapeResidual, int> left = meanResidualOfRangeIf(parent.range, t.numLandmarks, pred);
             
-            const int numParent = static_cast<int>(std::distance(parent.range.first, parent.range.second));
-            const int numRight = numParent - numLeft;
+            const int numParent = numElementsInRange(parent.range);
+            const int numRight = numParent - left.second;
             
-            ShapeResidual rRight = (numParent * parentMeanResidual - numLeft * rLeft) / numRight;
+            ShapeResidual rRight = (numParent * parentMeanResidual - left.second * left.first) / numRight;
             
-            return numLeft * rLeft.squaredNorm() + numRight * rRight.squaredNorm();
+            return left.second * left.first.squaredNorm() + numRight * rRight.squaredNorm();
         }
 
         
