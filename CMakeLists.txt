@@ -28,7 +28,17 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc")
 add_library(dest
     inc/dest/dest.h
     inc/dest/core/shape.h
+    inc/dest/core/image.h
+    inc/dest/core/triplet.h
+    inc/dest/core/trainer.h
+    inc/dest/core/tracker.h
+    inc/dest/core/regressor.h
+    inc/dest/core/tree.h
     inc/dest/face/database_importers.h
+    src/core/trainer.cpp
+    src/core/tracker.cpp
+    src/core/regressor.cpp
+    src/core/tree.cpp
     src/face/database_importers.cpp
 )
 	

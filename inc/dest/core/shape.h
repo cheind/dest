@@ -21,14 +21,12 @@
 #define DEST_SHAPE_H
 
 #include <Eigen/Core>
-#include <vector>
 
 namespace dest {
     namespace core {
     
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
-        
-        typedef std::vector<Shape> ShapeVector;
+        typedef Shape ShapeResidual;
         
     }
 }

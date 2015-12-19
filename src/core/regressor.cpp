@@ -15,30 +15,37 @@
  
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
-#ifndef DEST_DATABASE_IMPORTERS_H
-#define DEST_DATABASE_IMPORTERS_H
-
-#include <dest/core/shape.h>
-#include <dest/core/image.h>
-#include <string>
-#include <vector>
+#include <dest/core/regressor.h>
+#include <random>
 
 namespace dest {
-    namespace face {
+    namespace core {
         
-        /**
-            Load the IMM face database.
-         
-            References:
-            Nordstrøm, Michael M., et al. 
-            The IMM face database-an annotated dataset of 240 face images. Technical
-            University of Denmark, DTU Informatics, Building 321, 2004.
-        */
-        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
+        struct Regressor::data {
+            
+            data()
+            {
+            }
+        };
         
+        Regressor::Regressor()
+        : _data(new data())
+        {
+        }
+        
+        Regressor::~Regressor()
+        {}
+        
+        bool Regressor::fit(const std::vector<Image> &images, const std::vector<Triplet> &triplets)
+        {
+            return false;
+        }
+        
+        Shape Regressor::predict(const Image &img, const Shape &shape) const
+        {
+            return Shape::Zero(0, 0);
+        }
     }
 }
-
-#endif

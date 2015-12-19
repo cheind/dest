@@ -19,6 +19,7 @@
 
 #include <dest/face/database_importers.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/eigen.hpp>
 #include <iomanip>
 #include <fstream>
 
@@ -67,7 +68,7 @@ namespace dest {
             return s.rows() > 0 && s.cols() > 0;
         }
         
-        bool importIMMFaceDatabase(const std::string &directory, std::vector<cv::Mat> &images, core::ShapeVector &shapes) {
+        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
             
             images.clear();
             shapes.clear();
@@ -89,9 +90,15 @@ namespace dest {
                     
                     core::Shape s;
                     bool asfOk = parseAsfFile(fileNamePts, s);
-                    cv::Mat img = cv::imread(fileNameImg, 0);
+                    cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
                     
-                    if(asfOk && !img.empty()) {
+                    if(asfOk && !cvImg.empty()) {
+                        cv::Mat cvImgF;
+                        cvImg.convertTo(cvImgF, CV_32F);
+                        
+                        core::Image img;
+                        cv::cv2eigen(cvImgF, img);
+                        
                         images.push_back(img);
                         shapes.push_back(s);
                     } else {

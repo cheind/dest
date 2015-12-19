@@ -20,7 +20,10 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
+#include <dest/core/trainer.h>
+
 
 TEST_CASE("empty")
 {
+    dest::core::Trainer t;
 }
