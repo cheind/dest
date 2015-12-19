@@ -76,7 +76,7 @@ namespace dest {
             
             struct SplitInfo;
             void sampleSplitPositions(TreeTraining &t, std::vector<SplitInfo> &splits) const;
-            float splitEnergy(TreeTraining &t, const NodeInfo &parent, const SplitInfo &split) const;
+            float splitEnergy(TreeTraining &t, const NodeInfo &parent, const ShapeResidual &parentMeanResidual, const SplitInfo &split) const;
             
             struct data;
             std::unique_ptr<data> _data;

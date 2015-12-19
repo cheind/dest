@@ -37,30 +37,32 @@ namespace dest {
             ShapeResidual mean;
         };
         
+        typedef std::pair<TreeTraining::SampleVector::iterator, TreeTraining::SampleVector::iterator> SampleRange;
+        
+        
         struct Tree::NodeInfo {
             int node;
             int depth;
-            typedef std::pair<TreeTraining::SampleVector::iterator, TreeTraining::SampleVector::iterator> SampleRange;
             SampleRange range;
-            ShapeResidual mean;
             
             NodeInfo() {}
             
             NodeInfo(int n, int d, const SampleRange &r)
             :node(n), depth(d), range(r)
             {}
-            
-            void updateMean() {
-                if (range.first != range.second) {
-                    mean = ShapeResidual::Zero(2, range.first->residual.cols());
-                    for (TreeTraining::SampleVector::iterator i = range.first; i != range.second; ++i) {
-                        mean += i->residual;
-                    }
-                    mean /= static_cast<int>(std::distance(range.first, range.second));
-                }
-
-            }
         };
+        
+        inline ShapeResidual meanResidual(const SampleRange &r) {
+            if (r.first != r.second) {
+                ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+                for (TreeTraining::SampleVector::iterator i = r.first; i != r.second; ++i) {
+                    mean += i->residual;
+                }
+                mean /= static_cast<int>(std::distance(r.first, r.second));
+                return mean;
+            }
+            return ShapeResidual();
+        }
         
         struct Tree::data {
             
@@ -103,7 +105,6 @@ namespace dest {
                 if (nr.depth < depth) {
                     // Generate a split
                     NodeInfo left, right;
-                    nr.updateMean();
                     if (splitNode(t, nr, left, right)) {
                         queue.push(left);
                         queue.push(right);
@@ -142,12 +143,14 @@ namespace dest {
             std::vector<SplitInfo> splits;
             sampleSplitPositions(t, splits);
             
+            const ShapeResidual meanResidualParent = meanResidual(parent.range);
+            
             // Choose best split according to minimization of residual energy
             float maxEnergy = -std::numeric_limits<float>::max();
             size_t bestSplit = std::numeric_limits<size_t>::max();
             
             for (size_t i = 0; i <  splits.size(); ++i) {
-                float e = splitEnergy(t, parent, splits[i]);
+                float e = splitEnergy(t, parent, meanResidualParent, splits[i]);
                 if (e > maxEnergy) {
                     maxEnergy = e;
                     bestSplit = i;
@@ -172,8 +175,8 @@ namespace dest {
             left.node = parent.node * 2 + 1;
             right.node = parent.node * 2 + 2;
             left.depth = right.depth = parent.depth + 1;
-            left.range = NodeInfo::SampleRange(parent.range.first, middle);
-            right.range = NodeInfo::SampleRange(middle, parent.range.second);
+            left.range = SampleRange(parent.range.first, middle);
+            right.range = SampleRange(middle, parent.range.second);
             
             
             return true;
@@ -225,14 +228,18 @@ namespace dest {
             }
         }
         
-        float Tree::splitEnergy(TreeTraining &t, const NodeInfo &parent, const SplitInfo &split) const {
+        float Tree::splitEnergy(TreeTraining &t, const NodeInfo &parent, const ShapeResidual &parentMeanResidual, const SplitInfo &split) const {
             const int numLandmarks = t.samples.front().residual.cols();
             
             int numLeft = 0;
             ShapeResidual rLeft = ShapeResidual::Zero(2, numLandmarks);
             
+            PartitionPredicate pred;
+            pred.split = split;
+            
+            
             for (TreeTraining::SampleVector::iterator iter = parent.range.first; iter != parent.range.second; ++iter) {
-                if (iter->intensities(split.idx1) - iter->intensities(split.idx2) > split.threshold) {
+                if (pred(*iter)) {
                     rLeft += iter->residual;
                     ++numLeft;
                 }
@@ -244,7 +251,7 @@ namespace dest {
             const int numParent = static_cast<int>(std::distance(parent.range.first, parent.range.second));
             const int numRight = numParent - numLeft;
             
-            ShapeResidual rRight = (numParent * parent.mean - numLeft * rLeft) / numRight;
+            ShapeResidual rRight = (numParent * parentMeanResidual - numLeft * rLeft) / numRight;
             
             return numLeft * rLeft.squaredNorm() + numRight * rRight.squaredNorm();
         }
