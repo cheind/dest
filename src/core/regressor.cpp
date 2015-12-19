@@ -43,6 +43,10 @@ namespace dest {
         {
         }
         
+        Regressor::Regressor(const Regressor &other)
+        :_data(new data(*other._data))
+        {}
+        
         Regressor::~Regressor()
         {}
         
@@ -58,6 +62,7 @@ namespace dest {
             tt.numLandmarks = t.numLandmarks;
             tt.numSplitPositions = t.numRandomSplitPositions;
             tt.maxDepth = t.maxTreeDepth;
+            tt.lambda = t.exponentialLambda;
             tt.samples.resize(t.samples.size());
             
             // Draw random samples
@@ -170,13 +175,11 @@ namespace dest {
             Eigen::Matrix3f trans = estimateSimilarityTransform(data.meanShape, shape);
             readPixelIntensities(trans, shape, img, intensities);
             
-            const float lr = _data->learningRate;
-            const std::vector<Tree> &trees = _data->trees;
-            const size_t numTrees = trees.size();
+            const size_t numTrees = data.trees.size();
             
-            ShapeResidual sr = _data->meanResidual;
+            ShapeResidual sr = data.meanResidual;
             for(size_t i = 0; i < numTrees; ++i) {
-                sr += trees[i].predict(intensities) * lr;
+                sr += data.trees[i].predict(intensities) * data.learningRate;
             }
             
             return sr;

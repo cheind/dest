@@ -20,16 +20,41 @@
 #ifndef DEST_TRACKER_H
 #define DEST_TRACKER_H
 
+#include <dest/core/image.h>
+#include <dest/core/shape.h>
 #include <memory>
+#include <vector>
 
 namespace dest {
     namespace core {
+        
+        struct TrackerTraining {
+            typedef std::vector<Shape> ShapeVector;
+            typedef std::vector<Image> ImageVector;
+            
+            ShapeVector shapes;
+            ImageVector images;
+            
+            int numCascades;
+            int numInitializationsPerImage;
+            int numTrees;
+            int maxTreeDepth;
+            int numRandomSplitPositions;
+            int numPixelSamplePositions;
+            float exponentialLambda;
+            float learningRate;
+        };
         
         class Tracker {
         public:
             Tracker();
             ~Tracker();
             Tracker(const Tracker &other);
+            
+            bool fit(TrackerTraining &t);
+            
+            Shape predict(const Image &img, const Shape &shape) const;
+
             
             
         private:

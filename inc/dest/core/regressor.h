@@ -59,6 +59,7 @@ namespace dest {
         class Regressor {
         public:
             Regressor();
+            Regressor(const Regressor &other);
             ~Regressor();
             
             bool fit(RegressorTraining &t);
