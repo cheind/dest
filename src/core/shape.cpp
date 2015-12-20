@@ -19,23 +19,24 @@
 
 #include <dest/core/shape.h>
 #include <Eigen/Dense>
+#include <iostream>
 
 namespace dest {
     namespace core {
         
-        Eigen::Matrix3f estimateSimilarityTransform(const Shape &from, const Shape &to) {
+        Eigen::AffineCompact2f estimateSimilarityTransform(const Shape &from, const Shape &to) {
             
             Eigen::Vector2f meanFrom = from.rowwise().mean();
             Eigen::Vector2f meanTo = to.rowwise().mean();
             
-            Shape centeredFrom = from - meanFrom;
-            Shape centeredTo = to - meanTo;
+            Shape centeredFrom = from.colwise() - meanFrom;
+            Shape centeredTo = to.colwise() - meanTo;
             
             Eigen::Matrix2f cov = (centeredFrom) * (centeredTo).transpose();
             cov /= from.cols();
             const float sFrom = centeredFrom.squaredNorm() / from.cols();
             
-            auto svd = cov.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV);
+            auto svd = cov.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
             Eigen::Matrix2f d = Eigen::Matrix2f::Zero(2, 2);
             d(0, 0) = svd.singularValues()(0);
             d(1, 1) = svd.singularValues()(1);
@@ -52,7 +53,7 @@ namespace dest {
                 }
             }
             
-            Eigen::Matrix2f rot = svd.matrixU() * s * svd.matrixV().transpose();
+            Eigen::Matrix2f rot = svd.matrixU().transpose() * s * svd.matrixV();
             float c = 1.f;
             if (sFrom > 0) {
                 c = 1.f / sFrom * (d * s).trace();
@@ -60,10 +61,46 @@ namespace dest {
             
             Eigen::Vector2f t = meanTo - c * rot * meanFrom;
             
-            Eigen::Matrix3f ret = Eigen::Matrix3f::Identity(3, 3);
+            Eigen::Matrix<float, 2, 3> ret = Eigen::Matrix<float, 2, 3>::Identity(2, 3);
             ret.block<2,2>(0,0) = c * rot;
-            ret.block<2,1>(2,0) = t;
-            return ret;
+            ret.block<2,1>(0,2) = t;
+            
+            return Eigen::AffineCompact2f(ret);
         }
+        
+        int findClosestLandmarkIndex(const Shape &s, const Eigen::Ref<const Eigen::Vector2f> &x)
+        {
+            const int numLandmarks = s.cols();
+            
+            int bestLandmark = -1;
+            float bestD2 = std::numeric_limits<float>::max();
+            
+            for (int i = 0; i < numLandmarks; ++i) {
+                float d2 = (s.col(i) - x).squaredNorm();
+                if (d2 < bestD2) {
+                    bestD2 = d2;
+                    bestLandmark = i;
+                }
+            }
+            
+            return bestLandmark;
+        }
+        
+        
+        void shapeRelativePixelCoordinates(const Shape &s, const PixelCoordinates &abscoords, PixelCoordinates &relcoords, Eigen::VectorXi &closestLandmarks)
+        {
+            
+            relcoords.resize(abscoords.rows(), abscoords.cols());
+            closestLandmarks.resize(abscoords.cols());
+            
+            const int numLocs = abscoords.cols();
+            for (int i  = 0; i < numLocs; ++i) {
+                int idx = findClosestLandmarkIndex(s, abscoords.col(i));
+                relcoords.col(i) = abscoords.col(i) - s.col(idx);
+                closestLandmarks(i) = idx;
+            }
+            
+        }
+
     }
 }

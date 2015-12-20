@@ -21,7 +21,6 @@
 #define DEST_IMAGE_H
 
 #include <Eigen/Core>
-#include <vector>
 
 namespace dest {
     namespace core {

@@ -77,7 +77,7 @@ namespace dest {
                 tt.samples[i].residual = t.shapes[t.samples[i].idx] - t.samples[i].estimate;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::Matrix3f trans = estimateSimilarityTransform(t.meanShape, t.samples[i].estimate);
+                Eigen::AffineCompact2f trans = estimateSimilarityTransform(t.meanShape, t.samples[i].estimate);
                 readPixelIntensities(trans, t.samples[i].estimate, t.images[t.samples[i].idx], tt.samples[i].intensities);
                 
             }
@@ -153,12 +153,12 @@ namespace dest {
             return bestLandmark;
         }
         
-        void Regressor::readPixelIntensities(const Eigen::Matrix3f &t, const Shape &s, const Image &img, PixelIntensities &intensities) const
+        void Regressor::readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &img, PixelIntensities &intensities) const
         {
             Regressor::data &data = *_data;
             
             int numCoords = data.shapeRelativePixelCoordinates.cols();
-            PixelCoordinates coords = t.block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
+            PixelCoordinates coords = t.matrix().block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
             
             for(int i = 0; i < numCoords; ++i) {
                 coords.col(i) += s.col(data.closestShapeLandmark[i]);
@@ -172,7 +172,7 @@ namespace dest {
             Regressor::data &data = *_data;
             
             PixelIntensities intensities;
-            Eigen::Matrix3f trans = estimateSimilarityTransform(data.meanShape, shape);
+            Eigen::AffineCompact2f trans = estimateSimilarityTransform(data.meanShape, shape);
             readPixelIntensities(trans, shape, img, intensities);
             
             const size_t numTrees = data.trees.size();

@@ -17,13 +17,27 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-#include <dest/core/trainer.h>
+#include <dest/core/image.h>
+#include <iostream>
 
-
-TEST_CASE("empty")
+TEST_CASE("image-readpixels")
 {
-    dest::core::Trainer t;
+    dest::core::Image img(2, 2);
+    img << 0.f, 64.f,
+           128.f, 256.f;
+    
+    dest::core::PixelCoordinates coords(2, 6);
+    coords << -1.f, 0.f, 0.f, 0.5f, 0.5f, 2.f,
+              -1.f, 0.f, 0.5f, 0.0f, 0.5f, 2.f;
+    
+    dest::core::PixelIntensities expected(6);
+    expected << 0.f, 0.f, 64.f, 32.f, 112.f, 256.f;
+    
+    dest::core::PixelIntensities intensities;
+    dest::core::readImage(img, coords, intensities);
+    
+    REQUIRE(intensities.isApprox(expected));
+
 }

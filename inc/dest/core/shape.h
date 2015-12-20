@@ -20,7 +20,8 @@
 #ifndef DEST_SHAPE_H
 #define DEST_SHAPE_H
 
-#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <dest/core/image.h>
 
 namespace dest {
     namespace core {
@@ -28,7 +29,9 @@ namespace dest {
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
         typedef Shape ShapeResidual;
         
-        Eigen::Matrix3f estimateSimilarityTransform(const Shape &from, const Shape &to);
+        Eigen::AffineCompact2f estimateSimilarityTransform(const Shape &from, const Shape &to);
+        
+        void shapeRelativePixelCoordinates(const Shape &s, const PixelCoordinates &abscoords, PixelCoordinates &relcoords, Eigen::VectorXi &closestLandmarks);
         
     }
 }

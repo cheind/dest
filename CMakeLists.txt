@@ -55,6 +55,8 @@ target_link_libraries(dest_facetrack dest ${DEST_LINK_TARGETS})
 
 add_executable(dest_tests
     tests/catch.hpp
-    tests/gbdt.cpp
+    tests/test_transform.cpp
+    tests/test_image.cpp
+    tests/test_shape.cpp
 )
 target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})

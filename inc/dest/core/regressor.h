@@ -73,7 +73,7 @@ namespace dest {
             
             int closestLandmarkIndex(const Shape &s, const Eigen::Ref<const Eigen::Vector2f> &x) const;
             
-            void readPixelIntensities(const Eigen::Matrix3f &t, const Shape &s, const Image &i, PixelIntensities &intensities) const;
+            void readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &i, PixelIntensities &intensities) const;
             
             struct data;
             std::unique_ptr<data> _data;
