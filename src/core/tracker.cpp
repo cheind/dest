@@ -20,6 +20,8 @@
 #include <dest/core/tracker.h>
 #include <dest/core/regressor.h>
 #include <dest/core/log.h>
+#include <dest/util/draw.h>
+#include <opencv2/opencv.hpp>
 
 namespace dest {
     namespace core {
@@ -79,12 +81,18 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    rt.samples[i].estimate += data.cascade[i].predict(t.images[rt.samples[i].idx], rt.samples[i].estimate);
+                    if (s < 10) {
+                        cv::Mat tmp = util::drawShape(t.images[rt.samples[s].idx], rt.samples[s].estimate, cv::Scalar(0,255,0));
+                        cv::imshow("x", tmp);
+                        cv::waitKey();
+                        
+                        DEST_LOG( i << " " <<  (t.shapes[rt.samples[s].idx] - rt.samples[s].estimate).norm() << std::endl);
+                    }
+                    
+                    rt.samples[s].estimate += data.cascade[i].predict(t.images[rt.samples[s].idx], rt.samples[s].estimate);
+                    
                 }
             }
-            
-            DEST_LOG(rt.trainingData->shapes[0] << std::endl);
-            DEST_LOG(rt.samples[0].estimate << std::endl);
             
             return true;
 

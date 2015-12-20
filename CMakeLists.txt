@@ -29,6 +29,8 @@ set(DEST_VERBOSE ON CACHE BOOL "Build DEST in verbose mode.")
 configure_file(inc/dest/core/config.h.in dest/core/config.h)
 add_library(dest
     inc/dest/dest.h
+    inc/dest/core/config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
     inc/dest/core/log.h
     inc/dest/core/shape.h
     inc/dest/core/image.h
@@ -37,6 +39,7 @@ add_library(dest
     inc/dest/core/regressor.h
     inc/dest/core/tree.h
     inc/dest/face/database_importers.h
+    inc/dest/util/draw.h
     src/core/training_data.cpp
     src/core/tracker.cpp
     src/core/regressor.cpp
@@ -44,6 +47,7 @@ add_library(dest
     src/core/shape.cpp
     src/core/image.cpp
     src/face/database_importers.cpp
+    src/util/draw.cpp
 )
 	
 target_link_libraries(dest ${DEST_LINK_TARGETS})

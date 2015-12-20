@@ -17,13 +17,26 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DEST_CONFIG_H
-#define DEST_CONFIG_H
+#ifndef DEST_DRAW_H
+#define DEST_DRAW_H
 
-/** Whether or not report progress */
-#cmakedefine DEST_VERBOSE
+#include <dest/core/config.h>
+#include <dest/core/shape.h>
+#include <dest/core/image.h>
 
-/** Whether or not OpenCV is available. */
-#cmakedefine DEST_WITH_OPENCV
+#ifdef DEST_WITH_OPENCV
+#include <opencv2/core/core.hpp>
+
+namespace dest {
+    namespace util {
+        
+        void drawShape(cv::Mat &img, const core::Shape &s, const cv::Scalar &color);
+        
+        cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color);
+        
+    }
+}
+
+#endif
 
 #endif

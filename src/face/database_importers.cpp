@@ -19,6 +19,7 @@
 
 #include <dest/face/database_importers.h>
 #include <dest/core/log.h>
+#include <dest/util/draw.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <iomanip>
@@ -101,9 +102,6 @@ namespace dest {
                         // Need to pre-allocate because of row-major flag
                         core::Image img(cvImg.rows, cvImg.cols);
                         cv::cv2eigen(cvImg, img);
-                        
-                        cv::Mat tmp, tmp2;
-                        cv::eigen2cv(img, tmp);
                         
                         images.push_back(img);
                         shapes.push_back(s);

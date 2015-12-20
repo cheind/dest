@@ -108,8 +108,8 @@ namespace dest {
             const int numCoords = t.trainingData->params.numRandomPixelCoordinates;
             PixelCoordinates result(2, numCoords);
             
-            std::uniform_real_distribution<float> dx(maxC.x() - minC.x());
-            std::uniform_real_distribution<float> dy(maxC.y() - minC.y());
+            std::uniform_real_distribution<float> dx(0.f, maxC.x() - minC.x());
+            std::uniform_real_distribution<float> dy(0.f, maxC.y() - minC.y());
             
             for (int i = 0; i < numCoords; ++i) {
                 result(0, i) = minC.x() + dx(t.trainingData->rnd);

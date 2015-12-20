@@ -274,9 +274,9 @@ namespace dest {
                 if (node.split.idx1 < 0)
                     break; // premature leaf
                 
-                float val = intensities(node.split.idx1) - intensities(node.split.idx2);
+                bool left = intensities(node.split.idx1) - intensities(node.split.idx2) > node.split.threshold;
                 
-                n = val > 0.f ? 2 * n + 1 : 2 * n + 2;
+                n = left ? 2 * n + 1 : 2 * n + 2;
             }
             
             return nodes[n].mean;
