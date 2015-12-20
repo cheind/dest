@@ -25,7 +25,7 @@ namespace dest {
         AlgorithmParameters::AlgorithmParameters()
         {
             numInitializationsPerImage = 20;
-            numCascades = 5;
+            numCascades = 10;
             numTrees = 500;
             maxTreeDepth = 5;
             numRandomPixelCoordinates = 400;

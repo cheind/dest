@@ -81,7 +81,7 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    if (s < 10) {
+                    if (s < 20) {
                         cv::Mat tmp = util::drawShape(t.images[rt.samples[s].idx], rt.samples[s].estimate, cv::Scalar(0,255,0));
                         cv::imshow("x", tmp);
                         cv::waitKey();
@@ -100,6 +100,7 @@ namespace dest {
         
         Shape Tracker::predict(const Image &img, const Shape &shape) const
         {
+            // TODO!
             return shape;
         }
 
