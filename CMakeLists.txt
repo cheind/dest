@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 2.8)
 project(deformable-shape-tracking)
 
 if (WIN32)
-    set(OpenCV_STATIC OFF)
-	set(OpenCV_SHARED ON)
 	add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 endif()
 
 set(DEST_LINK_TARGETS)
@@ -38,6 +39,9 @@ add_library(dest
     inc/dest/core/regressor.h
     inc/dest/core/tree.h
     inc/dest/face/database_importers.h
+    inc/dest/io/dest_io.fbs
+    inc/dest/io/dest_io_generated.h
+    inc/dest/io/matrix_io.h
     inc/dest/util/draw.h
     inc/dest/util/log.h
     src/core/training_data.cpp
@@ -64,5 +68,6 @@ add_executable(dest_tests
     tests/test_transform.cpp
     tests/test_image.cpp
     tests/test_shape.cpp
+    tests/test_matrix_io.cpp
 )
 target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})

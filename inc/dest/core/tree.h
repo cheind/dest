@@ -23,6 +23,7 @@
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
 #include <dest/core/training_data.h>
+#include <dest/io/dest_io_generated.h>
 #include <memory>
 
 namespace dest {
@@ -39,7 +40,11 @@ namespace dest {
             
             ShapeResidual predict(const PixelIntensities &intensities) const;
             
+            flatbuffers::Offset<io::Tree> save(flatbuffers::FlatBufferBuilder &fbb) const;
+            void load(const io::Tree &fbs);
+            
         private:
+            
             struct TreeNode;
             struct PartitionPredicate;
             struct NodeInfo;

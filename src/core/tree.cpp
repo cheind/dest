@@ -19,6 +19,7 @@
 
 #include <dest/core/tree.h>
 #include <dest/util/log.h>
+#include <dest/io/matrix_io.h>
 #include <queue>
 
 namespace dest {
@@ -35,6 +36,18 @@ namespace dest {
             Tree::SplitInfo split;
             // For leaf nodes
             ShapeResidual mean;
+            
+            flatbuffers::Offset<io::TreeNode> save(flatbuffers::FlatBufferBuilder &fbb) const {
+                flatbuffers::Offset<io::MatrixF> lmean = io::toFbs(fbb, mean);
+                return io::CreateTreeNode(fbb, split.idx1, split.idx2, split.threshold, lmean);
+            }
+            
+            void load(const io::TreeNode &fbs) {
+                split.idx1 = fbs.idx1();
+                split.idx2 = fbs.idx2();
+                split.threshold = fbs.threshold();
+                io::fromFbs(*fbs.mean(), mean);
+            }
         };
         
         typedef std::pair<TreeTraining::SampleVector::iterator, TreeTraining::SampleVector::iterator> SampleRange;
@@ -95,6 +108,25 @@ namespace dest {
             data()
             : depth(0)
             {}
+            
+            flatbuffers::Offset<io::Tree> save(flatbuffers::FlatBufferBuilder &fbb) const {
+                std::vector<flatbuffers::Offset<io::TreeNode> > nlocs;
+                
+                for (size_t i = 0; i < nodes.size(); ++i) {
+                    nlocs.push_back(nodes[i].save(fbb));
+                }
+                
+                return io::CreateTree(fbb, fbb.CreateVector(nlocs), depth);
+            }
+            
+            void load(const io::Tree &fbs) {
+                depth = fbs.depth();
+                
+                nodes.resize(fbs.nodes()->size());
+                for (flatbuffers::uoffset_t i = 0; i < fbs.nodes()->size(); ++i) {
+                    nodes[i].load(*fbs.nodes()->Get(i));
+                }
+            }
         };
         
         
@@ -109,6 +141,14 @@ namespace dest {
         
         Tree::~Tree()
         {}
+        
+        flatbuffers::Offset<io::Tree> Tree::save(flatbuffers::FlatBufferBuilder &fbb) const {
+            return _data->save(fbb);
+        }
+        
+        void Tree::load(const io::Tree &fbs) {
+            _data->load(fbs);
+        }
         
         bool Tree::fit(TreeTraining &t)
         {
