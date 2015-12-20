@@ -22,28 +22,11 @@
 
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
+#include <dest/core/training_data.h>
 #include <memory>
-#include <vector>
 
 namespace dest {
     namespace core {
-        
-        struct TrackerTraining {
-            typedef std::vector<Shape> ShapeVector;
-            typedef std::vector<Image> ImageVector;
-            
-            ShapeVector shapes;
-            ImageVector images;
-            
-            int numCascades;
-            int numInitializationsPerImage;
-            int numTrees;
-            int maxTreeDepth;
-            int numRandomSplitPositions;
-            int numPixelSamplePositions;
-            float exponentialLambda;
-            float learningRate;
-        };
         
         class Tracker {
         public:
@@ -51,7 +34,7 @@ namespace dest {
             ~Tracker();
             Tracker(const Tracker &other);
             
-            bool fit(TrackerTraining &t);
+            bool fit(TrainingData &t);
             
             Shape predict(const Image &img, const Shape &shape) const;
 

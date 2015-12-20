@@ -20,4 +20,6 @@
 #ifndef DEST_H
 #define DEST_H
 
+#include <dest/core/tracker.h>
+
 #endif

@@ -17,32 +17,20 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DEST_TRAINER_H
-#define DEST_TRAINER_H
+#ifndef DEST_LOG_H
+#define DEST_LOG_H
 
-#include <dest/core/shape.h>
-#include <dest/core/image.h>
-#include <dest/core/tracker.h>
-#include <vector>
-#include <memory>
+#include <dest/core/config.h>
 
-namespace dest {
-    namespace core {
-    
-        class Trainer {
-        public:
-            Trainer();
-            ~Trainer();
-            
-            Tracker train(const std::vector<Image> &images, const std::vector<Shape> &shapes) const;
-            
-            
-        private:
-            struct data;
-            std::unique_ptr<data> _data;
-        };
-        
-    }
-}
+
+#ifdef DEST_VERBOSE
+    #include <iostream>
+    #include <iomanip>
+    #define DEST_LOG(x) do { std::cout << x; } while (0)
+    #define DEST_LOG_MARK DEST_LOG(__FILE__ << " : " << __LINE__ << std::endl)
+#else
+    #define DEST_LOG(x)
+    #define DEST_LOG_MARK DEST_LOG
+#endif
 
 #endif

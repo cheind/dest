@@ -15,40 +15,24 @@
  
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
-#ifndef DEST_REGRESSOR_H
-#define DEST_REGRESSOR_H
-
-#include <dest/core/image.h>
-#include <dest/core/shape.h>
 #include <dest/core/training_data.h>
-#include <memory>
 
 namespace dest {
     namespace core {
-        
-            
-        class Regressor {
-        public:
-            Regressor();
-            Regressor(const Regressor &other);
-            ~Regressor();
-            
-            bool fit(RegressorTraining &t);
-            
-            ShapeResidual predict(const Image &img, const Shape &shape) const;
-            
-        private:
-            
-            PixelCoordinates sampleCoordinates(RegressorTraining &t) const;
-            void readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &i, PixelIntensities &intensities) const;
-            
-            struct data;
-            std::unique_ptr<data> _data;
-        };
-        
+       
+        AlgorithmParameters::AlgorithmParameters()
+        {
+            numInitializationsPerImage = 20;
+            numCascades = 5;
+            numTrees = 500;
+            maxTreeDepth = 5;
+            numRandomPixelCoordinates = 400;
+            numRandomSplitTestsPerNode = 20;
+            exponentialLambda = 0.1f;
+            learningRate = 0.1f;
+        }
+       
     }
 }
-
-#endif

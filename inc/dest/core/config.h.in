@@ -17,21 +17,10 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DEST_TRIPLET_H
-#define DEST_TRIPLET_H
+#ifndef DEST_CONFIG_H
+#define DEST_CONFIG_H
 
-#include <dest/core/shape.h>
-
-namespace dest {
-    namespace core {
-        
-        struct Triplet {
-            int shapeId;
-            Shape shapeEstimate;
-            Shape shapeDelta;
-        };
-        
-    }
-}
+/** Whether or not report progress */
+#cmakedefine DEST_VERBOSE
 
 #endif

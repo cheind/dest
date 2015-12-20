@@ -18,6 +18,7 @@
  */
 
 #include <dest/core/image.h>
+#include <dest/core/log.h>
 
 namespace dest {
     namespace core {
@@ -52,9 +53,9 @@ namespace dest {
         }
         
         void readImage(const Image &img, const PixelCoordinates &coords, PixelIntensities &intensities) {
-            intensities.resize(coords.cols());
+            const int numCoords = coords.cols();
             
-            int numCoords = coords.cols();
+            intensities.resize(coords.cols());
             
             for (int i = 0; i < numCoords; ++i) {
                 intensities(i) = bilinearSample(img, coords(0, i), coords(1, i));

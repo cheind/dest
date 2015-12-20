@@ -18,6 +18,7 @@
  */
 
 #include <dest/core/tree.h>
+#include <dest/core/log.h>
 #include <random>
 #include <queue>
 
@@ -57,7 +58,7 @@ namespace dest {
         }
         
         inline ShapeResidual meanResidualOfRange(const SampleRange &r, int numLandmarks) {
-            ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+            ShapeResidual mean = ShapeResidual::Zero(2, numLandmarks);
             
             const int numElements = numElementsInRange(r);
             if (numElements > 0) {
@@ -71,7 +72,7 @@ namespace dest {
         
         template<class UnaryPredicate>
         inline std::pair<ShapeResidual, int> meanResidualOfRangeIf(const SampleRange &r, int numLandmarks, UnaryPredicate pred) {
-            ShapeResidual mean = ShapeResidual::Zero(2, r.first->residual.cols());
+            ShapeResidual mean = ShapeResidual::Zero(2, numLandmarks);
             
             int numElements = 0;
             for (TreeTraining::SampleVector::iterator i = r.first; i != r.second; ++i) {
@@ -115,7 +116,7 @@ namespace dest {
             std::vector<Tree::TreeNode> &nodes = _data->nodes;
             int &depth = _data->depth;
             
-            depth = std::max<int>(t.maxDepth, 1);
+            depth = std::max<int>(t.trainingData->params.maxTreeDepth, 1);
             const int numNodes = (int)std::pow(2.0, depth) - 1;
             nodes.resize(numNodes);
 
@@ -141,8 +142,6 @@ namespace dest {
                 }
             }
             
-            
-            
             return true;
         }
         
@@ -150,7 +149,7 @@ namespace dest {
             SplitInfo split;
             
             bool operator()(const TreeTraining::Sample &s) const {
-                return (s.intensities(split.idx1) - s.intensities(split.idx2) > split.threshold);
+                return (s.intensities(split.idx1) - s.intensities(split.idx2)) > split.threshold;
             }
             
         };
@@ -222,22 +221,25 @@ namespace dest {
             std::uniform_int_distribution<> di(0, t.pixelCoordinates.cols() - 1);
             std::uniform_real_distribution<float> dr(0.f, 1.f);
             
-            for (int i = 0; i < t.numSplitPositions; ++i) {
+            const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
+            const float lambda = t.trainingData->params.exponentialLambda;
+            
+            for (int i = 0; i < numTests; ++i) {
             
                 SplitInfo split;
                 int iter = 0;
                 float e;
                 do {
-                    split.idx1 = di(t.rnd);
-                    split.idx2 = di(t.rnd);
+                    split.idx1 = di(t.trainingData->rnd);
+                    split.idx2 = di(t.trainingData->rnd);
                     float d = (t.pixelCoordinates.col(split.idx1) - t.pixelCoordinates.col(split.idx2)).norm();
-                    e = std::exp(-t.lambda * d);
+                    e = std::exp(-lambda * d);
                     ++iter;
                 
-                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (dr(t.rnd) < e));
+                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (dr(t.trainingData->rnd) < e));
                 
                 if (iter <= maxAttempts) {
-                    split.threshold = dr(t.rnd) * 256.f;
+                    split.threshold = dr(t.trainingData->rnd) * 256.f;
                     splits.push_back(split);
                 }
             }

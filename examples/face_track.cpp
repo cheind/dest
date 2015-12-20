@@ -19,7 +19,15 @@
 
 #include <dest/dest.h>
 
+#include <dest/face/database_importers.h>
+
 int main(int argc, char **argv)
 {
+    dest::core::TrainingData td;
+    dest::face::importIMMFaceDatabase(argv[1], td.images, td.shapes);
+    
+    dest::core::Tracker t;
+    t.fit(td);
+    
     return 0;
 }

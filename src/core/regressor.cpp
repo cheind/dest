@@ -19,6 +19,7 @@
 
 #include <dest/core/regressor.h>
 #include <dest/core/tree.h>
+#include <dest/core/log.h>
 
 namespace dest {
     namespace core {
@@ -53,49 +54,45 @@ namespace dest {
         bool Regressor::fit(RegressorTraining &t)
         {
             Regressor::data &data = *_data;
-            data.learningRate = t.learningRate;
-            data.trees.resize(t.numTrees);
+            data.learningRate = t.trainingData->params.learningRate;
+            data.trees.resize(t.trainingData->params.numTrees);
             data.meanShape = t.meanShape;
             
             TreeTraining tt;
-            tt.rnd = t.rnd;
             tt.numLandmarks = t.numLandmarks;
-            tt.numSplitPositions = t.numRandomSplitPositions;
-            tt.maxDepth = t.maxTreeDepth;
-            tt.lambda = t.exponentialLambda;
+            tt.trainingData = t.trainingData;
             tt.samples.resize(t.samples.size());
             
             // Draw random samples
             tt.pixelCoordinates = sampleCoordinates(t);
             
             // Encode them with respect to the mean shape
-            relativePixelCoordinates(t, tt.pixelCoordinates, data.shapeRelativePixelCoordinates, data.closestShapeLandmark);
+            shapeRelativePixelCoordinates(t.meanShape, tt.pixelCoordinates, data.shapeRelativePixelCoordinates, data.closestShapeLandmark);
             
             // Compute the mean residual, to be used as base learner
             data.meanResidual = ShapeResidual::Zero(2, t.numLandmarks);
             for (size_t i = 0; i < t.samples.size(); ++i) {
-                tt.samples[i].residual = t.shapes[t.samples[i].idx] - t.samples[i].estimate;
+
+                tt.samples[i].residual = t.trainingData->shapes[t.samples[i].idx] - t.samples[i].estimate;
                 data.meanResidual += tt.samples[i].residual;
                 
                 Eigen::AffineCompact2f trans = estimateSimilarityTransform(t.meanShape, t.samples[i].estimate);
-                readPixelIntensities(trans, t.samples[i].estimate, t.images[t.samples[i].idx], tt.samples[i].intensities);
+                readPixelIntensities(trans, t.samples[i].estimate, t.trainingData->images[t.samples[i].idx], tt.samples[i].intensities);
                 
             }
             data.meanResidual /= t.samples.size();
-
-            for (size_t i = 0; i < t.samples.size(); ++i) {
-                tt.samples[i].residual -= data.meanResidual;
-            }
             
-            for (int k = 0; k < t.numTrees; ++k) {
+            for (int k = 0; k < t.trainingData->params.numTrees; ++k) {
+                DEST_LOG("Building tree " << std::setw(3) << k << "\r");
                 for (size_t i = 0; i < t.samples.size(); ++i) {
                     
-                    if (k > 0) {
-                        tt.samples[i].residual -= data.learningRate *  data.trees[k - 1].predict(tt.samples[i].intensities);
+                    if (k == 0) {
+                        tt.samples[i].residual -= data.meanResidual;
+                    } else {
+                        tt.samples[i].residual -= data.learningRate * data.trees[k - 1].predict(tt.samples[i].intensities);
                     }
-                    
-                    data.trees[k].fit(tt);
                 }
+                data.trees[k].fit(tt);
             }
             
             
@@ -108,60 +105,30 @@ namespace dest {
             Eigen::Vector2f minC = t.meanShape.rowwise().minCoeff();
             Eigen::Vector2f maxC = t.meanShape.rowwise().maxCoeff();
 
-            PixelCoordinates result(2, t.numPixelSamplePositions);
+            const int numCoords = t.trainingData->params.numRandomPixelCoordinates;
+            PixelCoordinates result(2, numCoords);
             
             std::uniform_real_distribution<float> dx(maxC.x() - minC.x());
             std::uniform_real_distribution<float> dy(maxC.y() - minC.y());
             
-            for (int i = 0; i < t.numPixelSamplePositions; ++i) {
-                result(i, 0) = minC.x() + dx(t.rnd);
-                result(i, 1) = maxC.y() + dy(t.rnd);
+            for (int i = 0; i < numCoords; ++i) {
+                result(0, i) = minC.x() + dx(t.trainingData->rnd);
+                result(1, i) = maxC.y() + dy(t.trainingData->rnd);
             }
             
             return result;
         }
         
-        void Regressor::relativePixelCoordinates(RegressorTraining &t, const PixelCoordinates &pcoords, PixelCoordinates &relcoords, Eigen::VectorXi &closestLandmarks) const
-        {
-            
-            relcoords.resize(pcoords.rows(), pcoords.cols());
-            closestLandmarks.resize(pcoords.cols());
-            
-            for (int i  = 0; i < t.numLandmarks; ++i) {
-                int closestLandmark = closestLandmarkIndex(t.meanShape, pcoords.col(i));
-                relcoords.col(i) = pcoords.col(i) - t.meanShape.col(closestLandmark);
-                closestLandmarks(i) = closestLandmark;
-            }
-            
-        }
-        
-        int Regressor::closestLandmarkIndex(const Shape &s, const Eigen::Ref<const Eigen::Vector2f> &x) const
-        {
-            const int numLandmarks = s.cols();
-            
-            int bestLandmark = -1;
-            float bestD2 = std::numeric_limits<float>::max();
-            
-            for (int i = 0; i < numLandmarks; ++i) {
-                float d2 = (s.col(i) - x).squaredNorm();
-                if (d2 < bestD2) {
-                    bestD2 = d2;
-                    bestLandmark = i;
-                }
-            }
-            
-            return bestLandmark;
-        }
         
         void Regressor::readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &img, PixelIntensities &intensities) const
         {
             Regressor::data &data = *_data;
             
-            int numCoords = data.shapeRelativePixelCoordinates.cols();
             PixelCoordinates coords = t.matrix().block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
             
+            const int numCoords = data.shapeRelativePixelCoordinates.cols();
             for(int i = 0; i < numCoords; ++i) {
-                coords.col(i) += s.col(data.closestShapeLandmark[i]);
+                coords.col(i) += s.col(data.closestShapeLandmark(i));
             }
             
             readImage(img, coords, intensities);

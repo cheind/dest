@@ -19,6 +19,7 @@
 
 #include <dest/core/tracker.h>
 #include <dest/core/regressor.h>
+#include <dest/core/log.h>
 
 namespace dest {
     namespace core {
@@ -42,24 +43,16 @@ namespace dest {
         Tracker::~Tracker()
         {}
         
-        bool Tracker::fit(TrackerTraining &t) {
+        bool Tracker::fit(TrainingData &t) {
             
             
             const int numShapes = static_cast<int>(t.shapes.size());
-            const int numSamples = numShapes * t.numInitializationsPerImage;
+            const int numSamples = numShapes * t.params.numInitializationsPerImage;
             
             RegressorTraining rt;
-            rt.exponentialLambda = t.exponentialLambda;
-            rt.images = t.images;
-            rt.shapes = t.shapes;
-            rt.learningRate = t.learningRate;
-            rt.maxTreeDepth = t.maxTreeDepth;
-            rt.numLandmarks = t.shapes.front().cols();
-            rt.numPixelSamplePositions = t.numPixelSamplePositions;
-            rt.numRandomSplitPositions = t.numRandomSplitPositions;
-            rt.numTrees = t.numTrees;
+            rt.trainingData = &t;
             rt.samples.resize(numSamples);
-            rt.rnd.seed(10);
+            rt.numLandmarks = static_cast<int>(t.shapes.front().cols());
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numShapes; ++i) {
@@ -70,7 +63,7 @@ namespace dest {
             // Generate training triplets
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             for (int i = 0; i < numSamples; ++i) {
-                int id = dist(rt.rnd);
+                int id = dist(t.rnd);
                 
                 rt.samples[i].idx = i % numShapes;
                 rt.samples[i].estimate = t.shapes[id];
@@ -78,9 +71,10 @@ namespace dest {
             
             // Build cascade
             Tracker::data &data = *_data;
-            data.cascade.resize(t.numCascades);
+            data.cascade.resize(t.params.numCascades);
             
-            for (int i = 0; i < t.numCascades; ++i) {
+            for (int i = 0; i < t.params.numCascades; ++i) {
+                DEST_LOG("Building cascade " << i << std::endl);
                 data.cascade[i].fit(rt);
                 
                 // Update shape estimate
@@ -88,6 +82,9 @@ namespace dest {
                     rt.samples[i].estimate += data.cascade[i].predict(t.images[rt.samples[i].idx], rt.samples[i].estimate);
                 }
             }
+            
+            DEST_LOG(rt.trainingData->shapes[0] << std::endl);
+            DEST_LOG(rt.samples[0].estimate << std::endl);
             
             return true;
 

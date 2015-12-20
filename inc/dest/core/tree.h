@@ -20,39 +20,13 @@
 #ifndef DEST_TREE_H
 #define DEST_TREE_H
 
-#include <dest/core/triplet.h>
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
+#include <dest/core/training_data.h>
 #include <memory>
-#include <vector>
-#include <random>
 
 namespace dest {
     namespace core {
-        
-        struct TreeTraining {
-            PixelCoordinates pixelCoordinates;
-            
-            struct Sample {
-                ShapeResidual residual;
-                PixelIntensities intensities;
-                
-                friend void swap(Sample& a, Sample& b)
-                {
-                    using std::swap;
-                    swap(a.residual, b.residual);
-                    swap(a.intensities, b.intensities);
-                }
-            };
-            typedef std::vector<Sample> SampleVector;
-            SampleVector samples;
-            std::mt19937 rnd;
-            
-            int maxDepth;
-            int numSplitPositions;
-            int numLandmarks;
-            float lambda;
-        };
     
         class Tree {
         public:

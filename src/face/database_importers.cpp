@@ -18,6 +18,7 @@
  */
 
 #include <dest/face/database_importers.h>
+#include <dest/core/log.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <iomanip>
@@ -34,33 +35,32 @@ namespace dest {
             
             std::string line;
             while (std::getline(file, line)) {
-                if (line.size() > 0) {
-                    if (line[0] != '#') {
-                        if (line.find(".jpg") != std::string::npos) {
-                            // ignored: file name of jpg image
-                        }
-                        else if (line.size() < 10) {
-                            int nbPoints = atol(line.c_str());
-                            
-                            s.resize(2, nbPoints);
-                            s.fill(0);
-                        }
-                        else {
-                            std::stringstream stream(line);
-                            
-                            std::string path;
-                            std::string type;
-                            float x, y;
-                            
-                            stream >> path;
-                            stream >> x;
-                            stream >> y;
-                            
-                            s(0, landmarkCount) = x;
-                            s(1, landmarkCount) = y;
-                            
-                            ++landmarkCount;
-                        }
+                if (line.size() > 0 && line[0] != '#') {
+                    if (line.find(".jpg") != std::string::npos) {
+                        // ignored: file name of jpg image
+                    }
+                    else if (line.size() < 10) {
+                        int nbPoints = atol(line.c_str());
+                        
+                        s.resize(2, nbPoints);
+                        s.fill(0);
+                    }
+                    else {
+                        std::stringstream stream(line);
+                        
+                        std::string path;
+                        std::string type;
+                        float x, y;
+                        
+                        stream >> path;
+                        stream >> type;
+                        stream >> x;
+                        stream >> y;
+                        
+                        s(0, landmarkCount) = x;
+                        s(1, landmarkCount) = y;
+                        
+                        ++landmarkCount;
                     }
                 }
             }
@@ -93,14 +93,22 @@ namespace dest {
                     cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
                     
                     if(asfOk && !cvImg.empty()) {
-                        cv::Mat cvImgF;
-                        cvImg.convertTo(cvImgF, CV_32F);
                         
-                        core::Image img;
-                        cv::cv2eigen(cvImgF, img);
+                        // Scale to image dimensions
+                        s.row(0) *= cvImg.cols;
+                        s.row(1) *= cvImg.rows;
+                        
+                        // Need to pre-allocate because of row-major flag
+                        core::Image img(cvImg.rows, cvImg.cols);
+                        cv::cv2eigen(cvImg, img);
+                        
+                        cv::Mat tmp, tmp2;
+                        cv::eigen2cv(img, tmp);
                         
                         images.push_back(img);
                         shapes.push_back(s);
+                        ++j;
+                        DEST_LOG("Loaded " << fileNameImg << std::endl);
                     } else {
                         subIdOK = false;
                     }
