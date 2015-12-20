@@ -19,7 +19,7 @@
 
 #include <dest/core/tracker.h>
 #include <dest/core/regressor.h>
-#include <dest/core/log.h>
+#include <dest/util/log.h>
 #include <dest/util/draw.h>
 #include <opencv2/opencv.hpp>
 

@@ -18,7 +18,6 @@
  */
 
 #include <dest/core/image.h>
-#include <dest/core/log.h>
 
 namespace dest {
     namespace core {

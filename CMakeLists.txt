@@ -31,7 +31,6 @@ add_library(dest
     inc/dest/dest.h
     inc/dest/core/config.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
-    inc/dest/core/log.h
     inc/dest/core/shape.h
     inc/dest/core/image.h
     inc/dest/core/training_data.h
@@ -40,6 +39,7 @@ add_library(dest
     inc/dest/core/tree.h
     inc/dest/face/database_importers.h
     inc/dest/util/draw.h
+    inc/dest/util/log.h
     src/core/training_data.cpp
     src/core/tracker.cpp
     src/core/regressor.cpp

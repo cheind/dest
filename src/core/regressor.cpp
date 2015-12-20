@@ -19,7 +19,7 @@
 
 #include <dest/core/regressor.h>
 #include <dest/core/tree.h>
-#include <dest/core/log.h>
+#include <dest/util/log.h>
 
 namespace dest {
     namespace core {

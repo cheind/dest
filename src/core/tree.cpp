@@ -18,8 +18,7 @@
  */
 
 #include <dest/core/tree.h>
-#include <dest/core/log.h>
-#include <random>
+#include <dest/util/log.h>
 #include <queue>
 
 namespace dest {

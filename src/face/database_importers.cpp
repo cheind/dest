@@ -18,7 +18,7 @@
  */
 
 #include <dest/face/database_importers.h>
-#include <dest/core/log.h>
+#include <dest/util/log.h>
 #include <dest/util/draw.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
