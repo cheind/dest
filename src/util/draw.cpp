@@ -18,6 +18,7 @@
  */
 
 #include <dest/util/draw.h>
+#include <dest/util/convert.h>
 
 #ifdef DEST_WITH_OPENCV
 #include <opencv2/opencv.hpp>
@@ -37,7 +38,8 @@ namespace dest {
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color)
         {
             cv::Mat tmp, gray, tmp2;
-            cv::eigen2cv(img, tmp);
+
+            util::toCVHeaderOnly(img, tmp);
             tmp.convertTo(gray, CV_8U);
             cv::cvtColor(gray, tmp2, CV_GRAY2BGR);
             

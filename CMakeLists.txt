@@ -44,6 +44,7 @@ add_library(dest
     inc/dest/io/matrix_io.h
     inc/dest/util/draw.h
     inc/dest/util/log.h
+    inc/dest/util/convert.h
     src/core/training_data.cpp
     src/core/tracker.cpp
     src/core/regressor.cpp

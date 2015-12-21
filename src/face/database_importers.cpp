@@ -20,8 +20,8 @@
 #include <dest/face/database_importers.h>
 #include <dest/util/log.h>
 #include <dest/util/draw.h>
+#include <dest/util/convert.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/core/eigen.hpp>
 #include <iomanip>
 #include <fstream>
 
@@ -96,13 +96,12 @@ namespace dest {
                     if(asfOk && !cvImg.empty()) {
                         
                         // Scale to image dimensions
-                        s.row(0) *= cvImg.cols;
-                        s.row(1) *= cvImg.rows;
-                        
-                        // Need to pre-allocate because of row-major flag
-                        core::Image img(cvImg.rows, cvImg.cols);
-                        cv::cv2eigen(cvImg, img);
-                        
+                        s.row(0) *= static_cast<float>(cvImg.cols);
+                        s.row(1) *= static_cast<float>(cvImg.rows);
+                                                
+                        core::Image img;
+                        util::toDest(cvImg, img);
+
                         images.push_back(img);
                         shapes.push_back(s);
                         ++j;
