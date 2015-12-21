@@ -164,7 +164,7 @@ namespace dest {
             queue.push(NodeInfo(0, 1, std::make_pair(t.samples.begin(), t.samples.end())));
             
             while (!queue.empty()) {
-                NodeInfo &nr = queue.front(); queue.pop();
+                NodeInfo nr = queue.front(); queue.pop();
                 
                 if (nr.depth < depth) {
                     // Generate a split
