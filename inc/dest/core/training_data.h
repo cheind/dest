@@ -42,25 +42,27 @@ namespace dest {
         };
         
         struct TrainingData {
-            typedef std::vector<Shape> ShapeVector;
-            typedef std::vector<Image> ImageVector;
             
-            ShapeVector shapes;
-            ImageVector images;
-            AlgorithmParameters params;
-            std::mt19937 rnd;
-        };
-        
-        struct RegressorTraining {
             struct Sample {
                 int idx;
                 Shape estimate;
             };
             typedef std::vector<Sample> SampleVector;
+            typedef std::vector<Shape> ShapeVector;
+            typedef std::vector<Image> ImageVector;
             
-            TrainingData *trainingData;
-            Shape meanShape;
             SampleVector samples;
+            ShapeVector shapes;
+            ImageVector images;
+            AlgorithmParameters params;
+            std::mt19937 rnd;
+
+            static void createTrainingSamplesKazemi(TrainingData &t);
+        };
+        
+        struct RegressorTraining {
+            TrainingData *trainingData;
+            Shape meanShape;            
             int numLandmarks;
         };
         

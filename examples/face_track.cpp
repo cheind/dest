@@ -41,15 +41,15 @@ int main(int argc, char **argv)
     td.params.numCascades = 10;
     td.params.numTrees = 500;
 
-    dest::core::Tracker t;
-    t.fit(td);
+    //dest::core::Tracker t;
+    //t.fit(td);
     //t.save("dest_tracker_imm.bin");
 
-    /*
+    dest::core::Tracker t;
     if (!t.load(argv[2])) {
         std::cout << "Failed to load tracker." << std::endl;
         return 0;
-    }*/
+    }
 
     dest::face::FaceDetector fd;
     if (!fd.loadClassifiers("classifier_frontalface.xml", "classifier_eyes.xml")) {

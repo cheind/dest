@@ -20,6 +20,7 @@
 #include <dest/dest.h>
 
 #include <dest/face/database_importers.h>
+#include <iostream>
 
 int main(int argc, char **argv)
 {
@@ -29,7 +30,8 @@ int main(int argc, char **argv)
     td.params.numTrees = 500;
 
     dest::face::importIMMFaceDatabase(argv[1], td.images, td.shapes);
-    
+    dest::core::TrainingData::createTrainingSamplesKazemi(td);
+
     dest::core::Tracker t;
     t.fit(td);
     t.save("dest_tracker_imm.bin");

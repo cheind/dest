@@ -128,29 +128,18 @@ namespace dest {
         bool Tracker::fit(TrainingData &t) {
             Tracker::data &data = *_data;
             
-            const int numShapes = static_cast<int>(t.shapes.size());
-            const int numSamples = numShapes * t.params.numInitializationsPerImage;
-            
+            const int numSamples = static_cast<int>(t.samples.size());
+
             RegressorTraining rt;
             rt.trainingData = &t;
-            rt.samples.resize(numSamples);
             rt.numLandmarks = static_cast<int>(t.shapes.front().cols());
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
-            for (int i = 0; i < numShapes; ++i) {
-                rt.meanShape += t.shapes[i];
-            }
-            rt.meanShape /= static_cast<float>(numShapes);            
-            
-            // Generate training triplets
-            std::uniform_int_distribution<int> dist(0, numShapes - 1);
             for (int i = 0; i < numSamples; ++i) {
-                int id = dist(t.rnd);
-                
-                rt.samples[i].idx = i % numShapes;
-                rt.samples[i].estimate = t.shapes[id];
+                rt.meanShape += t.samples[i].estimate;
             }
-            
+            rt.meanShape /= static_cast<float>(numSamples);
+
             // Build cascade           
             data.cascade.resize(t.params.numCascades);
             
@@ -160,15 +149,8 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    if (s < 20) {
-                        cv::Mat tmp = util::drawShape(t.images[rt.samples[s].idx], rt.samples[s].estimate, cv::Scalar(0,255,0));
-                        cv::imshow("x", tmp);
-                        cv::waitKey();
-                        
-                        DEST_LOG( i << " " <<  (t.shapes[rt.samples[s].idx] - rt.samples[s].estimate).norm() << std::endl);
-                    }
-                    
-                    rt.samples[s].estimate += data.cascade[i].predict(t.images[rt.samples[s].idx], rt.samples[s].estimate);
+                  
+                    t.samples[s].estimate += data.cascade[i].predict(t.images[t.samples[s].idx], t.samples[s].estimate);
                     
                 }
             }

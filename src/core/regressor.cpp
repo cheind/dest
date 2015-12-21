@@ -103,6 +103,8 @@ namespace dest {
         bool Regressor::fit(RegressorTraining &t)
         {
             Regressor::data &data = *_data;
+            TrainingData &tdata = *t.trainingData;
+
             data.learningRate = t.trainingData->params.learningRate;
             data.trees.resize(t.trainingData->params.numTrees);
             data.meanShape = t.meanShape;
@@ -110,7 +112,7 @@ namespace dest {
             TreeTraining tt;
             tt.numLandmarks = t.numLandmarks;
             tt.trainingData = t.trainingData;
-            tt.samples.resize(t.samples.size());
+            tt.samples.resize(t.trainingData->samples.size());
             
             // Draw random samples
             tt.pixelCoordinates = sampleCoordinates(t);
@@ -120,20 +122,20 @@ namespace dest {
             
             // Compute the mean residual, to be used as base learner
             data.meanResidual = ShapeResidual::Zero(2, t.numLandmarks);
-            for (size_t i = 0; i < t.samples.size(); ++i) {
+            for (size_t i = 0; i < tdata.samples.size(); ++i) {
 
-                tt.samples[i].residual = t.trainingData->shapes[t.samples[i].idx] - t.samples[i].estimate;
+                tt.samples[i].residual = t.trainingData->shapes[tdata.samples[i].idx] - tdata.samples[i].estimate;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::AffineCompact2f trans = estimateSimilarityTransform(t.meanShape, t.samples[i].estimate);
-                readPixelIntensities(trans, t.samples[i].estimate, t.trainingData->images[t.samples[i].idx], tt.samples[i].intensities);
+                Eigen::AffineCompact2f trans = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimate);
+                readPixelIntensities(trans, tdata.samples[i].estimate, t.trainingData->images[tdata.samples[i].idx], tt.samples[i].intensities);
                 
             }
-            data.meanResidual /= static_cast<float>(t.samples.size());
+            data.meanResidual /= static_cast<float>(tdata.samples.size());
             
             for (int k = 0; k < t.trainingData->params.numTrees; ++k) {
-                DEST_LOG("Building tree " << std::setw(3) << k << "\r");
-                for (size_t i = 0; i < t.samples.size(); ++i) {
+                DEST_LOG("Building tree " << std::setw(3) << k + 1 << "\r");
+                for (size_t i = 0; i < tdata.samples.size(); ++i) {
                     
                     if (k == 0) {
                         tt.samples[i].residual -= data.meanResidual;

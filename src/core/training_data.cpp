@@ -33,6 +33,21 @@ namespace dest {
             exponentialLambda = 0.1f;
             learningRate = 0.1f;
         }
+
+        void TrainingData::createTrainingSamplesKazemi(TrainingData &t)
+        {
+            int numShapes = static_cast<int>(t.shapes.size());
+            int numSamples = numShapes * t.params.numInitializationsPerImage;
+
+            std::uniform_int_distribution<int> dist(0, numShapes - 1);
+            t.samples.resize(numSamples);
+            for (int i = 0; i < numSamples; ++i) {
+                int id = dist(t.rnd);
+
+                t.samples[i].idx = i % numShapes;
+                t.samples[i].estimate = t.shapes[id];
+            }
+        }
        
     }
 }
