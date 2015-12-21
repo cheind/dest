@@ -234,14 +234,14 @@ inline flatbuffers::Offset<Regressor> CreateRegressor(flatbuffers::FlatBufferBui
 
 struct Tracker FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const MatrixF *meanShape() const { return GetPointer<const MatrixF *>(4); }
-  const MatrixF *meanShapeBounds() const { return GetPointer<const MatrixF *>(6); }
+  const MatrixF *meanShapeRectCorners() const { return GetPointer<const MatrixF *>(6); }
   const flatbuffers::Vector<flatbuffers::Offset<Regressor>> *cascade() const { return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Regressor>> *>(8); }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<flatbuffers::uoffset_t>(verifier, 4 /* meanShape */) &&
            verifier.VerifyTable(meanShape()) &&
-           VerifyField<flatbuffers::uoffset_t>(verifier, 6 /* meanShapeBounds */) &&
-           verifier.VerifyTable(meanShapeBounds()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 6 /* meanShapeRectCorners */) &&
+           verifier.VerifyTable(meanShapeRectCorners()) &&
            VerifyField<flatbuffers::uoffset_t>(verifier, 8 /* cascade */) &&
            verifier.Verify(cascade()) &&
            verifier.VerifyVectorOfTables(cascade()) &&
@@ -253,7 +253,7 @@ struct TrackerBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_meanShape(flatbuffers::Offset<MatrixF> meanShape) { fbb_.AddOffset(4, meanShape); }
-  void add_meanShapeBounds(flatbuffers::Offset<MatrixF> meanShapeBounds) { fbb_.AddOffset(6, meanShapeBounds); }
+  void add_meanShapeRectCorners(flatbuffers::Offset<MatrixF> meanShapeRectCorners) { fbb_.AddOffset(6, meanShapeRectCorners); }
   void add_cascade(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Regressor>>> cascade) { fbb_.AddOffset(8, cascade); }
   TrackerBuilder(flatbuffers::FlatBufferBuilder &_fbb) : fbb_(_fbb) { start_ = fbb_.StartTable(); }
   TrackerBuilder &operator=(const TrackerBuilder &);
@@ -265,11 +265,11 @@ struct TrackerBuilder {
 
 inline flatbuffers::Offset<Tracker> CreateTracker(flatbuffers::FlatBufferBuilder &_fbb,
    flatbuffers::Offset<MatrixF> meanShape = 0,
-   flatbuffers::Offset<MatrixF> meanShapeBounds = 0,
+   flatbuffers::Offset<MatrixF> meanShapeRectCorners = 0,
    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Regressor>>> cascade = 0) {
   TrackerBuilder builder_(_fbb);
   builder_.add_cascade(cascade);
-  builder_.add_meanShapeBounds(meanShapeBounds);
+  builder_.add_meanShapeRectCorners(meanShapeRectCorners);
   builder_.add_meanShape(meanShape);
   return builder_.Finish();
 }

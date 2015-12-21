@@ -67,7 +67,7 @@ table Regressor {
 /** Serialized tracker. */
 table Tracker {
     meanShape:MatrixF;
-    meanShapeBounds:MatrixF;
+    meanShapeRectCorners:MatrixF;
     cascade:[Regressor];
 }
 

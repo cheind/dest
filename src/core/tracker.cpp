@@ -33,11 +33,11 @@ namespace dest {
             typedef std::vector<Regressor> RegressorVector;            
             RegressorVector cascade;
             Shape meanShape;
-            Eigen::Matrix<float, 2, 2, Eigen::DontAlign> meanShapeBounds; // Note cannot use EIGEN_MAKE_ALIGNED_OPERATOR_NEW?
+            Shape meanShapeRectCorners;            
 
             flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const {
                 flatbuffers::Offset<io::MatrixF> lmeans = io::toFbs(fbb, meanShape);
-                flatbuffers::Offset<io::MatrixF> lbounds = io::toFbs(fbb, meanShapeBounds);
+                flatbuffers::Offset<io::MatrixF> lbounds = io::toFbs(fbb, meanShapeRectCorners);
 
                 std::vector< flatbuffers::Offset<io::Regressor> > lregs;
                 for (size_t i = 0; i < cascade.size(); ++i) {
@@ -49,7 +49,7 @@ namespace dest {
                 io::TrackerBuilder b(fbb);
                 b.add_cascade(vregs);
                 b.add_meanShape(lmeans);
-                b.add_meanShapeBounds(lbounds);
+                b.add_meanShapeRectCorners(lbounds);
 
                 return b.Finish();
             }
@@ -57,7 +57,7 @@ namespace dest {
             void load(const io::Tracker &fbs) {
 
                 io::fromFbs(*fbs.meanShape(), meanShape);
-                io::fromFbs(*fbs.meanShapeBounds(), meanShapeBounds);
+                io::fromFbs(*fbs.meanShapeRectCorners(), meanShapeRectCorners);
 
                 cascade.resize(fbs.cascade()->size());
                 for (flatbuffers::uoffset_t i = 0; i < fbs.cascade()->size(); ++i) {
@@ -140,9 +140,7 @@ namespace dest {
             for (int i = 0; i < numShapes; ++i) {
                 rt.meanShape += t.shapes[i];
             }
-            rt.meanShape /= static_cast<float>(numShapes);
-            data.meanShape = rt.meanShape;
-
+            rt.meanShape /= static_cast<float>(numShapes);            
             
             // Generate training triplets
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
@@ -174,6 +172,10 @@ namespace dest {
                     
                 }
             }
+
+            // Update internal data
+            data.meanShape = rt.meanShape;
+            data.meanShapeRectCorners = boundingBoxCornersOfShape(data.meanShape);
             
             return true;
 
@@ -182,7 +184,7 @@ namespace dest {
         Shape Tracker::predict(const Image &img, const Shape &shape) const
         {
             Tracker::data &data = *_data;
-
+            
             Shape estimate = shape;
 
             const int numCascades = static_cast<int>(data.cascade.size());
@@ -191,6 +193,20 @@ namespace dest {
             }
 
             return estimate;
+        }
+
+        Shape Tracker::boundingBoxCornersOfShape(const Shape &s) const
+        {
+            const Eigen::Vector2f minC = s.rowwise().minCoeff();
+            const Eigen::Vector2f maxC = s.rowwise().maxCoeff();
+
+            Shape rect(2, 4);
+            rect.col(0) = minC;
+            rect.col(1) = Eigen::Vector2f(maxC(0), minC(0));
+            rect.col(2) = Eigen::Vector2f(minC(0), maxC(0));
+            rect.col(3) = maxC;
+
+            return rect;
         }
 
         

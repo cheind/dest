@@ -39,6 +39,7 @@ int main(int argc, char **argv)
 
     std::mt19937 rnd;
     std::uniform_int_distribution<int> d(0, (int)images.size() - 1);
+    std::normal_distribution<float> dg(0, 2.f);
 
     bool done = false;
     while (!done) {

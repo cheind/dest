@@ -47,6 +47,9 @@ namespace dest {
             bool load(const std::string &path);
             
         private:
+
+            Shape boundingBoxCornersOfShape(const Shape &s) const;
+
             struct data;
             std::unique_ptr<data> _data;
         };
