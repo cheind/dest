@@ -32,8 +32,8 @@ namespace dest {
             flatbuffers::Offset< flatbuffers::Vector<float> > od = fbb.CreateVector(m.array().data(), m.array().size());
             
             MatrixFBuilder mb(fbb);
-            mb.add_rows(m.rows());
-            mb.add_cols(m.cols());
+            mb.add_rows(static_cast<int>(m.rows()));
+            mb.add_cols(static_cast<int>(m.cols()));
             mb.add_data(od);
             
             return mb.Finish();
@@ -45,8 +45,8 @@ namespace dest {
             flatbuffers::Offset< flatbuffers::Vector<int> > od = fbb.CreateVector(m.array().data(), m.array().size());
             
             MatrixIBuilder mb(fbb);
-            mb.add_rows(m.rows());
-            mb.add_cols(m.cols());
+            mb.add_rows(static_cast<int>(m.rows()));
+            mb.add_cols(static_cast<int>(m.cols()));
             mb.add_data(od);
             
             return mb.Finish();

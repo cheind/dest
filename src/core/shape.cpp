@@ -33,7 +33,7 @@ namespace dest {
             Shape centeredTo = to.colwise() - meanTo;
             
             Eigen::Matrix2f cov = (centeredFrom) * (centeredTo).transpose();
-            cov /= from.cols();
+            cov /= static_cast<float>(from.cols());
             const float sFrom = centeredFrom.squaredNorm() / from.cols();
             
             auto svd = cov.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
@@ -70,7 +70,7 @@ namespace dest {
         
         int findClosestLandmarkIndex(const Shape &s, const Eigen::Ref<const Eigen::Vector2f> &x)
         {
-            const int numLandmarks = s.cols();
+            const int numLandmarks = static_cast<int>(s.cols());
             
             int bestLandmark = -1;
             float bestD2 = std::numeric_limits<float>::max();
@@ -93,7 +93,7 @@ namespace dest {
             relcoords.resize(abscoords.rows(), abscoords.cols());
             closestLandmarks.resize(abscoords.cols());
             
-            const int numLocs = abscoords.cols();
+            const int numLocs = static_cast<int>(abscoords.cols());
             for (int i  = 0; i < numLocs; ++i) {
                 int idx = findClosestLandmarkIndex(s, abscoords.col(i));
                 relcoords.col(i) = abscoords.col(i) - s.col(idx);

@@ -77,7 +77,7 @@ namespace dest {
                 for (TreeTraining::SampleVector::iterator i = r.first; i != r.second; ++i) {
                     mean += i->residual;
                 }
-                mean /= numElements;
+                mean /= static_cast<float>(numElements);
             }
             return mean;
         }
@@ -94,7 +94,7 @@ namespace dest {
                 }
             }
             if (numElements > 0) {
-                mean /= numElements;
+                mean /= static_cast<float>(numElements);
             }
             
             return std::make_pair(mean, numElements);
@@ -257,7 +257,7 @@ namespace dest {
             splits.clear();
             
             const int maxAttempts = 100;
-            std::uniform_int_distribution<> di(0, t.pixelCoordinates.cols() - 1);
+            std::uniform_int_distribution<int> di(0, static_cast<int>(t.pixelCoordinates.cols()) - 1);
             std::uniform_real_distribution<float> dr(0.f, 1.f);
             
             const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
@@ -291,10 +291,11 @@ namespace dest {
             
             std::pair<ShapeResidual, int> left = meanResidualOfRangeIf(parent.range, t.numLandmarks, pred);
             
-            const int numParent = numElementsInRange(parent.range);
-            const int numRight = numParent - left.second;
+            const float numLeft = static_cast<float>(left.second);
+            const float numParent = static_cast<float>(numElementsInRange(parent.range));
+            const float numRight = numParent - numLeft;
             
-            ShapeResidual rRight = (numParent * parentMeanResidual - left.second * left.first) / numRight;
+            ShapeResidual rRight = (numParent * parentMeanResidual - numLeft * left.first) / numRight;
             
             return left.second * left.first.squaredNorm() + numRight * rRight.squaredNorm();
         }

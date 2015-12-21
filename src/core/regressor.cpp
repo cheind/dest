@@ -80,7 +80,7 @@ namespace dest {
                 readPixelIntensities(trans, t.samples[i].estimate, t.trainingData->images[t.samples[i].idx], tt.samples[i].intensities);
                 
             }
-            data.meanResidual /= t.samples.size();
+            data.meanResidual /= static_cast<float>(t.samples.size());
             
             for (int k = 0; k < t.trainingData->params.numTrees; ++k) {
                 DEST_LOG("Building tree " << std::setw(3) << k << "\r");
@@ -126,8 +126,8 @@ namespace dest {
             
             PixelCoordinates coords = t.matrix().block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
             
-            const int numCoords = data.shapeRelativePixelCoordinates.cols();
-            for(int i = 0; i < numCoords; ++i) {
+            const Shape::Index numCoords = data.shapeRelativePixelCoordinates.cols();
+            for(Shape::Index i = 0; i < numCoords; ++i) {
                 coords.col(i) += s.col(data.closestShapeLandmark(i));
             }
             

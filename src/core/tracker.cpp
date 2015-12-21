@@ -60,7 +60,7 @@ namespace dest {
             for (int i = 0; i < numShapes; ++i) {
                 rt.meanShape += t.shapes[i];
             }
-            rt.meanShape /= numShapes;
+            rt.meanShape /= static_cast<float>(numShapes);
             
             // Generate training triplets
             std::uniform_int_distribution<int> dist(0, numShapes - 1);

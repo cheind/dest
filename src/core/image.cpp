@@ -22,8 +22,8 @@
 namespace dest {
     namespace core {
         
-        inline int clampToEdge(int v, int len) {
-            return std::min<int>(len - 1, std::max<int>(0, v));
+        inline int clampToEdge(int v, Image::Index len) {
+            return std::min<int>(static_cast<int>(len) - 1, std::max<int>(0, v));
         }
         
         inline float bilinearSample(const Image &img, float x, float y) {
@@ -52,7 +52,7 @@ namespace dest {
         }
         
         void readImage(const Image &img, const PixelCoordinates &coords, PixelIntensities &intensities) {
-            const int numCoords = coords.cols();
+            const int numCoords = static_cast<int>(coords.cols());
             
             intensities.resize(coords.cols());
             
