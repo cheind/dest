@@ -18,13 +18,13 @@
  */
 
 #include <dest/core/training_data.h>
+#include <set>
 
 namespace dest {
     namespace core {
        
         AlgorithmParameters::AlgorithmParameters()
         {
-            numInitializationsPerImage = 20;
             numCascades = 10;
             numTrees = 500;
             maxTreeDepth = 5;
@@ -34,18 +34,51 @@ namespace dest {
             learningRate = 0.1f;
         }
 
-        void TrainingData::createTrainingSamplesKazemi(TrainingData &t)
+        struct ImageShapeId {
+            int shapeId;
+            int imageId;
+
+            bool operator<(const ImageShapeId &other) const {
+                if (shapeId != other.shapeId) {
+
+                }
+            }
+        };
+
+        void TrainingData::createTrainingSamplesKazemi(TrainingData &t, int numInitializationsPerImage, float validationPercent)
         {
-            int numShapes = static_cast<int>(t.shapes.size());
-            int numSamples = numShapes * t.params.numInitializationsPerImage;
+            const int numShapes = static_cast<int>(t.shapes.size());
+            const int numSamples = numShapes * numInitializationsPerImage;
+            const int numValidationSamples = static_cast<int>(numShapes * validationPercent);
 
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
-            t.samples.resize(numSamples);
-            for (int i = 0; i < numSamples; ++i) {
-                int id = dist(t.rnd);
+            std::set< std::pair<int, int> > validationSet;
 
-                t.samples[i].idx = i % numShapes;
-                t.samples[i].estimate = t.shapes[id];
+            t.validationSamples.resize(numValidationSamples);
+            for (int i = 0; i < numValidationSamples; ++i) {
+                int imageid;
+                int shapeid;
+                std::pair<int, int> isPair;
+                do {
+                    isPair.first = dist(t.rnd);
+                    isPair.second = dist(t.rnd);
+                } while (validationSet.find(isPair) != validationSet.end());
+                validationSet.insert(isPair);
+
+                t.validationSamples[i].idx = isPair.first;
+                t.validationSamples[i].estimate = t.shapes[isPair.second];
+            }
+
+            t.trainSamples.resize(numSamples);
+            for (int i = 0; i < numSamples; ++i) {
+                std::pair<int, int> isPair;
+                do {
+                    isPair.first = i % numShapes;
+                    isPair.second = dist(t.rnd);
+                } while (validationSet.find(isPair) != validationSet.end());
+
+                t.trainSamples[i].idx = isPair.first;
+                t.trainSamples[i].estimate = t.shapes[isPair.second];
             }
         }
        

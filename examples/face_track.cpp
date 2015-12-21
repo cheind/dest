@@ -32,19 +32,6 @@ int main(int argc, char **argv)
 
     dest::face::importIMMFaceDatabase(argv[1], images, shapes);
 
-    //dest::core::Tracker t;
-
-    dest::core::TrainingData td;
-    td.shapes = shapes;
-    td.images = images;
-    td.params.numInitializationsPerImage = 20;
-    td.params.numCascades = 10;
-    td.params.numTrees = 500;
-
-    //dest::core::Tracker t;
-    //t.fit(td);
-    //t.save("dest_tracker_imm.bin");
-
     dest::core::Tracker t;
     if (!t.load(argv[2])) {
         std::cout << "Failed to load tracker." << std::endl;
@@ -66,7 +53,7 @@ int main(int argc, char **argv)
         int imageId = d(rnd);
         int shapeId = d(rnd);
 
-        dest::core::Shape s = shapes[shapeId];
+        //dest::core::Shape s = shapes[shapeId];
         dest::core::Image i = images[imageId];
         dest::core::Shape rect = fd.detectSingleFace(i);
 
@@ -75,13 +62,12 @@ int main(int argc, char **argv)
             continue;
         }
 
-        Eigen::AffineCompact2f trans;
-        trans = Eigen::Translation2f(dg(rnd), dg(rnd));
-        s = (trans * s.colwise().homogeneous()).eval();
+        //Eigen::AffineCompact2f trans;
+        //trans = Eigen::Translation2f(dg(rnd), dg(rnd));
+        //s = (trans * s.colwise().homogeneous()).eval();
 
-        /*
+        
         dest::core::Shape s = t.initialShapeFromRect(rect);
-        */
         cv::Mat img = dest::util::drawShape(i, s, cv::Scalar(0, 0, 255));
         
         s = t.predict(i, s);

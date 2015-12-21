@@ -258,7 +258,8 @@ namespace dest {
             
             const int maxAttempts = 100;
             std::uniform_int_distribution<int> di(0, static_cast<int>(t.pixelCoordinates.cols()) - 1);
-            std::uniform_real_distribution<float> dr(0.f, 1.f);
+            std::uniform_real_distribution<float> drZeroOne(0.f, 1.f);
+            std::uniform_real_distribution<float> drThreshold(-255.f, 255.f);
             
             const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
             const float lambda = t.trainingData->params.exponentialLambda;
@@ -275,10 +276,10 @@ namespace dest {
                     e = std::exp(-lambda * d);
                     ++iter;
                 
-                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (dr(t.trainingData->rnd) < e));
+                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (drZeroOne(t.trainingData->rnd) < e));
                 
                 if (iter <= maxAttempts) {
-                    split.threshold = dr(t.trainingData->rnd) * 256.f;
+                    split.threshold = drThreshold(t.trainingData->rnd);
                     splits.push_back(split);
                 }
             }

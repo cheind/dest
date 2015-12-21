@@ -128,7 +128,7 @@ namespace dest {
         bool Tracker::fit(TrainingData &t) {
             Tracker::data &data = *_data;
             
-            const int numSamples = static_cast<int>(t.samples.size());
+            const int numSamples = static_cast<int>(t.trainSamples.size());
 
             RegressorTraining rt;
             rt.trainingData = &t;
@@ -136,7 +136,7 @@ namespace dest {
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numSamples; ++i) {
-                rt.meanShape += t.samples[i].estimate;
+                rt.meanShape += t.trainSamples[i].estimate;
             }
             rt.meanShape /= static_cast<float>(numSamples);
 
@@ -144,20 +144,36 @@ namespace dest {
             data.cascade.resize(t.params.numCascades);
             
             for (int i = 0; i < t.params.numCascades; ++i) {
-                DEST_LOG("Building cascade " << i << std::endl);
+                DEST_LOG("Building cascade " << i + 1 << std::endl);
+                
+                // Fit gradient boosted trees.
                 data.cascade[i].fit(rt);
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                  
-                    t.samples[s].estimate += data.cascade[i].predict(t.images[t.samples[s].idx], t.samples[s].estimate);
-                    
+                    t.trainSamples[s].estimate += data.cascade[i].predict(t.images[t.trainSamples[s].idx], t.trainSamples[s].estimate);  
                 }
             }
 
             // Update internal data
             data.meanShape = rt.meanShape;
             data.meanShapeRectCorners = boundingBoxCornersOfShape(data.meanShape);
+
+            // Perform validation
+            ShapeResidual meanShapeResidualTraining = ShapeResidual(2, rt.numLandmarks);
+            for (int s = 0; s < numSamples; ++s) {
+                meanShapeResidualTraining += t.shapes[t.trainSamples[s].idx] - t.trainSamples[s].estimate;
+            }
+            meanShapeResidualTraining /= static_cast<float>(numSamples);
+            DEST_LOG("Mean norm of shape residual over training data: " << meanShapeResidualTraining.norm() << std::endl);
+
+            ShapeResidual meanShapeResidualValidation = ShapeResidual(2, rt.numLandmarks);
+            const int numValidationSamples = static_cast<int>(t.validationSamples.size());
+            for (int s = 0; s < numValidationSamples; ++s) {
+                meanShapeResidualValidation += t.shapes[t.validationSamples[s].idx] - predict(t.images[t.validationSamples[s].idx], t.validationSamples[s].estimate);
+            }
+            meanShapeResidualValidation /= static_cast<float>(numValidationSamples);
+            DEST_LOG("Mean norm of shape residual over validation data: " << meanShapeResidualValidation.norm() << std::endl);
             
             return true;
 

@@ -25,12 +25,11 @@
 int main(int argc, char **argv)
 {
     dest::core::TrainingData td;
-    td.params.numInitializationsPerImage = 100;
     td.params.numCascades = 10;
     td.params.numTrees = 500;
 
     dest::face::importIMMFaceDatabase(argv[1], td.images, td.shapes);
-    dest::core::TrainingData::createTrainingSamplesKazemi(td);
+    dest::core::TrainingData::createTrainingSamplesKazemi(td, 100);
 
     dest::core::Tracker t;
     t.fit(td);

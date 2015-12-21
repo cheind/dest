@@ -29,7 +29,6 @@ namespace dest {
     namespace core {
         
         struct AlgorithmParameters {
-            int numInitializationsPerImage;
             int numCascades;
             int numTrees;
             int maxTreeDepth;
@@ -51,13 +50,14 @@ namespace dest {
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
             
-            SampleVector samples;
+            SampleVector trainSamples;
+            SampleVector validationSamples;
             ShapeVector shapes;
             ImageVector images;
             AlgorithmParameters params;
             std::mt19937 rnd;
 
-            static void createTrainingSamplesKazemi(TrainingData &t);
+            static void createTrainingSamplesKazemi(TrainingData &t, int numInitializationsPerImage = 20, float validationPercent = 0.1f);
         };
         
         struct RegressorTraining {
