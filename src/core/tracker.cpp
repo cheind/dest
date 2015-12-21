@@ -160,13 +160,13 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    /*if (s < 20) {
+                    if (s < 20) {
                         cv::Mat tmp = util::drawShape(t.images[rt.samples[s].idx], rt.samples[s].estimate, cv::Scalar(0,255,0));
                         cv::imshow("x", tmp);
                         cv::waitKey();
                         
                         DEST_LOG( i << " " <<  (t.shapes[rt.samples[s].idx] - rt.samples[s].estimate).norm() << std::endl);
-                    }*/
+                    }
                     
                     rt.samples[s].estimate += data.cascade[i].predict(t.images[rt.samples[s].idx], rt.samples[s].estimate);
                     
@@ -195,6 +195,14 @@ namespace dest {
             return estimate;
         }
 
+        Shape Tracker::initialShapeFromRect(const Shape &rect) const
+        {
+            Tracker::data &data = *_data;
+            Eigen::AffineCompact2f t = estimateSimilarityTransform(data.meanShapeRectCorners, rect);
+            return t * data.meanShape.colwise().homogeneous();
+        }
+
+
         Shape Tracker::boundingBoxCornersOfShape(const Shape &s) const
         {
             const Eigen::Vector2f minC = s.rowwise().minCoeff();
@@ -202,8 +210,8 @@ namespace dest {
 
             Shape rect(2, 4);
             rect.col(0) = minC;
-            rect.col(1) = Eigen::Vector2f(maxC(0), minC(0));
-            rect.col(2) = Eigen::Vector2f(minC(0), maxC(0));
+            rect.col(1) = Eigen::Vector2f(maxC(0), minC(1));
+            rect.col(2) = Eigen::Vector2f(minC(0), maxC(1));
             rect.col(3) = maxC;
 
             return rect;

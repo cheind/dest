@@ -40,6 +40,8 @@ namespace dest {
             
             Shape predict(const Image &img, const Shape &shape) const;
 
+            Shape initialShapeFromRect(const Shape &rect) const;
+
             flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const;
             void load(const io::Tracker &fbs);
 
