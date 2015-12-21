@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         int imageId = d(rnd);
         int shapeId = d(rnd);
 
-        //dest::core::Shape s = shapes[shapeId];
+        dest::core::Shape s = shapes[shapeId];
         dest::core::Image i = images[imageId];
         dest::core::Shape rect = fd.detectSingleFace(i);
 
@@ -75,11 +75,18 @@ int main(int argc, char **argv)
             continue;
         }
 
+        Eigen::AffineCompact2f trans;
+        trans = Eigen::Translation2f(dg(rnd), dg(rnd));
+        s = (trans * s.colwise().homogeneous()).eval();
+
+        /*
         dest::core::Shape s = t.initialShapeFromRect(rect);
+        */
         cv::Mat img = dest::util::drawShape(i, s, cv::Scalar(0, 0, 255));
+        
         s = t.predict(i, s);
         
-        dest::util::drawShape(img, s, cv::Scalar(0, 255, 0));
+        dest::util::drawShape(img, s, cv::Scalar(255, 0, 0));
 
         cv::imshow("prediction", img);
         int key = cv::waitKey();
