@@ -20,6 +20,7 @@
 #include <dest/dest.h>
 
 #include <dest/face/database_importers.h>
+#include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
 #include <random>
 #include <opencv2/opencv.hpp>
@@ -31,10 +32,29 @@ int main(int argc, char **argv)
 
     dest::face::importIMMFaceDatabase(argv[1], images, shapes);
 
+    //dest::core::Tracker t;
+
+    dest::core::TrainingData td;
+    td.shapes = shapes;
+    td.images = images;
+    td.params.numInitializationsPerImage = 20;
+    td.params.numCascades = 10;
+    td.params.numTrees = 500;
+
     dest::core::Tracker t;
+    t.fit(td);
+    //t.save("dest_tracker_imm.bin");
+
+    /*
     if (!t.load(argv[2])) {
         std::cout << "Failed to load tracker." << std::endl;
-        return false;
+        return 0;
+    }*/
+
+    dest::face::FaceDetector fd;
+    if (!fd.loadClassifiers("classifier_frontalface.xml", "classifier_eyes.xml")) {
+        std::cout << "Failed to load classifiers." << std::endl;
+        return 0;
     }
 
     std::mt19937 rnd;
@@ -46,13 +66,20 @@ int main(int argc, char **argv)
         int imageId = d(rnd);
         int shapeId = d(rnd);
 
-        dest::core::Shape s = shapes[shapeId];
+        //dest::core::Shape s = shapes[shapeId];
         dest::core::Image i = images[imageId];
+        dest::core::Shape rect = fd.detectSingleFace(i);
 
-        dest::core::Shape spred = t.predict(i, s);
+        if (rect.cols() == 0) {
+            std::cout << "No face detected" << std::endl;
+            continue;
+        }
 
+        dest::core::Shape s = t.initialShapeFromRect(rect);
         cv::Mat img = dest::util::drawShape(i, s, cv::Scalar(0, 0, 255));
-        dest::util::drawShape(img, spred, cv::Scalar(0, 255, 0));
+        s = t.predict(i, s);
+        
+        dest::util::drawShape(img, s, cv::Scalar(0, 255, 0));
 
         cv::imshow("prediction", img);
         int key = cv::waitKey();

@@ -39,6 +39,7 @@ add_library(dest
     inc/dest/core/regressor.h
     inc/dest/core/tree.h
     inc/dest/face/database_importers.h
+    inc/dest/face/face_detector.h
     inc/dest/io/dest_io.fbs
     inc/dest/io/dest_io_generated.h
     inc/dest/io/matrix_io.h
@@ -52,6 +53,7 @@ add_library(dest
     src/core/shape.cpp
     src/core/image.cpp
     src/face/database_importers.cpp
+    src/face/face_detector.cpp
     src/util/draw.cpp
 )
 	
