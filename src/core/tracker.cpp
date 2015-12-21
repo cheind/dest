@@ -115,7 +115,8 @@ namespace dest {
             if (ifs.bad())
                 return false;
 
-            if (!io::VerifyTrackerBuffer(flatbuffers::Verifier(reinterpret_cast<const uint8_t*>(buf.data()), buf.size()))) {
+            flatbuffers::Verifier v(reinterpret_cast<const uint8_t*>(buf.data()), buf.size());
+            if (!io::VerifyTrackerBuffer(v)) {
                 return false;
             }
 

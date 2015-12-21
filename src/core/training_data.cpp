@@ -34,17 +34,6 @@ namespace dest {
             learningRate = 0.1f;
         }
 
-        struct ImageShapeId {
-            int shapeId;
-            int imageId;
-
-            bool operator<(const ImageShapeId &other) const {
-                if (shapeId != other.shapeId) {
-
-                }
-            }
-        };
-
         void TrainingData::createTrainingSamplesKazemi(TrainingData &t, int numInitializationsPerImage, float validationPercent)
         {
             const int numShapes = static_cast<int>(t.shapes.size());
@@ -56,8 +45,6 @@ namespace dest {
 
             t.validationSamples.resize(numValidationSamples);
             for (int i = 0; i < numValidationSamples; ++i) {
-                int imageid;
-                int shapeid;
                 std::pair<int, int> isPair;
                 do {
                     isPair.first = dist(t.rnd);
