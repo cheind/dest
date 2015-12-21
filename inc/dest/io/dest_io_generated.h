@@ -13,6 +13,8 @@ struct MatrixF;
 struct MatrixI;
 struct TreeNode;
 struct Tree;
+struct Regressor;
+struct Tracker;
 
 struct MatrixF FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t rows() const { return GetField<int32_t>(4, 0); }
@@ -171,11 +173,112 @@ inline flatbuffers::Offset<Tree> CreateTree(flatbuffers::FlatBufferBuilder &_fbb
   return builder_.Finish();
 }
 
-inline const dest::io::Tree *GetTree(const void *buf) { return flatbuffers::GetRoot<dest::io::Tree>(buf); }
+struct Regressor FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  const MatrixF *pixelCoordinates() const { return GetPointer<const MatrixF *>(4); }
+  const MatrixI *closestLandmarks() const { return GetPointer<const MatrixI *>(6); }
+  const MatrixF *meanShapeResidual() const { return GetPointer<const MatrixF *>(8); }
+  const MatrixF *meanShape() const { return GetPointer<const MatrixF *>(10); }
+  const flatbuffers::Vector<flatbuffers::Offset<Tree>> *forest() const { return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Tree>> *>(12); }
+  float learningRate() const { return GetField<float>(14, 0); }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 4 /* pixelCoordinates */) &&
+           verifier.VerifyTable(pixelCoordinates()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 6 /* closestLandmarks */) &&
+           verifier.VerifyTable(closestLandmarks()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 8 /* meanShapeResidual */) &&
+           verifier.VerifyTable(meanShapeResidual()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 10 /* meanShape */) &&
+           verifier.VerifyTable(meanShape()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 12 /* forest */) &&
+           verifier.Verify(forest()) &&
+           verifier.VerifyVectorOfTables(forest()) &&
+           VerifyField<float>(verifier, 14 /* learningRate */) &&
+           verifier.EndTable();
+  }
+};
 
-inline bool VerifyTreeBuffer(flatbuffers::Verifier &verifier) { return verifier.VerifyBuffer<dest::io::Tree>(); }
+struct RegressorBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_pixelCoordinates(flatbuffers::Offset<MatrixF> pixelCoordinates) { fbb_.AddOffset(4, pixelCoordinates); }
+  void add_closestLandmarks(flatbuffers::Offset<MatrixI> closestLandmarks) { fbb_.AddOffset(6, closestLandmarks); }
+  void add_meanShapeResidual(flatbuffers::Offset<MatrixF> meanShapeResidual) { fbb_.AddOffset(8, meanShapeResidual); }
+  void add_meanShape(flatbuffers::Offset<MatrixF> meanShape) { fbb_.AddOffset(10, meanShape); }
+  void add_forest(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Tree>>> forest) { fbb_.AddOffset(12, forest); }
+  void add_learningRate(float learningRate) { fbb_.AddElement<float>(14, learningRate, 0); }
+  RegressorBuilder(flatbuffers::FlatBufferBuilder &_fbb) : fbb_(_fbb) { start_ = fbb_.StartTable(); }
+  RegressorBuilder &operator=(const RegressorBuilder &);
+  flatbuffers::Offset<Regressor> Finish() {
+    auto o = flatbuffers::Offset<Regressor>(fbb_.EndTable(start_, 6));
+    return o;
+  }
+};
 
-inline void FinishTreeBuffer(flatbuffers::FlatBufferBuilder &fbb, flatbuffers::Offset<dest::io::Tree> root) { fbb.Finish(root); }
+inline flatbuffers::Offset<Regressor> CreateRegressor(flatbuffers::FlatBufferBuilder &_fbb,
+   flatbuffers::Offset<MatrixF> pixelCoordinates = 0,
+   flatbuffers::Offset<MatrixI> closestLandmarks = 0,
+   flatbuffers::Offset<MatrixF> meanShapeResidual = 0,
+   flatbuffers::Offset<MatrixF> meanShape = 0,
+   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Tree>>> forest = 0,
+   float learningRate = 0) {
+  RegressorBuilder builder_(_fbb);
+  builder_.add_learningRate(learningRate);
+  builder_.add_forest(forest);
+  builder_.add_meanShape(meanShape);
+  builder_.add_meanShapeResidual(meanShapeResidual);
+  builder_.add_closestLandmarks(closestLandmarks);
+  builder_.add_pixelCoordinates(pixelCoordinates);
+  return builder_.Finish();
+}
+
+struct Tracker FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  const MatrixF *meanShape() const { return GetPointer<const MatrixF *>(4); }
+  const MatrixF *meanShapeBounds() const { return GetPointer<const MatrixF *>(6); }
+  const flatbuffers::Vector<flatbuffers::Offset<Regressor>> *cascade() const { return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<Regressor>> *>(8); }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 4 /* meanShape */) &&
+           verifier.VerifyTable(meanShape()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 6 /* meanShapeBounds */) &&
+           verifier.VerifyTable(meanShapeBounds()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, 8 /* cascade */) &&
+           verifier.Verify(cascade()) &&
+           verifier.VerifyVectorOfTables(cascade()) &&
+           verifier.EndTable();
+  }
+};
+
+struct TrackerBuilder {
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_meanShape(flatbuffers::Offset<MatrixF> meanShape) { fbb_.AddOffset(4, meanShape); }
+  void add_meanShapeBounds(flatbuffers::Offset<MatrixF> meanShapeBounds) { fbb_.AddOffset(6, meanShapeBounds); }
+  void add_cascade(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Regressor>>> cascade) { fbb_.AddOffset(8, cascade); }
+  TrackerBuilder(flatbuffers::FlatBufferBuilder &_fbb) : fbb_(_fbb) { start_ = fbb_.StartTable(); }
+  TrackerBuilder &operator=(const TrackerBuilder &);
+  flatbuffers::Offset<Tracker> Finish() {
+    auto o = flatbuffers::Offset<Tracker>(fbb_.EndTable(start_, 3));
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<Tracker> CreateTracker(flatbuffers::FlatBufferBuilder &_fbb,
+   flatbuffers::Offset<MatrixF> meanShape = 0,
+   flatbuffers::Offset<MatrixF> meanShapeBounds = 0,
+   flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<Regressor>>> cascade = 0) {
+  TrackerBuilder builder_(_fbb);
+  builder_.add_cascade(cascade);
+  builder_.add_meanShapeBounds(meanShapeBounds);
+  builder_.add_meanShape(meanShape);
+  return builder_.Finish();
+}
+
+inline const dest::io::Tracker *GetTracker(const void *buf) { return flatbuffers::GetRoot<dest::io::Tracker>(buf); }
+
+inline bool VerifyTrackerBuffer(flatbuffers::Verifier &verifier) { return verifier.VerifyBuffer<dest::io::Tracker>(); }
+
+inline void FinishTrackerBuffer(flatbuffers::FlatBufferBuilder &fbb, flatbuffers::Offset<dest::io::Tracker> root) { fbb.Finish(root); }
 
 }  // namespace io
 }  // namespace dest

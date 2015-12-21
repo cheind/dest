@@ -21,15 +21,49 @@
 #include <dest/core/regressor.h>
 #include <dest/util/log.h>
 #include <dest/util/draw.h>
+#include <dest/io/matrix_io.h>
+#include <fstream>
+#include <iomanip>
 #include <opencv2/opencv.hpp>
 
 namespace dest {
     namespace core {
         
         struct Tracker::data {
-            typedef std::vector<Regressor> RegressorVector;
-            
+            typedef std::vector<Regressor> RegressorVector;            
             RegressorVector cascade;
+            Shape meanShape;
+            Eigen::Matrix<float, 2, 2, Eigen::DontAlign> meanShapeBounds; // Note cannot use EIGEN_MAKE_ALIGNED_OPERATOR_NEW?
+
+            flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const {
+                flatbuffers::Offset<io::MatrixF> lmeans = io::toFbs(fbb, meanShape);
+                flatbuffers::Offset<io::MatrixF> lbounds = io::toFbs(fbb, meanShapeBounds);
+
+                std::vector< flatbuffers::Offset<io::Regressor> > lregs;
+                for (size_t i = 0; i < cascade.size(); ++i) {
+                    lregs.push_back(cascade[i].save(fbb));
+                }
+
+                auto vregs = fbb.CreateVector(lregs);
+
+                io::TrackerBuilder b(fbb);
+                b.add_cascade(vregs);
+                b.add_meanShape(lmeans);
+                b.add_meanShapeBounds(lbounds);
+
+                return b.Finish();
+            }
+
+            void load(const io::Tracker &fbs) {
+
+                io::fromFbs(*fbs.meanShape(), meanShape);
+                io::fromFbs(*fbs.meanShapeBounds(), meanShapeBounds);
+
+                cascade.resize(fbs.cascade()->size());
+                for (flatbuffers::uoffset_t i = 0; i < fbs.cascade()->size(); ++i) {
+                    cascade[i].load(*fbs.cascade()->Get(i));
+                }
+            }
         };
         
         Tracker::Tracker()
@@ -44,9 +78,55 @@ namespace dest {
         
         Tracker::~Tracker()
         {}
+
+        flatbuffers::Offset<io::Tracker> Tracker::save(flatbuffers::FlatBufferBuilder &fbb) const
+        {
+            return _data->save(fbb);
+        }
+
+        void Tracker::load(const io::Tracker &fbs)
+        {
+            _data->load(fbs);
+        }
+
+        bool Tracker::save(const std::string &path) const
+        {
+            std::ofstream ofs(path, std::ofstream::binary);
+            if (!ofs.is_open()) return false;
+
+            flatbuffers::FlatBufferBuilder fbb;
+            io::FinishTrackerBuffer(fbb, save(fbb));
+
+            ofs.write(reinterpret_cast<char*>(fbb.GetBufferPointer()), fbb.GetSize());
+            return !ofs.bad();
+        }
+
+        bool Tracker::load(const std::string &path)
+        {
+            std::ifstream ifs(path, std::ifstream::binary);
+            if (!ifs.is_open()) return false;
+
+            std::string buf;
+            ifs.seekg(0, std::ios::end);
+            buf.resize(static_cast<size_t>(ifs.tellg()));
+            ifs.seekg(0, std::ios::beg);
+            ifs.read(&buf[0], buf.size());
+
+            if (ifs.bad())
+                return false;
+
+            if (!io::VerifyTrackerBuffer(flatbuffers::Verifier(reinterpret_cast<const uint8_t*>(buf.data()), buf.size()))) {
+                return false;
+            }
+
+            const io::Tracker *t = io::GetTracker(buf.data());
+            load(*t);
+
+            return true;
+        }
         
         bool Tracker::fit(TrainingData &t) {
-            
+            Tracker::data &data = *_data;
             
             const int numShapes = static_cast<int>(t.shapes.size());
             const int numSamples = numShapes * t.params.numInitializationsPerImage;
@@ -61,6 +141,8 @@ namespace dest {
                 rt.meanShape += t.shapes[i];
             }
             rt.meanShape /= static_cast<float>(numShapes);
+            data.meanShape = rt.meanShape;
+
             
             // Generate training triplets
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
@@ -71,8 +153,7 @@ namespace dest {
                 rt.samples[i].estimate = t.shapes[id];
             }
             
-            // Build cascade
-            Tracker::data &data = *_data;
+            // Build cascade           
             data.cascade.resize(t.params.numCascades);
             
             for (int i = 0; i < t.params.numCascades; ++i) {
@@ -81,13 +162,13 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    if (s < 20) {
+                    /*if (s < 20) {
                         cv::Mat tmp = util::drawShape(t.images[rt.samples[s].idx], rt.samples[s].estimate, cv::Scalar(0,255,0));
                         cv::imshow("x", tmp);
                         cv::waitKey();
                         
                         DEST_LOG( i << " " <<  (t.shapes[rt.samples[s].idx] - rt.samples[s].estimate).norm() << std::endl);
-                    }
+                    }*/
                     
                     rt.samples[s].estimate += data.cascade[i].predict(t.images[rt.samples[s].idx], rt.samples[s].estimate);
                     
@@ -100,8 +181,16 @@ namespace dest {
         
         Shape Tracker::predict(const Image &img, const Shape &shape) const
         {
-            // TODO!
-            return shape;
+            Tracker::data &data = *_data;
+
+            Shape estimate = shape;
+
+            const int numCascades = static_cast<int>(data.cascade.size());
+            for (int i = 0; i < numCascades; ++i) {
+                estimate += data.cascade[i].predict(img, estimate);               
+            }
+
+            return estimate;
         }
 
         

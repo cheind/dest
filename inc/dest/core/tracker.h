@@ -23,7 +23,9 @@
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
 #include <dest/core/training_data.h>
+#include <dest/io/dest_io_generated.h>
 #include <memory>
+#include <string>
 
 namespace dest {
     namespace core {
@@ -38,7 +40,11 @@ namespace dest {
             
             Shape predict(const Image &img, const Shape &shape) const;
 
-            
+            flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const;
+            void load(const io::Tracker &fbs);
+
+            bool save(const std::string &path) const;
+            bool load(const std::string &path);
             
         private:
             struct data;

@@ -54,4 +54,21 @@ table Tree {
     depth:int;
 }
 
-root_type Tree;
+/** Serialized regressor */
+table Regressor {
+    pixelCoordinates:MatrixF;
+    closestLandmarks:MatrixI;
+    meanShapeResidual:MatrixF;
+    meanShape:MatrixF;
+    forest:[Tree];
+    learningRate:float;
+}
+
+/** Serialized tracker. */
+table Tracker {
+    meanShape:MatrixF;
+    meanShapeBounds:MatrixF;
+    cascade:[Regressor];
+}
+
+root_type Tracker;

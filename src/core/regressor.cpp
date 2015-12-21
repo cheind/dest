@@ -20,6 +20,8 @@
 #include <dest/core/regressor.h>
 #include <dest/core/tree.h>
 #include <dest/util/log.h>
+#include <dest/io/dest_io_generated.h>
+#include <dest/io/matrix_io.h>
 
 namespace dest {
     namespace core {
@@ -35,8 +37,47 @@ namespace dest {
             float learningRate;
             
             data()
-            {
+            {}
+
+            flatbuffers::Offset<io::Regressor> save(flatbuffers::FlatBufferBuilder &fbb) const {
+                flatbuffers::Offset<io::MatrixF> lpixels = io::toFbs(fbb, shapeRelativePixelCoordinates);
+                flatbuffers::Offset<io::MatrixI> lcosest = io::toFbs(fbb, closestShapeLandmark);
+                flatbuffers::Offset<io::MatrixF> lmeanr = io::toFbs(fbb, meanResidual);
+                flatbuffers::Offset<io::MatrixF> lmeans = io::toFbs(fbb, meanShape);
+                
+
+                std::vector< flatbuffers::Offset<io::Tree> > ltrees;
+                for (size_t i = 0; i < trees.size(); ++i) {
+                    ltrees.push_back(trees[i].save(fbb));
+                }
+                auto vtrees = fbb.CreateVector(ltrees);
+
+                io::RegressorBuilder b(fbb);
+                b.add_closestLandmarks(lcosest);
+                b.add_pixelCoordinates(lpixels);
+                b.add_meanShapeResidual(lmeanr);
+                b.add_meanShape(lmeans);
+                b.add_forest(vtrees);
+                b.add_learningRate(learningRate);
+
+                return b.Finish();
             }
+
+            void load(const io::Regressor &fbs) {
+
+                io::fromFbs(*fbs.closestLandmarks(), closestShapeLandmark);
+                io::fromFbs(*fbs.pixelCoordinates(), shapeRelativePixelCoordinates);
+                io::fromFbs(*fbs.meanShapeResidual(), meanResidual);
+                io::fromFbs(*fbs.meanShape(), meanShape);
+                learningRate = fbs.learningRate();
+
+                trees.resize(fbs.forest()->size());
+                for (flatbuffers::uoffset_t i = 0; i < fbs.forest()->size(); ++i) {
+                    trees[i].load(*fbs.forest()->Get(i));
+                }
+            }
+
+
         };
         
         Regressor::Regressor()
@@ -50,6 +91,14 @@ namespace dest {
         
         Regressor::~Regressor()
         {}
+
+        flatbuffers::Offset<io::Regressor> Regressor::save(flatbuffers::FlatBufferBuilder &fbb) const {
+            return _data->save(fbb);
+        }
+
+        void Regressor::load(const io::Regressor &fbs) {
+            _data->load(fbs);
+        }
         
         bool Regressor::fit(RegressorTraining &t)
         {

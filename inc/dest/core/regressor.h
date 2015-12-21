@@ -23,6 +23,7 @@
 #include <dest/core/image.h>
 #include <dest/core/shape.h>
 #include <dest/core/training_data.h>
+#include <dest/io/dest_io_generated.h>
 #include <memory>
 
 namespace dest {
@@ -38,6 +39,9 @@ namespace dest {
             bool fit(RegressorTraining &t);
             
             ShapeResidual predict(const Image &img, const Shape &shape) const;
+
+            flatbuffers::Offset<io::Regressor> save(flatbuffers::FlatBufferBuilder &fbb) const;
+            void load(const io::Regressor &fbs);
             
         private:
             
