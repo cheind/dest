@@ -24,8 +24,8 @@
 namespace dest {
     namespace core {
         
-        Eigen::AffineCompact2f estimateSimilarityTransform(const Shape &from, const Shape &to) {
-            
+        Eigen::AffineCompact2f estimateSimilarityTransform(const Eigen::Ref<const Shape> &from, const Eigen::Ref<const Shape> &to)
+        {            
             Eigen::Vector2f meanFrom = from.rowwise().mean();
             Eigen::Vector2f meanTo = to.rowwise().mean();
             
@@ -102,5 +102,49 @@ namespace dest {
             
         }
 
+        inline Rect getUnitRectangle() {
+            Rect r(2, 4);
+
+            // Top-left
+            r(0, 0) = 0.f;
+            r(1, 0) = 0.f;
+
+            // Top-right
+            r(0, 1) = 1.f;
+            r(1, 1) = 0.f;
+
+            // Bottom-left
+            r(0, 2) = 0.f;
+            r(1, 2) = 1.f;
+
+            // Bottom-right
+            r(0, 3) = 1.f;
+            r(1, 3) = 1.f;
+
+            return r;
+        }
+
+        const Rect &unitRectangle() {
+            const static Rect _instance = getUnitRectangle();
+            return _instance;
+        }
+
+        Rect shapeBounds(const Eigen::Ref<const Shape> &s)
+        {
+            const Eigen::Vector2f minC = s.rowwise().minCoeff();
+            const Eigen::Vector2f maxC = s.rowwise().maxCoeff();
+
+            return createRectangle(minC, maxC);
+        }
+
+        Rect createRectangle(const Eigen::Vector2f &minC, const Eigen::Vector2f &maxC)
+        {
+            Rect rect(2, 4);
+            rect.col(0) = minC;
+            rect.col(1) = Eigen::Vector2f(maxC(0), minC(1));
+            rect.col(2) = Eigen::Vector2f(minC(0), maxC(1));
+            rect.col(3) = maxC;
+            return rect;
+        }
     }
 }

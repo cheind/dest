@@ -26,13 +26,19 @@
 namespace dest {
     namespace core {
     
+        typedef Eigen::Matrix<float, 2, 4, Eigen::DontAlign> Rect;
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
         typedef Shape ShapeResidual;
         
-        Eigen::AffineCompact2f estimateSimilarityTransform(const Shape &from, const Shape &to);
+        Eigen::AffineCompact2f estimateSimilarityTransform(const Eigen::Ref<const Shape> &from, const Eigen::Ref<const Shape> &to);
         
         void shapeRelativePixelCoordinates(const Shape &s, const PixelCoordinates &abscoords, PixelCoordinates &relcoords, Eigen::VectorXi &closestLandmarks);
         
+        const Rect &unitRectangle();
+        
+        Rect createRectangle(const Eigen::Vector2f &minCorner, const Eigen::Vector2f &maxCorner);
+
+        Rect shapeBounds(const Eigen::Ref<const Shape> &s);
     }
 }
 

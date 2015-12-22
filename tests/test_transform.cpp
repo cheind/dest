@@ -58,6 +58,23 @@ TEST_CASE("similarity-transform-compound")
     
     Eigen::AffineCompact2f expected = t.inverse();
     
-    REQUIRE(s.isApprox(expected));
-    
+    REQUIRE(s.isApprox(expected));    
+}
+
+
+TEST_CASE("similarity-transform-between-rects")
+{
+
+    dest::core::Rect r = dest::core::createRectangle(Eigen::Vector2f(-2.f, -2.f), Eigen::Vector2f(2.f, 2.f));
+
+    Eigen::AffineCompact2f t;
+    t = Eigen::Rotation2Df(0.17f);
+
+    r = t.matrix() * r.colwise().homogeneous();
+
+    dest::core::Rect n = dest::core::unitRectangle();
+    Eigen::AffineCompact2f s = dest::core::estimateSimilarityTransform(r, n);
+
+    r = s.matrix() * r.colwise().homogeneous();
+    REQUIRE(r.isApprox(n));
 }

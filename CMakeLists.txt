@@ -46,12 +46,12 @@ add_library(dest
     inc/dest/util/draw.h
     inc/dest/util/log.h
     inc/dest/util/convert.h
+    src/core/shape.cpp
+    src/core/image.cpp
     src/core/training_data.cpp
     src/core/tracker.cpp
     src/core/regressor.cpp
-    src/core/tree.cpp
-    src/core/shape.cpp
-    src/core/image.cpp
+    src/core/tree.cpp    
     src/face/database_importers.cpp
     src/face/face_detector.cpp
     src/util/draw.cpp

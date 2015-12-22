@@ -49,3 +49,15 @@ TEST_CASE("shape-relative-coords")
     REQUIRE(closest.isApprox(expectedClosest));
     
 }
+
+TEST_CASE("shape-bounds")
+{
+    dest::core::Shape s(2, 4);
+    s << 0.f, 2.f, 2.f, 0.f,
+         0.f, 0.f, 2.f, 2.f;
+
+    dest::core::Rect r = dest::core::shapeBounds(s);
+    dest::core::Rect expected = dest::core::createRectangle(Eigen::Vector2f(0.f, 0.f), Eigen::Vector2f(2.f, 2.f));
+
+    REQUIRE(r.isApprox(expected));
+}
