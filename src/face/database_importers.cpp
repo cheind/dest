@@ -21,6 +21,7 @@
 #include <dest/util/log.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
+#include <dest/util/glob.h>
 #include <opencv2/opencv.hpp>
 #include <iomanip>
 #include <fstream>
@@ -74,52 +75,32 @@ namespace dest {
             images.clear();
             shapes.clear();
             
-            bool ok = true;
-            int i = 1;
-            do {
-                bool subIdOK = true;
-                int j = 1;
-                do {
-                    std::stringstream prefix;
-                    prefix  << directory << "/"
-                            << std::setfill('0') << std::setw(2) << i
-                            << "-"
-                            << j << "m";
-                    
-                    const std::string fileNameImg = prefix.str() + ".jpg";
-                    const std::string fileNamePts = prefix.str() + ".asf";
-                    
-                    core::Shape s;
-                    bool asfOk = parseAsfFile(fileNamePts, s);
-                    cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
-                    
-                    if(asfOk && !cvImg.empty()) {
-                        
-                        // Scale to image dimensions
-                        s.row(0) *= static_cast<float>(cvImg.cols);
-                        s.row(1) *= static_cast<float>(cvImg.rows);
-                                                
-                        core::Image img;
-                        util::toDest(cvImg, img);
-
-                        images.push_back(img);
-                        shapes.push_back(s);
-
-                        ++j;
-                        DEST_LOG("Loaded " << fileNameImg << std::endl);
-                    } else {
-                        subIdOK = false;
-                    }
-                    
-                } while (subIdOK);
-                
-                if (j == 1) {
-                    ok = false;
-                }
-                
-                i++;
-            } while (ok);
+            std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
+            DEST_LOG("Loading IMM database. Found " << paths.size() << " canditate entries." << std::endl);
             
+            for (size_t i = 0; i < paths.size(); ++i) {
+                const std::string fileNameImg = paths[i] + ".jpg";
+                const std::string fileNamePts = paths[i] + ".asf";
+                
+                core::Shape s;
+                bool asfOk = parseAsfFile(fileNamePts, s);
+                cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
+                
+                if(asfOk && !cvImg.empty()) {
+                    
+                    // Scale to image dimensions
+                    s.row(0) *= static_cast<float>(cvImg.cols);
+                    s.row(1) *= static_cast<float>(cvImg.rows);
+                    
+                    core::Image img;
+                    util::toDest(cvImg, img);
+                    
+                    images.push_back(img);
+                    shapes.push_back(s);
+                }
+            }
+            
+            DEST_LOG("Successfully loaded " << images.size() << " entries from database." << std::endl);
             return shapes.size() > 0;
         }
         
