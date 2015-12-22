@@ -47,6 +47,19 @@ int main(int argc, char **argv)
         if (!fd.detectSingleFace(td.images[i], td.rects[i])) {
             td.rects[i] = dest::core::shapeBounds(td.shapes[i]);
         }
+        
+        /*
+        cv::Rect r;
+        r.x = td.rects[i](0, 0);
+        r.y = td.rects[i](1, 0);
+        r.width = td.rects[i](0, 3) - td.rects[i](0, 0);
+        r.height = td.rects[i](1, 3) - td.rects[i](1, 0);
+        cv::Mat img = dest::util::drawShape(td.images[i], td.shapes[i], cv::Scalar(0, 255, 0));
+        cv::rectangle(img, r, cv::Scalar(255, 0, 0));
+        
+        cv::imshow("img", img);
+        cv::waitKey();
+         */
     }
 
     dest::core::TrainingData::convertShapesToNormalizedShapeSpace(td.rects, td.shapes);
