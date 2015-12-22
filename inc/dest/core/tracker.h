@@ -38,9 +38,7 @@ namespace dest {
             
             bool fit(TrainingData &t);
             
-            Shape predict(const Image &img, const Shape &shape) const;
-
-            Shape initialShapeFromRect(const Shape &rect) const;
+            Shape predict(const Image &img, const Rect &rect, std::vector<Shape> *stepResults = 0) const;
 
             flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const;
             void load(const io::Tracker &fbs);
@@ -49,8 +47,6 @@ namespace dest {
             bool load(const std::string &path);
             
         private:
-
-            Shape boundingBoxCornersOfShape(const Shape &s) const;
 
             struct data;
             std::unique_ptr<data> _data;

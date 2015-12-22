@@ -127,6 +127,10 @@ namespace dest {
         }
         
         bool Tracker::fit(TrainingData &t) {
+            eigen_assert(!t.shapes.empty());
+            eigen_assert(t.shapes.size() == t.images.size() == t.rects.size());
+            eigen_assert(!t.trainSamples.empty());
+
             Tracker::data &data = *_data;
             
             const int numSamples = static_cast<int>(t.trainSamples.size());
@@ -152,70 +156,39 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    t.trainSamples[s].estimate += data.cascade[i].predict(t.images[t.trainSamples[s].idx], t.trainSamples[s].estimate);  
+                    t.trainSamples[s].estimate += data.cascade[i].predict(t.images[t.trainSamples[s].idx], t.trainSamples[s].estimate, t.rects[t.trainSamples[s].idx]);
                 }
             }
 
             // Update internal data
             data.meanShape = rt.meanShape;
-            data.meanShapeRectCorners = boundingBoxCornersOfShape(data.meanShape);
+            data.meanShapeRectCorners = shapeBounds(data.meanShape);
 
-            // Perform validation
-            ShapeResidual meanShapeResidualTraining = ShapeResidual(2, rt.numLandmarks);
-            for (int s = 0; s < numSamples; ++s) {
-                meanShapeResidualTraining += t.shapes[t.trainSamples[s].idx] - t.trainSamples[s].estimate;
-            }
-            meanShapeResidualTraining /= static_cast<float>(numSamples);
-            DEST_LOG("Mean norm of shape residual over training data: " << meanShapeResidualTraining.norm() << std::endl);
-
-            ShapeResidual meanShapeResidualValidation = ShapeResidual(2, rt.numLandmarks);
-            const int numValidationSamples = static_cast<int>(t.validationSamples.size());
-            for (int s = 0; s < numValidationSamples; ++s) {
-                meanShapeResidualValidation += t.shapes[t.validationSamples[s].idx] - predict(t.images[t.validationSamples[s].idx], t.validationSamples[s].estimate);
-            }
-            meanShapeResidualValidation /= static_cast<float>(numValidationSamples);
-            DEST_LOG("Mean norm of shape residual over validation data: " << meanShapeResidualValidation.norm() << std::endl);
-            
             return true;
 
         }
         
-        Shape Tracker::predict(const Image &img, const Shape &shape) const
+        Shape Tracker::predict(const Image &img, const Rect &rect, std::vector<Shape> *stepResults) const
         {
             Tracker::data &data = *_data;
-            
-            Shape estimate = shape;
 
+            Shape estimate = data.meanShape;
             const int numCascades = static_cast<int>(data.cascade.size());
             for (int i = 0; i < numCascades; ++i) {
-                estimate += data.cascade[i].predict(img, estimate);               
+                if (stepResults) {
+                    stepResults->push_back(estimateSimilarityTransform(unitRectangle(), rect) * estimate.colwise().homogeneous());
+                }
+                estimate += data.cascade[i].predict(img, estimate, rect);               
             }
 
-            return estimate;
-        }
+            Eigen::AffineCompact2f t = estimateSimilarityTransform(unitRectangle(), rect);
+            Shape final = t * estimate.colwise().homogeneous();
 
-        Shape Tracker::initialShapeFromRect(const Shape &rect) const
-        {
-            Tracker::data &data = *_data;
-            Eigen::AffineCompact2f t = estimateSimilarityTransform(data.meanShapeRectCorners, rect);
-            return t * data.meanShape.colwise().homogeneous();
-        }
+            if (stepResults) {
+                stepResults->push_back(final);
+            }
 
-
-        Shape Tracker::boundingBoxCornersOfShape(const Shape &s) const
-        {
-            const Eigen::Vector2f minC = s.rowwise().minCoeff();
-            const Eigen::Vector2f maxC = s.rowwise().maxCoeff();
-
-            Shape rect(2, 4);
-            rect.col(0) = minC;
-            rect.col(1) = Eigen::Vector2f(maxC(0), minC(1));
-            rect.col(2) = Eigen::Vector2f(minC(0), maxC(1));
-            rect.col(3) = maxC;
-
-            return rect;
-        }
-
-        
+            return final;
+        }        
     }
 }

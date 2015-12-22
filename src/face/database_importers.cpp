@@ -104,6 +104,7 @@ namespace dest {
 
                         images.push_back(img);
                         shapes.push_back(s);
+
                         ++j;
                         DEST_LOG("Loaded " << fileNameImg << std::endl);
                     } else {

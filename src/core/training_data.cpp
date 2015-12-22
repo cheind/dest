@@ -18,7 +18,6 @@
  */
 
 #include <dest/core/training_data.h>
-#include <set>
 
 namespace dest {
     namespace core {
@@ -34,38 +33,86 @@ namespace dest {
             learningRate = 0.1f;
         }
 
-        void TrainingData::createTrainingSamplesKazemi(TrainingData &t, int numInitializationsPerImage, float validationPercent)
+        void TrainingData::createTrainingSamplesKazemi(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage)
         {
-            const int numShapes = static_cast<int>(t.shapes.size());
+            const int numShapes = static_cast<int>(shapes.size());
             const int numSamples = numShapes * numInitializationsPerImage;
-            const int numValidationSamples = static_cast<int>(numShapes * validationPercent);
 
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
-            std::set< std::pair<int, int> > validationSet;
+            samples.resize(numSamples);
+            for (int i = 0; i < numSamples; ++i) {
+                samples[i].idx = i % numShapes;
+                samples[i].estimate = shapes[dist(rnd)];
+            }
+        }
 
-            t.validationSamples.resize(numValidationSamples);
-            for (int i = 0; i < numValidationSamples; ++i) {
-                std::pair<int, int> isPair;
-                do {
-                    isPair.first = dist(t.rnd);
-                    isPair.second = dist(t.rnd);
-                } while (validationSet.find(isPair) != validationSet.end());
-                validationSet.insert(isPair);
+        void TrainingData::createTrainingSamplesThroughLinearCombinations(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage)
+        {
+            const int numShapes = static_cast<int>(shapes.size());
+            const int numSamples = numShapes * numInitializationsPerImage;
 
-                t.validationSamples[i].idx = isPair.first;
-                t.validationSamples[i].estimate = t.shapes[isPair.second];
+            std::uniform_int_distribution<int> dist(0, numShapes - 1);
+            std::uniform_real_distribution<float> zeroOne(0, 1);
+
+            samples.resize(numSamples);
+            for (int i = 0; i < numSamples; ++i) {
+                float a = zeroOne(rnd);
+                float b = zeroOne(rnd);
+                float c = zeroOne(rnd);
+                float sum = a + b + c;
+
+                a /= sum;
+                b /= sum;
+                c /= sum;
+
+                samples[i].idx = i % numShapes;
+                samples[i].estimate = shapes[dist(rnd)] * a + shapes[dist(rnd)] * b + shapes[dist(rnd)] * c;
+            }
+        }
+
+
+        void TrainingData::convertShapesToNormalizedShapeSpace(const RectVector &rects, ShapeVector &shapes)
+        {
+            const int numShapes = static_cast<int>(shapes.size());
+            for (int i = 0; i < numShapes; ++i) {
+                Eigen::AffineCompact2f t = estimateSimilarityTransform(rects[i], unitRectangle());
+                shapes[i] = (t * shapes[i].colwise().homogeneous()).eval();
+            }
+        }
+
+        void TrainingData::createTrainingRectsFromShapeBounds(const ShapeVector &shapes, RectVector &rects)
+        {
+            const int numShapes = static_cast<int>(shapes.size());
+            rects.resize(numShapes);
+
+            for (int i = 0; i < numShapes; ++i)
+            {
+                rects[i] = shapeBounds(shapes[i]);
+            }
+        }
+
+        struct Generator {
+            Generator() : m_value(0) { }
+            int operator()() { return m_value++; }
+            int m_value;
+        };
+
+        void TrainingData::randomPartitionTrainingSamples(SampleVector &train, SampleVector &validate, std::mt19937 &rnd, float validatePercent)
+        {
+            int numValidate = static_cast<int>((float)train.size() * validatePercent);
+
+            std::vector<int> ids(train.size());
+            std::generate(ids.begin(), ids.end(), Generator());
+            std::shuffle(ids.begin(), ids.end(), rnd);
+            
+            validate.clear();
+            for (size_t i = 0; i < numValidate; ++i) {
+                validate.push_back(train[ids[i]]);                
             }
 
-            t.trainSamples.resize(numSamples);
-            for (int i = 0; i < numSamples; ++i) {
-                std::pair<int, int> isPair;
-                do {
-                    isPair.first = i % numShapes;
-                    isPair.second = dist(t.rnd);
-                } while (validationSet.find(isPair) != validationSet.end());
-
-                t.trainSamples[i].idx = isPair.first;
-                t.trainSamples[i].estimate = t.shapes[isPair.second];
+            for (size_t i = 0; i < numValidate; ++i) {
+                train[ids[i]] = train.back();
+                train.pop_back();
             }
         }
        

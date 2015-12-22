@@ -127,8 +127,10 @@ namespace dest {
                 tt.samples[i].residual = t.trainingData->shapes[tdata.trainSamples[i].idx] - tdata.trainSamples[i].estimate;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::AffineCompact2f trans = estimateSimilarityTransform(t.meanShape, tdata.trainSamples[i].estimate);
-                readPixelIntensities(trans, tdata.trainSamples[i].estimate, t.trainingData->images[tdata.trainSamples[i].idx], tt.samples[i].intensities);
+                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.trainSamples[i].estimate);
+                Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), t.trainingData->rects[tdata.trainSamples[i].idx]);
+
+                readPixelIntensities(tShapeToShape, tShapeToImage, tdata.trainSamples[i].estimate, t.trainingData->images[tdata.trainSamples[i].idx], tt.samples[i].intensities);
                 
             }
             data.meanResidual /= static_cast<float>(tdata.trainSamples.size());
@@ -171,27 +173,29 @@ namespace dest {
         }
         
         
-        void Regressor::readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &img, PixelIntensities &intensities) const
+        void Regressor::readPixelIntensities(const Eigen::AffineCompact2f &shapeToShape, const Eigen::AffineCompact2f &shapeToImage, const Shape &s, const Image &img, PixelIntensities &intensities) const
         {
             Regressor::data &data = *_data;
             
-            PixelCoordinates coords = t.matrix().block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
+            PixelCoordinates coords = shapeToShape.matrix().block<2,2>(0,0) * data.shapeRelativePixelCoordinates;
             
             const Shape::Index numCoords = data.shapeRelativePixelCoordinates.cols();
             for(Shape::Index i = 0; i < numCoords; ++i) {
                 coords.col(i) += s.col(data.closestShapeLandmark(i));
             }
             
+            coords = shapeToImage.matrix() * coords.colwise().homogeneous();
             readImage(img, coords, intensities);
         }
         
-        ShapeResidual Regressor::predict(const Image &img, const Shape &shape) const
+        ShapeResidual Regressor::predict(const Image &img, const Shape &shape, const Rect &rect) const
         {
             Regressor::data &data = *_data;
             
             PixelIntensities intensities;
-            Eigen::AffineCompact2f trans = estimateSimilarityTransform(data.meanShape, shape);
-            readPixelIntensities(trans, shape, img, intensities);
+            Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(data.meanShape, shape);
+            Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), rect);
+            readPixelIntensities(tShapeToShape, tShapeToImage, shape, img, intensities);
             
             const size_t numTrees = data.trees.size();
             

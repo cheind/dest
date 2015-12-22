@@ -22,59 +22,48 @@
 #include <dest/face/database_importers.h>
 #include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
+#include <dest/util/convert.h>
 #include <random>
 #include <opencv2/opencv.hpp>
 
 int main(int argc, char **argv)
 {
-    std::vector<dest::core::Image> images;
-    std::vector<dest::core::Shape> shapes;
 
-    dest::face::importIMMFaceDatabase(argv[1], images, shapes);
+    cv::Mat imgCV = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
+    dest::core::Image img;
+    dest::util::toDest(imgCV, img);
 
+    dest::face::FaceDetector fd;
+    if (!fd.loadClassifiers("classifier_frontalface.xml")) {
+        std::cout << "Failed to load classifiers." << std::endl;
+        return 0;
+    }
+    
+    dest::core::Rect r;
+    if (!fd.detectSingleFace(img, r)) {
+        std::cout << "Failed to detect face" << std::endl;
+        return 0;
+    }
+
+    
     dest::core::Tracker t;
-    if (!t.load(argv[2])) {
+    if (!t.load(argv[1])) {
         std::cout << "Failed to load tracker." << std::endl;
         return 0;
     }
 
-    dest::face::FaceDetector fd;
-    if (!fd.loadClassifiers("classifier_frontalface.xml", "classifier_eyes.xml")) {
-        std::cout << "Failed to load classifiers." << std::endl;
-        return 0;
-    }
-
-    std::mt19937 rnd;
-    std::uniform_int_distribution<int> d(0, (int)images.size() - 1);
-    std::normal_distribution<float> dg(0, 2.f);
+    std::vector<dest::core::Shape> steps;
+    dest::core::Shape s = t.predict(img, r, &steps);
 
     bool done = false;
+    int id = 0;
     while (!done) {
-        int imageId = d(rnd);
-        int shapeId = d(rnd);
-
-        //dest::core::Shape s = shapes[shapeId];
-        dest::core::Image i = images[imageId];
-        dest::core::Shape rect = fd.detectSingleFace(i);
-
-        if (rect.cols() == 0) {
-            std::cout << "No face detected" << std::endl;
-            continue;
-        }
-
-        //Eigen::AffineCompact2f trans;
-        //trans = Eigen::Translation2f(dg(rnd), dg(rnd));
-        //s = (trans * s.colwise().homogeneous()).eval();
-
         
-        dest::core::Shape s = t.initialShapeFromRect(rect);
-        cv::Mat img = dest::util::drawShape(i, s, cv::Scalar(0, 0, 255));
-        
-        s = t.predict(i, s);
-        
-        dest::util::drawShape(img, s, cv::Scalar(255, 0, 0));
+        cv::Mat r = dest::util::drawShape(img, steps[id], cv::Scalar(0, 255, 0));
+        cv::imshow("prediction", r);
 
-        cv::imshow("prediction", img);
+        id = (id + 1) % steps.size();
+
         int key = cv::waitKey();
         if (key == 'x')
             done = true;

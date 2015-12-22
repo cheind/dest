@@ -53,7 +53,7 @@ namespace dest {
             return true;
         }
 
-        cv::Rect FaceDetector::detectSingleFace(const cv::Mat &img) const
+        bool FaceDetector::detectSingleFace(const cv::Mat &img, cv::Rect &face) const
         {
             FaceDetector::data &data = *_data;
 
@@ -71,7 +71,7 @@ namespace dest {
             data.classifierFace.detectMultiScale(data.gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
 
             if (faces.empty()) {
-                return cv::Rect();
+                return false;
             }
             else {
                 std::sort(faces.begin(), faces.end(), [](const cv::Rect &a, const cv::Rect &b) { return a.area() > b.area(); });
@@ -80,59 +80,27 @@ namespace dest {
                     std::vector<cv::Rect> eyes;
                     data.classifierEyes.detectMultiScale(roi, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
                     if (eyes.size() == 0)
-                        return cv::Rect();
-                }
+                        return false;
+                }              
 
-                float s = 0.8f;
-                faces.front().y += 40;
-                faces.front().x += (faces.front().width * (1.f - s)) / 2.f;
-                faces.front().y += (faces.front().height * (1.f - s)) / 2.f;;
-                faces.front().width *= s;
-                faces.front().height *= s;
-                
-
-                cv::Mat tmp;
-                img.copyTo(tmp);
-                cv::rectangle(tmp, faces.front(), cv::Scalar(255), 1);
-                cv::imshow("rect", tmp);
-                cv::waitKey(10);
-
-                
-
-                return faces.front();
+                face = faces.front();
+                return true;
             }
         }
 
-        core::Shape FaceDetector::detectSingleFace(const core::Image &img) const
+        bool FaceDetector::detectSingleFace(const core::Image &img, core::Rect &face) const
         {
             cv::Mat hdr, u8;
 
             util::toCVHeaderOnly(img, hdr);
             hdr.convertTo(u8, CV_8U);
 
-            cv::Rect r = detectSingleFace(u8);
+            cv::Rect r;
+            if (!detectSingleFace(u8, r))
+                return false;
 
-            if (r.area() == 0) {
-                return core::Shape(2, 0);
-            } else {
-                // Note, order important here as tracker will use bounds for initial transform
-                // Compare to Tracker::boundingBoxCornersOfShape
-                core::Shape s(2, 4);
-
-                s(0, 0) = static_cast<float>(r.tl().x);
-                s(1, 0) = static_cast<float>(r.tl().y);
-
-                s(0, 1) = static_cast<float>(r.br().x);
-                s(1, 1) = static_cast<float>(r.tl().y);
-
-                s(0, 2) = static_cast<float>(r.tl().x);
-                s(1, 2) = static_cast<float>(r.br().y);
-
-                s(0, 3) = static_cast<float>(r.br().x);
-                s(1, 3) = static_cast<float>(r.br().y);
-
-                return s;
-            }
+            face = core::createRectangle(Eigen::Vector2f(r.tl().x, r.tl().y), Eigen::Vector2f(r.br().x, r.br().y));
+            return true;
         }
     }
 }

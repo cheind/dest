@@ -47,17 +47,23 @@ namespace dest {
                 Shape estimate;
             };
             typedef std::vector<Sample> SampleVector;
+            typedef std::vector<Rect> RectVector;
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
-            
-            SampleVector trainSamples;
-            SampleVector validationSamples;
+                        
+            RectVector rects;
             ShapeVector shapes;
             ImageVector images;
+
+            SampleVector trainSamples;
             AlgorithmParameters params;
             std::mt19937 rnd;
 
-            static void createTrainingSamplesKazemi(TrainingData &t, int numInitializationsPerImage = 20, float validationPercent = 0.1f);
+            static void createTrainingSamplesKazemi(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
+            static void createTrainingSamplesThroughLinearCombinations(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
+            static void convertShapesToNormalizedShapeSpace(const RectVector &rects, ShapeVector &shapes);
+            static void createTrainingRectsFromShapeBounds(const ShapeVector &shapes, RectVector &rects);
+            static void randomPartitionTrainingSamples(SampleVector &train, SampleVector &validate, std::mt19937 &rnd, float validatePercent = 0.1f);
         };
         
         struct RegressorTraining {
@@ -71,7 +77,7 @@ namespace dest {
                 ShapeResidual residual;
                 PixelIntensities intensities;
                 
-                friend void swap(Sample& a, Sample& b)
+                friend inline void swap(Sample& a, Sample& b)
                 {
                     using std::swap;
                     swap(a.residual, b.residual);

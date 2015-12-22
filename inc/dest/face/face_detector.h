@@ -34,10 +34,10 @@ namespace dest {
             FaceDetector();
             ~FaceDetector();
 
-            bool loadClassifiers(const std::string &frontalFaceClassifier, const std::string &eyeClassifier);
+            bool loadClassifiers(const std::string &frontalFaceClassifier, const std::string &eyeClassifier = "");
 
-            core::Shape detectSingleFace(const core::Image &img) const;
-            cv::Rect detectSingleFace(const cv::Mat &img) const;
+            bool detectSingleFace(const core::Image &img, core::Rect &face) const;
+            bool detectSingleFace(const cv::Mat &img, cv::Rect &face) const;
 
         private:
             struct data;

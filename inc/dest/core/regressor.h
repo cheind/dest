@@ -38,7 +38,7 @@ namespace dest {
             
             bool fit(RegressorTraining &t);
             
-            ShapeResidual predict(const Image &img, const Shape &shape) const;
+            ShapeResidual predict(const Image &img, const Shape &shape, const Rect &rect) const;
 
             flatbuffers::Offset<io::Regressor> save(flatbuffers::FlatBufferBuilder &fbb) const;
             void load(const io::Regressor &fbs);
@@ -46,7 +46,7 @@ namespace dest {
         private:
             
             PixelCoordinates sampleCoordinates(RegressorTraining &t) const;
-            void readPixelIntensities(const Eigen::AffineCompact2f &t, const Shape &s, const Image &i, PixelIntensities &intensities) const;
+            void readPixelIntensities(const Eigen::AffineCompact2f &shapeToShape, const Eigen::AffineCompact2f &shapeToImage, const Shape &s, const Image &i, PixelIntensities &intensities) const;
             
             struct data;
             std::unique_ptr<data> _data;

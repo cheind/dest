@@ -64,7 +64,6 @@ TEST_CASE("similarity-transform-compound")
 
 TEST_CASE("similarity-transform-between-rects")
 {
-
     dest::core::Rect r = dest::core::createRectangle(Eigen::Vector2f(-2.f, -2.f), Eigen::Vector2f(2.f, 2.f));
 
     Eigen::AffineCompact2f t;
