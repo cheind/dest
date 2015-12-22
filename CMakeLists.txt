@@ -23,7 +23,7 @@ if(DEST_WITH_OPENCV)
 	list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc")
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc" "ext")
 
 # Library
 set(DEST_VERBOSE ON CACHE BOOL "Build DEST in verbose mode.")
@@ -46,6 +46,7 @@ add_library(dest
     inc/dest/util/draw.h
     inc/dest/util/log.h
     inc/dest/util/convert.h
+    inc/dest/util/glob.h
     src/core/shape.cpp
     src/core/image.cpp
     src/core/training_data.cpp
@@ -55,6 +56,7 @@ add_library(dest
     src/face/database_importers.cpp
     src/face/face_detector.cpp
     src/util/draw.cpp
+    src/util/glob.cpp
 )
 	
 target_link_libraries(dest ${DEST_LINK_TARGETS})
