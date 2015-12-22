@@ -42,21 +42,13 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    std::vector<size_t> removeIds;
     td.rects.resize(td.shapes.size());
     for (size_t i = 0; i < td.rects.size(); ++i) {
         if (!fd.detectSingleFace(td.images[i], td.rects[i])) {
-            removeIds.push_back(i);
+            td.rects[i] = dest::core::shapeBounds(td.shapes[i]);
         }
     }
 
-    for (size_t i = 0; i < removeIds.size(); ++i) {
-        td.rects[removeIds[i]] = td.rects.back(); td.rects.pop_back();
-        td.shapes[removeIds[i]] = td.shapes.back(); td.shapes.pop_back();
-        td.images[removeIds[i]] = td.images.back(); td.images.pop_back();
-    }
-
-    
     dest::core::TrainingData::convertShapesToNormalizedShapeSpace(td.rects, td.shapes);
     dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(td.shapes, td.trainSamples, td.rnd, 20);
 
