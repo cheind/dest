@@ -128,7 +128,8 @@ namespace dest {
         
         bool Tracker::fit(TrainingData &t) {
             eigen_assert(!t.shapes.empty());
-            eigen_assert(t.shapes.size() == t.images.size() == t.rects.size());
+            eigen_assert(t.shapes.size() == t.images.size());
+            eigen_assert(t.shapes.size() == t.rects.size());
             eigen_assert(!t.trainSamples.empty());
 
             Tracker::data &data = *_data;
