@@ -272,7 +272,7 @@ namespace dest {
             std::uniform_real_distribution<float> drThreshold(-255.f, 255.f);
             
             const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
-            const float lambda = t.trainingData->params.exponentialLambda;
+            const float invlambda = 1.f / t.trainingData->params.exponentialLambda;
             
             for (int i = 0; i < numTests; ++i) {
             
@@ -283,7 +283,7 @@ namespace dest {
                     split.idx1 = di(t.trainingData->rnd);
                     split.idx2 = di(t.trainingData->rnd);
                     float d = (t.pixelCoordinates.col(split.idx1) - t.pixelCoordinates.col(split.idx2)).norm();
-                    e = std::exp(-lambda * d);
+                    e = std::exp(-d * invlambda); // Note, shapes live in normalized space,  therefore rather divide by lambda.
                     ++iter;
                 
                 } while (iter <= maxAttempts && split.idx1 == split.idx2 && (drZeroOne(t.trainingData->rnd) < e));
