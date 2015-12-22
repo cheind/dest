@@ -61,8 +61,18 @@ namespace dest {
             NodeInfo() {}
             
             NodeInfo(int n, int d, const SampleRange &r)
-            :node(n), depth(d), range(r)
-            {}
+            :node(n), depth(d)
+            {
+                range.first = r.first;
+                range.second = r.second;
+            }
+
+            NodeInfo(const NodeInfo &other)
+                :node(other.node), depth(other.depth)
+            {
+                range.first = other.range.first;
+                range.second = other.range.second;
+            }
         };
         
         inline int numElementsInRange(const SampleRange &r) {
@@ -164,7 +174,7 @@ namespace dest {
             queue.push(NodeInfo(0, 1, std::make_pair(t.samples.begin(), t.samples.end())));
             
             while (!queue.empty()) {
-                NodeInfo nr = queue.front(); queue.pop();
+                const NodeInfo nr = queue.front(); queue.pop();
                 
                 if (nr.depth < depth) {
                     // Generate a split
@@ -244,7 +254,7 @@ namespace dest {
             return true;
         }
         
-        void Tree::makeLeaf(TreeTraining &t, NodeInfo &ni) {
+        void Tree::makeLeaf(TreeTraining &t, const NodeInfo &ni) {
             
             Tree::TreeNode &leaf = _data->nodes[ni.node];
             leaf.split.idx1 = -1;
