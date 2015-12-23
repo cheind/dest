@@ -165,7 +165,7 @@ namespace dest {
             std::vector<Tree::TreeNode> &nodes = _data->nodes;
             int &depth = _data->depth;
             
-            depth = std::max<int>(t.trainingData->params.maxTreeDepth, 1);
+            depth = std::max<int>(t.training->params.maxTreeDepth, 1);
             const int numNodes = (int)std::pow(2.0, depth) - 1;
             nodes.resize(numNodes);
 
@@ -271,8 +271,8 @@ namespace dest {
             std::uniform_real_distribution<float> drZeroOne(0.f, 1.f);
             std::uniform_real_distribution<float> drThreshold(-64.f, 64.f);
             
-            const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
-            const float invlambda = 1.f / t.trainingData->params.exponentialLambda;
+            const int numTests = t.training->params.numRandomSplitTestsPerNode;
+            const float invlambda = 1.f / t.training->params.exponentialLambda;
             
             for (int i = 0; i < numTests; ++i) {
             
@@ -282,18 +282,18 @@ namespace dest {
                 float d;
                 float r;
                 do {
-                    split.idx1 = di(t.trainingData->rnd);
-                    split.idx2 = di(t.trainingData->rnd);
+                    split.idx1 = di(t.input->rnd);
+                    split.idx2 = di(t.input->rnd);
                     d = (t.pixelCoordinates.col(split.idx1) - t.pixelCoordinates.col(split.idx2)).norm();
                     // http://www.wolframalpha.com/input/?i=plot+e%5E%28-x%2F0.05%29+from+0.05+to+0.1
                     e = std::exp(-d * invlambda);
-                    r = drZeroOne(t.trainingData->rnd);
+                    r = drZeroOne(t.input->rnd);
                     ++iter;
                 
                 } while ((iter <= maxAttempts) && (split.idx1 == split.idx2 || (r >= e)));
                 
                 if (iter <= maxAttempts) {
-                    split.threshold = drThreshold(t.trainingData->rnd);
+                    split.threshold = drThreshold(t.input->rnd);
                     splits.push_back(split);
                 }
             }

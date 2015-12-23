@@ -107,16 +107,17 @@ namespace dest {
         bool Regressor::fit(RegressorTraining &t)
         {
             Regressor::data &data = *_data;
-            TrainingData &tdata = *t.trainingData;
+            TrainingData &tdata = *t.training;
 
-            data.learningRate = t.trainingData->params.learningRate;
-            data.trees.resize(t.trainingData->params.numTrees);
+            data.learningRate = t.training->params.learningRate;
+            data.trees.resize(t.training->params.numTrees);
             data.meanShape = t.meanShape;
             
             TreeTraining tt;
             tt.numLandmarks = t.numLandmarks;
-            tt.trainingData = t.trainingData;
-            tt.samples.resize(t.trainingData->trainSamples.size());
+            tt.training = t.training;
+            tt.input = t.input;
+            tt.samples.resize(t.training->samples.size());
             
             // Draw random samples
             tt.pixelCoordinates = sampleCoordinates(t);
@@ -126,22 +127,26 @@ namespace dest {
             
             // Compute the mean residual, to be used as base learner
             data.meanResidual = ShapeResidual::Zero(2, t.numLandmarks);
-            for (size_t i = 0; i < tdata.trainSamples.size(); ++i) {
+            for (size_t i = 0; i < tdata.samples.size(); ++i) {
 
-                tt.samples[i].residual = t.trainingData->shapes[tdata.trainSamples[i].idx] - tdata.trainSamples[i].estimate;
+                tt.samples[i].residual = tdata.samples[i].targetInNormalizedSpace - tdata.samples[i].estimateInNormalizedSpace;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.trainSamples[i].estimate);
-                Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), t.trainingData->rects[tdata.trainSamples[i].idx]);
+                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimateInNormalizedSpace);
+                Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), tdata.samples[i].targetRectInImageSpace);
 
-                readPixelIntensities(tShapeToShape, tShapeToImage, tdata.trainSamples[i].estimate, t.trainingData->images[tdata.trainSamples[i].idx], tt.samples[i].intensities);
+                readPixelIntensities(tShapeToShape,
+                                     tShapeToImage,
+                                     tdata.samples[i].estimateInNormalizedSpace,
+                                     t.input->images[tdata.samples[i].inputIdx],
+                                     tt.samples[i].intensities);
                 
             }
-            data.meanResidual /= static_cast<float>(tdata.trainSamples.size());
+            data.meanResidual /= static_cast<float>(tdata.samples.size());
             
-            for (int k = 0; k < t.trainingData->params.numTrees; ++k) {
+            for (int k = 0; k < t.training->params.numTrees; ++k) {
                 DEST_LOG("Building tree " << std::setw(3) << k + 1 << "\r");
-                for (size_t i = 0; i < tdata.trainSamples.size(); ++i) {
+                for (size_t i = 0; i < tdata.samples.size(); ++i) {
                     
                     if (k == 0) {
                         tt.samples[i].residual -= data.meanResidual;
@@ -162,15 +167,15 @@ namespace dest {
             Eigen::Vector2f minC = t.meanShape.rowwise().minCoeff();
             Eigen::Vector2f maxC = t.meanShape.rowwise().maxCoeff();
 
-            const int numCoords = t.trainingData->params.numRandomPixelCoordinates;
+            const int numCoords = t.training->params.numRandomPixelCoordinates;
             PixelCoordinates result(2, numCoords);
             
             std::uniform_real_distribution<float> dx(0.f, maxC.x() - minC.x());
             std::uniform_real_distribution<float> dy(0.f, maxC.y() - minC.y());
             
             for (int i = 0; i < numCoords; ++i) {
-                result(0, i) = minC.x() + dx(t.trainingData->rnd);
-                result(1, i) = minC.y() + dy(t.trainingData->rnd);
+                result(0, i) = minC.x() + dx(t.input->rnd);
+                result(1, i) = minC.y() + dy(t.input->rnd);
             }
             
             return result;

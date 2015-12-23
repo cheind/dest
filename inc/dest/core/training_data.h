@@ -40,34 +40,41 @@ namespace dest {
             AlgorithmParameters();
         };
         
-        struct TrainingData {
-            
-            struct Sample {
-                int idx;
-                Shape estimate;
-            };
-            typedef std::vector<Sample> SampleVector;
+        struct InputData {
             typedef std::vector<Rect> RectVector;
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
-                        
+            
             RectVector rects;
             ShapeVector shapes;
             ImageVector images;
-
-            SampleVector trainSamples;
-            AlgorithmParameters params;
             std::mt19937 rnd;
+            
+            static void randomPartition(InputData &train, InputData &validate, float validatePercent = 0.1f);
+        };
+        
+        struct TrainingData {
+            
+            struct Sample {
+                int inputIdx;
+                Shape estimateInNormalizedSpace;
+                Shape targetInNormalizedSpace;
+                Rect targetRectInImageSpace;
+            };
+            typedef std::vector<Sample> SampleVector;
 
-            static void createTrainingSamplesKazemi(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
-            static void createTrainingSamplesThroughLinearCombinations(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
-            static void convertShapesToNormalizedShapeSpace(const RectVector &rects, ShapeVector &shapes);
-            static void createTrainingRectsFromShapeBounds(const ShapeVector &shapes, RectVector &rects);
-            static void randomPartitionTrainingSamples(SampleVector &train, SampleVector &validate, std::mt19937 &rnd, float validatePercent = 0.1f);
+            InputData *input;
+            SampleVector samples;
+            AlgorithmParameters params;
+
+            static void createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
+            static void createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
+            static void convertShapesToNormalizedShapeSpace(SampleVector &samples);
         };
         
         struct RegressorTraining {
-            TrainingData *trainingData;
+            InputData *input;
+            TrainingData *training;
             Shape meanShape;            
             int numLandmarks;
         };
@@ -86,7 +93,8 @@ namespace dest {
             };
             typedef std::vector<Sample> SampleVector;
             
-            TrainingData *trainingData;
+            InputData *input;
+            TrainingData *training;
             SampleVector samples;
             PixelCoordinates pixelCoordinates;
             int numLandmarks;

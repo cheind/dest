@@ -127,26 +127,24 @@ namespace dest {
         }
         
         bool Tracker::fit(TrainingData &t) {
-            eigen_assert(!t.shapes.empty());
-            eigen_assert(t.shapes.size() == t.images.size());
-            eigen_assert(t.shapes.size() == t.rects.size());
-            eigen_assert(!t.trainSamples.empty());
+            eigen_assert(!t.samples.empty());
 
             Tracker::data &data = *_data;
             
-            const int numSamples = static_cast<int>(t.trainSamples.size());
+            const int numSamples = static_cast<int>(t.samples.size());
 
             RegressorTraining rt;
-            rt.trainingData = &t;
-            rt.numLandmarks = static_cast<int>(t.shapes.front().cols());
+            rt.training = &t;
+            rt.numLandmarks = static_cast<int>(t.samples.front().estimateInNormalizedSpace.cols());
+            rt.input = t.input;
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numSamples; ++i) {
-                rt.meanShape += t.trainSamples[i].estimate;
+                rt.meanShape += t.samples[i].estimateInNormalizedSpace;
             }
             rt.meanShape /= static_cast<float>(numSamples);
 
-            // Build cascade           
+            // Build cascade
             data.cascade.resize(t.params.numCascades);
             
             for (int i = 0; i < t.params.numCascades; ++i) {
@@ -157,7 +155,10 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    t.trainSamples[s].estimate += data.cascade[i].predict(t.images[t.trainSamples[s].idx], t.trainSamples[s].estimate, t.rects[t.trainSamples[s].idx]);
+                    t.samples[s].estimateInNormalizedSpace +=
+                        data.cascade[i].predict(t.input->images[t.samples[s].inputIdx],
+                                                t.samples[s].estimateInNormalizedSpace,
+                                                t.samples[s].targetRectInImageSpace);
                 }
             }
 

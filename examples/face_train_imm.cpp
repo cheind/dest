@@ -28,13 +28,8 @@
 
 int main(int argc, char **argv)
 {
-    dest::core::TrainingData td;
-    td.params.numCascades = 10;
-    td.params.numTrees = 500;
-    td.params.learningRate = 0.1f;
-    td.params.maxTreeDepth = 4;
-
-    dest::face::importIMMFaceDatabase(argv[1], td.images, td.shapes);
+    dest::core::InputData inputs;
+    dest::face::importIMMFaceDatabase(argv[1], inputs.images, inputs.shapes);
 
     dest::face::FaceDetector fd;
     if (!fd.loadClassifiers("classifier_frontalface.xml")) {
@@ -42,27 +37,36 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    td.rects.resize(td.shapes.size());
-    for (size_t i = 0; i < td.rects.size(); ++i) {
-        if (!fd.detectSingleFace(td.images[i], td.rects[i])) {
-            td.rects[i] = dest::core::shapeBounds(td.shapes[i]);
+    inputs.rects.resize(inputs.shapes.size());
+    for (size_t i = 0; i < inputs.rects.size(); ++i) {
+        if (!fd.detectSingleFace(inputs.images[i], inputs.rects[i])) {
+            inputs.rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
         }
     }
-
-    dest::core::TrainingData::convertShapesToNormalizedShapeSpace(td.rects, td.shapes);
-    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(td.shapes, td.trainSamples, td.rnd, 20);
-
-    dest::core::TrainingData::SampleVector validate;
-    dest::core::TrainingData::randomPartitionTrainingSamples(td.trainSamples, validate, td.rnd, 0.1f);
-
+    
+    dest::core::InputData validation;
+    dest::core::InputData::randomPartition(inputs, validation, 0.1f);
+    
+    dest::core::TrainingData td;
+    td.params.numCascades = 10;
+    td.params.numTrees = 500;
+    td.params.learningRate = 0.1f;
+    td.params.maxTreeDepth = 5;
+    td.params.exponentialLambda = 0.08f;
+    td.input = &inputs;
+    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 20);
 
     dest::core::Tracker t;
     t.fit(td);
     t.save("dest_tracker_imm.bin");
-
-    for (size_t i = 0; i < validate.size(); ++i) {
-        dest::core::Shape s = t.predict(td.images[validate[i].idx], td.rects[validate[i].idx]);
-        cv::Mat tmp = dest::util::drawShape(td.images[validate[i].idx], s, cv::Scalar(0, 255, 0));
+    
+    dest::core::TrainingData::SampleVector validationSamples;
+    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(validation, validationSamples, inputs.rnd, 1);
+    for (size_t i = 0; i < validationSamples.size(); ++i) {
+        dest::core::TrainingData::Sample &s = validationSamples[i];
+        
+        dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.targetRectInImageSpace);
+        cv::Mat tmp = dest::util::drawShape(validation.images[s.inputIdx], shape, cv::Scalar(0, 255, 0));
         cv::imshow("result", tmp);
         cv::waitKey();
     }
