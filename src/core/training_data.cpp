@@ -106,14 +106,18 @@ namespace dest {
             std::shuffle(ids.begin(), ids.end(), rnd);
             
             validate.clear();
+            
             for (size_t i = 0; i < numValidate; ++i) {
                 validate.push_back(train[ids[i]]);                
             }
 
-            for (size_t i = 0; i < numValidate; ++i) {
-                train[ids[i]] = train.back();
-                train.pop_back();
+            SampleVector train2;
+            for (size_t i = numValidate; i < ids.size(); ++i)
+            {                
+                train2.push_back(train[ids[i]]);
             }
+            
+            std::swap(train2, train);
         }
        
     }
