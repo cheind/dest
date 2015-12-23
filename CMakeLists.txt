@@ -69,6 +69,9 @@ target_link_libraries(dest_facetrain_imm dest ${DEST_LINK_TARGETS})
 add_executable(dest_facetrack examples/face_track.cpp)
 target_link_libraries(dest_facetrack dest ${DEST_LINK_TARGETS})
 
+add_executable(dest_facetrack_video examples/face_track_video.cpp)
+target_link_libraries(dest_facetrack_video dest ${DEST_LINK_TARGETS})
+
 # Tests
 
 add_executable(dest_tests

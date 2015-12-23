@@ -69,6 +69,10 @@ namespace dest {
             toCVHeaderOnly(src, hdr);
             hdr.copyTo(dst);
         }
+        
+        inline void toDest(cv::Rect src, core::Rect &dst) {
+            dst = core::createRectangle(Eigen::Vector2f(src.tl().x, src.tl().y), Eigen::Vector2f(src.br().x, src.br().y));
+        }
 
     }
 }
