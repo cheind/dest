@@ -269,7 +269,7 @@ namespace dest {
             const int maxAttempts = 100;
             std::uniform_int_distribution<int> di(0, static_cast<int>(t.pixelCoordinates.cols()) - 1);
             std::uniform_real_distribution<float> drZeroOne(0.f, 1.f);
-            std::uniform_real_distribution<float> drThreshold(-255.f, 255.f);
+            std::uniform_real_distribution<float> drThreshold(-64.f, 64.f);
             
             const int numTests = t.trainingData->params.numRandomSplitTestsPerNode;
             const float invlambda = 1.f / t.trainingData->params.exponentialLambda;
