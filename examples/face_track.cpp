@@ -59,8 +59,9 @@ int main(int argc, char **argv)
     int id = 0;
     while (!done) {
         
-        cv::Mat r = dest::util::drawShape(img, steps[id], cv::Scalar(0, 255, 0));
-        cv::imshow("prediction", r);
+        cv::Mat tmp = dest::util::drawShape(img, steps[id], cv::Scalar(0, 255, 0));
+        cv::rectangle(tmp, cv::Rect2f(r(0, 0), r(1, 0), r(0, 3) - r(0, 0), r(1, 3) - r(1, 0)), cv::Scalar(255, 0, 0));
+        cv::imshow("prediction", tmp);
 
         id = (id + 1) % steps.size();
 
