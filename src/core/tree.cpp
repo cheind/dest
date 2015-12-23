@@ -286,7 +286,7 @@ namespace dest {
                     e = std::exp(-d * invlambda); // Note, shapes live in normalized space,  therefore rather divide by lambda.
                     ++iter;
                 
-                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (drZeroOne(t.trainingData->rnd) < e));
+                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (drZeroOne(t.trainingData->rnd) >= e));
                 
                 if (iter <= maxAttempts) {
                     split.threshold = drThreshold(t.trainingData->rnd);
