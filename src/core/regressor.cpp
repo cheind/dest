@@ -23,6 +23,10 @@
 #include <dest/io/dest_io_generated.h>
 #include <dest/io/matrix_io.h>
 
+
+#include <dest/util/draw.h>
+#include <opencv2/opencv.hpp>
+
 namespace dest {
     namespace core {
         
@@ -166,7 +170,7 @@ namespace dest {
             
             for (int i = 0; i < numCoords; ++i) {
                 result(0, i) = minC.x() + dx(t.trainingData->rnd);
-                result(1, i) = maxC.y() + dy(t.trainingData->rnd);
+                result(1, i) = minC.y() + dy(t.trainingData->rnd);
             }
             
             return result;
@@ -185,6 +189,7 @@ namespace dest {
             }
             
             coords = shapeToImage.matrix() * coords.colwise().homogeneous();
+
             readImage(img, coords, intensities);
         }
         
