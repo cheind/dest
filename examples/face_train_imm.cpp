@@ -31,8 +31,8 @@ int main(int argc, char **argv)
     dest::core::TrainingData td;
     td.params.numCascades = 10;
     td.params.numTrees = 500;
-    td.params.learningRate = 0.1f;
-    td.params.maxTreeDepth = 3;
+    td.params.learningRate = 0.05f;
+    td.params.maxTreeDepth = 2;
 
     dest::face::importIMMFaceDatabase(argv[1], td.images, td.shapes);
 
