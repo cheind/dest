@@ -30,7 +30,7 @@ namespace dest {
             numRandomPixelCoordinates = 400;
             numRandomSplitTestsPerNode = 20;
             exponentialLambda = 0.1f;
-            learningRate = 0.1f;
+            learningRate = 0.05f;
         }
 
         void TrainingData::createTrainingSamplesKazemi(const ShapeVector &shapes, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage)
