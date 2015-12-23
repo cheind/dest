@@ -279,14 +279,18 @@ namespace dest {
                 SplitInfo split;
                 int iter = 0;
                 float e;
+                float d;
+                float r;
                 do {
                     split.idx1 = di(t.trainingData->rnd);
                     split.idx2 = di(t.trainingData->rnd);
-                    float d = (t.pixelCoordinates.col(split.idx1) - t.pixelCoordinates.col(split.idx2)).norm();
-                    e = std::exp(-d * invlambda); // Note, shapes live in normalized space,  therefore rather divide by lambda.
+                    d = (t.pixelCoordinates.col(split.idx1) - t.pixelCoordinates.col(split.idx2)).norm();
+                    // http://www.wolframalpha.com/input/?i=plot+e%5E%28-x%2F0.05%29+from+0.05+to+0.1
+                    e = std::exp(-d * invlambda);
+                    r = drZeroOne(t.trainingData->rnd);
                     ++iter;
                 
-                } while (iter <= maxAttempts && split.idx1 == split.idx2 && (drZeroOne(t.trainingData->rnd) >= e));
+                } while ((iter <= maxAttempts) && (split.idx1 == split.idx2 || (r >= e)));
                 
                 if (iter <= maxAttempts) {
                     split.threshold = drThreshold(t.trainingData->rnd);
