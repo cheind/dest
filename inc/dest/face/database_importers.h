@@ -35,9 +35,26 @@ namespace dest {
             Nordstrøm, Michael M., et al. 
             The IMM face database-an annotated dataset of 240 face images. Technical
             University of Denmark, DTU Informatics, Building 321, 2004.
+            http://www.imm.dtu.dk/~aam/datasets/datasets.html
         */
         bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
         
+        
+        /** 
+            Load the W300 face database annotated by ibug.
+         
+            References:
+            C. Sagonas, G. Tzimiropoulos, S. Zafeiriou, M. Pantic. 
+            A semi-automatic methodology for facial landmark annotation. Proceedings of IEEE Int’l Conf. 
+            Computer Vision and Pattern Recognition (CVPR-W’13), 5th Workshop on Analysis and Modeling of Faces and Gestures (AMFG '13). Oregon, USA, June 2013.
+            http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+         
+            C. Sagonas, G. Tzimiropoulos, S. Zafeiriou, M. Pantic. 
+            300 Faces in-the-Wild Challenge: The first facial landmark localization Challenge. 
+            Proceedings of IEEE Int’l Conf. on Computer Vision (ICCV-W 2013), 300 Faces in-the-Wild Challenge (300-W). Sydney, Australia, December 2013
+            http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+         */
+        bool importIBugW300FaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
     }
 }
 

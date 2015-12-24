@@ -72,11 +72,11 @@ namespace dest {
         
         bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
             
-            images.clear();
-            shapes.clear();
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
             DEST_LOG("Loading IMM database. Found " << paths.size() << " canditate entries." << std::endl);
+            
+            size_t initialSize = images.size();
             
             for (size_t i = 0; i < paths.size(); ++i) {
                 const std::string fileNameImg = paths[i] + ".jpg";
@@ -100,8 +100,75 @@ namespace dest {
                 }
             }
             
-            DEST_LOG("Successfully loaded " << images.size() << " entries from database." << std::endl);
+            DEST_LOG("Successfully loaded " << (shapes.size() - initialSize) << " entries from database." << std::endl);
             return shapes.size() > 0;
+        }
+        
+        
+        bool parsePtsFile(const std::string& fileName, core::Shape &s) {
+            
+            std::ifstream file(fileName);
+            
+            std::string line;
+            std::getline(file, line); // Version
+            std::getline(file, line); // NPoints
+            
+            int numPoints;
+            std::stringstream str(line);
+            str >> line >> numPoints;
+            
+            std::getline(file, line); // {
+            
+            s.resize(2, numPoints);
+            s.fill(0);
+            
+            for (int i = 0; i < numPoints; ++i) {
+                if (!std::getline(file, line)) {
+                    DEST_LOG("Failed to read points." << std::endl);
+                    return false;
+                }
+                str = std::stringstream(line);
+                
+                float x, y;
+                str >> x >> y;
+                
+                s(0, i) = x;
+                s(1, i) = y;
+                
+            }
+            
+            return true;
+            
+        }
+        
+        bool importIBugW300FaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
+            
+            std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
+            DEST_LOG("Loading ibug W300 database. Found " << paths.size() << " canditate entries." << std::endl);
+            
+            size_t initialSize = images.size();
+            
+            for (size_t i = 0; i < paths.size(); ++i) {
+                const std::string fileNameImg = paths[i] + ".jpg";
+                const std::string fileNamePts = paths[i] + ".pts";
+                
+                core::Shape s;
+                bool ptsOk = parsePtsFile(fileNamePts, s);
+                cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
+                
+                if(ptsOk && !cvImg.empty()) {
+                    
+                    core::Image img;
+                    util::toDest(cvImg, img);
+                    
+                    images.push_back(img);
+                    shapes.push_back(s);
+                }
+            }
+            
+            DEST_LOG("Successfully loaded " << (shapes.size() - initialSize) << " entries from database." << std::endl);
+            return (shapes.size() - initialSize) > 0;
+
         }
         
     }
