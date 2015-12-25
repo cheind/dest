@@ -83,9 +83,9 @@ int main(int argc, char **argv)
         std::vector<dest::core::Shape> steps;
         dest::core::Shape s = t.predict(img, r, &steps);
         
-        dest::util::drawShape(imgCV, steps[0], cv::Scalar(0,255,0));
+        //dest::util::drawShape(imgCV, steps[0], cv::Scalar(0,255,0));
         dest::util::drawShape(imgCV, s, cv::Scalar(0,0,255));
-        cv::rectangle(imgCV, cvRect, cv::Scalar(0,255,0));
+        //cv::rectangle(imgCV, cvRect, cv::Scalar(0,255,0));
         
         cv::imshow("track", imgCV);
         int key = cv::waitKey(1);
