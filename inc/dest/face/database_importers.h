@@ -41,7 +41,7 @@ namespace dest {
         
         
         /** 
-            Load the W300 face database annotated by ibug.
+            Load the face databases annotated by ibug.
          
             References:
             C. Sagonas, G. Tzimiropoulos, S. Zafeiriou, M. Pantic. 
@@ -54,7 +54,7 @@ namespace dest {
             Proceedings of IEEE Int’l Conf. on Computer Vision (ICCV-W 2013), 300 Faces in-the-Wild Challenge (300-W). Sydney, Australia, December 2013
             http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
          */
-        bool importIBugW300FaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
     }
 }
 

@@ -45,18 +45,30 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 int main(int argc, char **argv)
 {
     dest::core::InputData inputs;
-    dest::face::importIBugW300FaceDatabase(argv[1], inputs.images, inputs.shapes);
+    for (int i = 1; i < argc; ++i) {
+        dest::face::importIBugAnnotatedFaceDatabase(argv[i], inputs.images, inputs.shapes);
+    }
 
-    dest::face::FaceDetector fd;
-    if (!fd.loadClassifiers("classifier_frontalface.xml")) {
+    dest::face::FaceDetector fdFront, fdProfile;
+    if (!fdFront.loadClassifiers("classifier_frontalface.xml")) {
+        std::cout << "Failed to load classifiers." << std::endl;
+        return 0;
+    }
+    
+    if (!fdProfile.loadClassifiers("classifier_frontalface.xml")) {
         std::cout << "Failed to load classifiers." << std::endl;
         return 0;
     }
 
     inputs.rects.resize(inputs.shapes.size());
     for (size_t i = 0; i < inputs.rects.size(); ++i) {
-        std::vector<dest::core::Rect> faces;
-        fd.detectFaces(inputs.images[i], faces);
+        std::vector<dest::core::Rect> faces, facesFront, facesProfile;
+        fdFront.detectFaces(inputs.images[i], facesFront);
+        //fdProfile.detectFaces(inputs.images[i], facesProfile);
+        
+        faces.insert(faces.end(), facesFront.begin(), facesFront.end());
+        //faces.insert(faces.end(), facesProfile.begin(), facesProfile.end());
+        
         // Find the face rect with a meaningful shape overlap
         float bestOverlap = 0.f;
         size_t bestId = std::numeric_limits<size_t>::max();
@@ -75,6 +87,9 @@ int main(int argc, char **argv)
             inputs.rects[i] = faces[bestId];
         }
         
+        if (i % 10 == 0)
+            std::cout << i << std::endl;
+        
         /*
         cv::Mat tmp = dest::util::drawShape(inputs.images[i], inputs.shapes[i], cv::Scalar(0,255,0));
         cv::Rect_<float> cr;
@@ -87,13 +102,13 @@ int main(int argc, char **argv)
     }
     
     dest::core::InputData validation;
-    dest::core::InputData::randomPartition(inputs, validation, 0.1f);
+    dest::core::InputData::randomPartition(inputs, validation, 0.01f);
     
     dest::core::TrainingData td;
     td.params.numCascades = 10;
     td.params.numTrees = 500;
     td.params.learningRate = 0.1f;
-    td.params.maxTreeDepth = 4;
+    td.params.maxTreeDepth = 5;
     td.params.exponentialLambda = 0.1f;
     td.input = &inputs;
     dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 200);

@@ -141,10 +141,10 @@ namespace dest {
             
         }
         
-        bool importIBugW300FaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
-            DEST_LOG("Loading ibug W300 database. Found " << paths.size() << " canditate entries." << std::endl);
+            DEST_LOG("Loading ibug database. Found " << paths.size() << " canditate entries." << std::endl);
             
             size_t initialSize = images.size();
             
