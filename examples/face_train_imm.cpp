@@ -26,10 +26,26 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &s) {
+    Eigen::Vector2f minC = r.col(0);
+    Eigen::Vector2f maxC = r.col(3);
+    
+    int numOverlap = 0;
+    for (dest::core::Shape::Index i = 0; i < s.cols(); ++i) {
+        Eigen::Vector2f a = s.col(i) - minC;
+        Eigen::Vector2f b = s.col(i) - maxC;
+        
+        if ((a.array() >= 0.f).all() && (b.array() <= 0.f).all())
+            numOverlap += 1;
+    }
+    
+    return (float)numOverlap / (float)s.cols();
+}
+
 int main(int argc, char **argv)
 {
     dest::core::InputData inputs;
-    dest::face::importIMMFaceDatabase(argv[1], inputs.images, inputs.shapes);
+    dest::face::importIBugW300FaceDatabase(argv[1], inputs.images, inputs.shapes);
 
     dest::face::FaceDetector fd;
     if (!fd.loadClassifiers("classifier_frontalface.xml")) {
@@ -39,9 +55,35 @@ int main(int argc, char **argv)
 
     inputs.rects.resize(inputs.shapes.size());
     for (size_t i = 0; i < inputs.rects.size(); ++i) {
-        if (!fd.detectSingleFace(inputs.images[i], inputs.rects[i])) {
-            inputs.rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
+        std::vector<dest::core::Rect> faces;
+        fd.detectFaces(inputs.images[i], faces);
+        // Find the face rect with a meaningful shape overlap
+        float bestOverlap = 0.f;
+        size_t bestId = std::numeric_limits<size_t>::max();
+        
+        for (size_t j = 0; j < faces.size(); ++j) {
+            float o = ratioRectShapeOverlap(faces[j], inputs.shapes[i]);
+            if (o > bestOverlap) {
+                bestId = j;
+                bestOverlap = o;
+            }
         }
+        
+        if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.6f) {
+            inputs.rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
+        } else {
+            inputs.rects[i] = faces[bestId];
+        }
+        
+        /*
+        cv::Mat tmp = dest::util::drawShape(inputs.images[i], inputs.shapes[i], cv::Scalar(0,255,0));
+        cv::Rect_<float> cr;
+        dest::util::toCV(inputs.rects[i], cr);
+        cv::rectangle(tmp, cr, cv::Scalar(0,255,0));
+        
+        cv::imshow("img", tmp);
+        cv::waitKey();
+        */
     }
     
     dest::core::InputData validation;
@@ -51,10 +93,10 @@ int main(int argc, char **argv)
     td.params.numCascades = 10;
     td.params.numTrees = 500;
     td.params.learningRate = 0.1f;
-    td.params.maxTreeDepth = 5;
-    td.params.exponentialLambda = 0.08f;
+    td.params.maxTreeDepth = 4;
+    td.params.exponentialLambda = 0.1f;
     td.input = &inputs;
-    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 20);
+    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 200);
 
     dest::core::Tracker t;
     t.fit(td);
