@@ -132,8 +132,8 @@ namespace dest {
                 float x, y;
                 str >> x >> y;
                 
-                s(0, i) = x;
-                s(1, i) = y;
+                s(0, i) = x - 1.f; // Matlab to C++ offset
+                s(1, i) = y - 1.f;
                 
             }
             
