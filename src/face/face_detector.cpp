@@ -52,13 +52,13 @@ namespace dest {
 
             return true;
         }
+        
+        
 
-        bool FaceDetector::detectSingleFace(const cv::Mat &img, cv::Rect &face) const
-        {
+        
+        bool FaceDetector::detectFaces(const cv::Mat &img, std::vector<cv::Rect> &faces) const {
             FaceDetector::data &data = *_data;
-
-            std::vector<cv::Rect> faces;
-
+            
             if (img.channels() == 3 || img.channels() == 4) {
                 cv::cvtColor(img, data.gray, CV_BGR2GRAY);
             }
@@ -66,40 +66,66 @@ namespace dest {
                 img.copyTo(data.gray);
             }
             cv::equalizeHist(data.gray, data.gray);
-
+            
             //-- Detect faces
-            data.classifierFace.detectMultiScale(data.gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
+            data.classifierFace.detectMultiScale(data.gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(10, 10));
+            if (data.withEyes) {
+                    
+                    std::vector<cv::Rect> finalFaces;
+                    for (size_t i = 0; i < faces.size(); ++i) {
+                        cv::Mat roi = data.gray(faces[i]);
+                        std::vector<cv::Rect> eyes;
+                        data.classifierEyes.detectMultiScale(roi, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(10, 10));
+                        if (eyes.size() > 0)
+                            finalFaces.push_back(faces[i]);
+                    }
+                    finalFaces.swap(faces);
+                }
+            return faces.size() > 0;
+        }
+        
+        bool FaceDetector::detectFaces(const core::Image &img, std::vector<core::Rect> &faces) const {
+            
+            
+            cv::Mat hdr, u8;
+            
+            util::toCVHeaderOnly(img, hdr);
+            hdr.convertTo(u8, CV_8U);
+            
+            std::vector<cv::Rect> cvFaces;
+            if (!detectFaces(u8, cvFaces)) {
+                return  false;
+            }
+            
+            faces.clear();
+            for (size_t i = 0; i < cvFaces.size(); ++i) {
+                cv::Rect r = cvFaces[i];
+                faces.push_back(core::createRectangle(Eigen::Vector2f(r.tl().x, r.tl().y), Eigen::Vector2f(r.br().x, r.br().y)));
+            }
+            
+            return true;
+        }
+        
 
-            if (faces.empty()) {
+
+        bool FaceDetector::detectSingleFace(const cv::Mat &img, cv::Rect &face) const
+        {
+            std::vector<cv::Rect> faces;
+            if (!detectFaces(img, faces))
                 return false;
-            }
-            else {
-                std::sort(faces.begin(), faces.end(), [](const cv::Rect &a, const cv::Rect &b) { return a.area() > b.area(); });
-                if (data.withEyes) {
-                    cv::Mat roi = data.gray(faces.front());
-                    std::vector<cv::Rect> eyes;
-                    data.classifierEyes.detectMultiScale(roi, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(30, 30));
-                    if (eyes.size() == 0)
-                        return false;
-                }              
-
-                face = faces.front();
-                return true;
-            }
+            
+            face = faces.front();
+            return true;
+            
         }
 
         bool FaceDetector::detectSingleFace(const core::Image &img, core::Rect &face) const
         {
-            cv::Mat hdr, u8;
-
-            util::toCVHeaderOnly(img, hdr);
-            hdr.convertTo(u8, CV_8U);
-
-            cv::Rect r;
-            if (!detectSingleFace(u8, r))
+            std::vector<core::Rect> faces;
+            if (!detectFaces(img, faces))
                 return false;
-
-            face = core::createRectangle(Eigen::Vector2f(r.tl().x, r.tl().y), Eigen::Vector2f(r.br().x, r.br().y));
+            
+            face = faces.front();
             return true;
         }
     }

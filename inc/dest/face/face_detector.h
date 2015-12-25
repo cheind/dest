@@ -36,6 +36,8 @@ namespace dest {
 
             bool loadClassifiers(const std::string &frontalFaceClassifier, const std::string &eyeClassifier = "");
 
+            bool detectFaces(const core::Image &img, std::vector<core::Rect> &faces) const;
+            bool detectFaces(const cv::Mat &img, std::vector<cv::Rect> &faces) const;
             bool detectSingleFace(const core::Image &img, core::Rect &face) const;
             bool detectSingleFace(const cv::Mat &img, cv::Rect &face) const;
 

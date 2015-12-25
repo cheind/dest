@@ -70,8 +70,15 @@ namespace dest {
             hdr.copyTo(dst);
         }
         
-        inline void toDest(cv::Rect src, core::Rect &dst) {
+        inline void toDest(const cv::Rect &src, core::Rect &dst) {
             dst = core::createRectangle(Eigen::Vector2f(src.tl().x, src.tl().y), Eigen::Vector2f(src.br().x, src.br().y));
+        }
+        
+        inline void toCV(const core::Rect &src, cv::Rect_<float> &dst) {
+            dst.x = src(0,0);
+            dst.y = src(1,0);
+            dst.width = src(0,3) - src(0,0);
+            dst.height = src(1,3) - src(1,0);
         }
 
     }
