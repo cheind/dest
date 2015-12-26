@@ -70,7 +70,9 @@ int main(int argc, char **argv)
         if (imgCV.empty())
             break;
         
+        cv::resize(imgCV, imgCV, cv::Size(320, 240));
         cv::cvtColor(imgCV, grayCV, CV_BGR2GRAY);
+        
         
         cv::Rect cvRect;
         if (!fd.detectSingleFace(imgCV, cvRect))
@@ -80,8 +82,7 @@ int main(int argc, char **argv)
         dest::util::toDest(grayCV, img);
         dest::util::toDest(cvRect, r);
         
-        std::vector<dest::core::Shape> steps;
-        dest::core::Shape s = t.predict(img, r, &steps);
+        dest::core::Shape s = t.predict(img, r);
         
         //dest::util::drawShape(imgCV, steps[0], cv::Scalar(0,255,0));
         dest::util::drawShape(imgCV, s, cv::Scalar(0,0,255));
