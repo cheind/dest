@@ -39,13 +39,13 @@ namespace dest {
             float a = x - (float)ix;
             float b = y - (float)iy;
             
-            const float *ptrY0 = img.row(y0).data();
-            const float *ptrY1 = img.row(y1).data();
+            const unsigned char *ptrY0 = img.row(y0).data();
+            const unsigned char *ptrY1 = img.row(y1).data();
             
-            const float f0 = ptrY0[x0];
-            const float f1 = ptrY0[x1];
-            const float f2 = ptrY1[x0];
-            const float f3 = ptrY1[x1];
+            const float f0 = static_cast<float>(ptrY0[x0]);
+            const float f1 = static_cast<float>(ptrY0[x1]);
+            const float f2 = static_cast<float>(ptrY1[x0]);
+            const float f3 = static_cast<float>(ptrY1[x1]);
             
             return (f0 * (float(1) - a) + f1 * a) * (float(1) - b) +
                    (f2 * (float(1) - a) + f3 * a) * b;

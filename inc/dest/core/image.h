@@ -26,7 +26,7 @@
 namespace dest {
     namespace core {
     
-        typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
+        typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> PixelCoordinates;
         typedef Eigen::Matrix<float, 1, Eigen::Dynamic> PixelIntensities;
         

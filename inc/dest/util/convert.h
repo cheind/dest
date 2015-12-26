@@ -40,18 +40,11 @@ namespace dest {
                 singleChannel = src;
             }
 
-            cv::Mat floating;
-            if (singleChannel.depth() != CV_32F) {
-                singleChannel.convertTo(floating, CV_32F);
-            } else {
-                floating = singleChannel;
-            }
-
-            const int outerStride = static_cast<int>(floating.step[0] / sizeof(float));
+            const int outerStride = static_cast<int>(singleChannel.step[0] / sizeof(unsigned char));
 
             typedef Eigen::Map<const core::Image, 0, Eigen::OuterStride<Eigen::Dynamic> > MapType;
 
-            MapType map(floating.ptr<float>(), floating.rows, floating.cols, Eigen::OuterStride<Eigen::Dynamic>(outerStride));
+            MapType map(singleChannel.ptr<unsigned char>(), singleChannel.rows, singleChannel.cols, Eigen::OuterStride<Eigen::Dynamic>(outerStride));
             dst = map;
         }
 
@@ -60,7 +53,7 @@ namespace dest {
             const int rows = static_cast<int>(src.rows());
             const int cols = static_cast<int>(src.cols());
 
-            dst = cv::Mat(rows, cols, CV_32FC1, const_cast<float*>(src.data()));
+            dst = cv::Mat(rows, cols, CV_8UC1, const_cast<unsigned char*>(src.data()));
         }
 
         inline void toCV(const core::Image &src, cv::Mat &dst) {

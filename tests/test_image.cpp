@@ -25,15 +25,15 @@
 TEST_CASE("image-readpixels")
 {
     dest::core::Image img(2, 2);
-    img << 0.f, 64.f,
-           128.f, 256.f;
+    img << 0, 64,
+           128, 255;
     
     dest::core::PixelCoordinates coords(2, 6);
     coords << -1.f, 0.f, 0.f, 0.5f, 0.5f, 2.f,
               -1.f, 0.f, 0.5f, 0.0f, 0.5f, 2.f;
     
     dest::core::PixelIntensities expected(6);
-    expected << 0.f, 0.f, 64.f, 32.f, 112.f, 256.f;
+    expected << 0.f, 0.f, 64.f, 32.f, 111.75f, 255.f;
     
     dest::core::PixelIntensities intensities;
     dest::core::readImage(img, coords, intensities);

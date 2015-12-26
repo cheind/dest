@@ -37,11 +37,10 @@ namespace dest {
         
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color)
         {
-            cv::Mat tmp, gray, tmp2;
+            cv::Mat tmp, tmp2;
 
             util::toCVHeaderOnly(img, tmp);
-            tmp.convertTo(gray, CV_8U);
-            cv::cvtColor(gray, tmp2, CV_GRAY2BGR);
+            cv::cvtColor(tmp, tmp2, CV_GRAY2BGR);
             
             drawShape(tmp2, s, color);
 
