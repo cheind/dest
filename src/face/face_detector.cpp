@@ -87,13 +87,12 @@ namespace dest {
         bool FaceDetector::detectFaces(const core::Image &img, std::vector<core::Rect> &faces) const {
             
             
-            cv::Mat hdr, u8;
+            cv::Mat hdr;
             
             util::toCVHeaderOnly(img, hdr);
-            hdr.convertTo(u8, CV_8U);
             
             std::vector<cv::Rect> cvFaces;
-            if (!detectFaces(u8, cvFaces)) {
+            if (!detectFaces(hdr, cvFaces)) {
                 return  false;
             }
             
