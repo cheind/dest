@@ -44,9 +44,12 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 
 int main(int argc, char **argv)
 {
+    dest::face::ImportParameters params;
+    params.maxImageSideLength = 640;
+    
     dest::core::InputData inputs;
     for (int i = 1; i < argc; ++i) {
-        dest::face::importIBugAnnotatedFaceDatabase(argv[i], inputs.images, inputs.shapes);
+        dest::face::importIBugAnnotatedFaceDatabase(argv[i], inputs.images, inputs.shapes, params);
     }
 
     dest::face::FaceDetector fdFront, fdProfile;
@@ -64,10 +67,10 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < inputs.rects.size(); ++i) {
         std::vector<dest::core::Rect> faces, facesFront, facesProfile;
         fdFront.detectFaces(inputs.images[i], facesFront);
-        //fdProfile.detectFaces(inputs.images[i], facesProfile);
+        fdProfile.detectFaces(inputs.images[i], facesProfile);
         
         faces.insert(faces.end(), facesFront.begin(), facesFront.end());
-        //faces.insert(faces.end(), facesProfile.begin(), facesProfile.end());
+        faces.insert(faces.end(), facesProfile.begin(), facesProfile.end());
         
         // Find the face rect with a meaningful shape overlap
         float bestOverlap = 0.f;

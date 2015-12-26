@@ -29,6 +29,35 @@
 namespace dest {
     namespace face {
         
+        ImportParameters::ImportParameters() {
+            maxImageSideLength = std::numeric_limits<int>::max();
+            generateVerticallyMirrored = false;
+        }
+        
+        bool imageNeedsScaling(cv::Size s, const ImportParameters &p, float &factor) {
+            int maxLen = std::max<int>(s.width, s.height);
+            if (maxLen > p.maxImageSideLength) {
+                factor = static_cast<float>(p.maxImageSideLength) / static_cast<float>(maxLen);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        
+        void scaleImageAndShape(cv::Mat &img, core::Shape &s, float factor) {
+            cv::resize(img, img, cv::Size(0,0), factor, factor, CV_INTER_CUBIC);
+            s *= factor;
+        }
+        
+        void mirrorImageAndShapeVertically(const cv::Mat &img, const core::Shape &s, cv::Mat &dstImage, core::Shape &dstShape) {
+            cv::flip(img, dstImage, 1);
+            dstShape.resize(2, s.cols());
+            for (core::Shape::Index i = 0; i < s.cols(); ++i) {
+                dstShape(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
+                dstShape(1, i) = s(1, i);
+            }
+        }
+        
         bool parseAsfFile(const std::string& fileName, core::Shape &s) {
             
             int landmarkCount = 0;
@@ -70,7 +99,7 @@ namespace dest {
             return s.rows() > 0 && s.cols() > 0;
         }
         
-        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
+        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, const ImportParameters &opts) {
             
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
@@ -92,11 +121,28 @@ namespace dest {
                     s.row(0) *= static_cast<float>(cvImg.cols);
                     s.row(1) *= static_cast<float>(cvImg.rows);
                     
+                    float f;
+                    if (imageNeedsScaling(cvImg.size(), opts, f)) {
+                        scaleImageAndShape(cvImg, s, f);
+                    }
+                    
                     core::Image img;
                     util::toDest(cvImg, img);
                     
                     images.push_back(img);
                     shapes.push_back(s);
+                    
+                    if (opts.generateVerticallyMirrored) {
+                        cv::Mat cvFlipped;
+                        core::Shape shapeFlipped;
+                        mirrorImageAndShapeVertically(cvImg, s, cvFlipped, shapeFlipped);
+                        
+                        core::Image imgFlipped;
+                        util::toDest(cvFlipped, imgFlipped);
+                        
+                        images.push_back(imgFlipped);
+                        shapes.push_back(shapeFlipped);
+                    }
                 }
             }
             
@@ -141,7 +187,7 @@ namespace dest {
             
         }
         
-        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes) {
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, const ImportParameters &opts) {
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
             DEST_LOG("Loading ibug database. Found " << paths.size() << " canditate entries." << std::endl);
@@ -158,11 +204,29 @@ namespace dest {
                 
                 if(ptsOk && !cvImg.empty()) {
                     
+                    float f;
+                    if (imageNeedsScaling(cvImg.size(), opts, f)) {
+                        scaleImageAndShape(cvImg, s, f);
+                    }
+                    
                     core::Image img;
                     util::toDest(cvImg, img);
                     
                     images.push_back(img);
                     shapes.push_back(s);
+                    
+                    
+                    if (opts.generateVerticallyMirrored) {
+                        cv::Mat cvFlipped;
+                        core::Shape shapeFlipped;
+                        mirrorImageAndShapeVertically(cvImg, s, cvFlipped, shapeFlipped);
+                        
+                        core::Image imgFlipped;
+                        util::toDest(cvFlipped, imgFlipped);
+                        
+                        images.push_back(imgFlipped);
+                        shapes.push_back(shapeFlipped);
+                    }
                 }
             }
             

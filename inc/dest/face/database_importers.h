@@ -29,6 +29,16 @@ namespace dest {
     namespace face {
         
         /**
+            Options when importing databases
+         */
+        struct ImportParameters {
+            int maxImageSideLength;
+            bool generateVerticallyMirrored;
+            
+            ImportParameters();
+        };
+        
+        /**
             Load the IMM face database.
          
             References:
@@ -37,7 +47,10 @@ namespace dest {
             University of Denmark, DTU Informatics, Building 321, 2004.
             http://www.imm.dtu.dk/~aam/datasets/datasets.html
         */
-        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
+        bool importIMMFaceDatabase(const std::string &directory,
+                                   std::vector<core::Image> &images,
+                                   std::vector<core::Shape> &shapes,
+                                   const ImportParameters &opts = ImportParameters());
         
         
         /** 
@@ -54,7 +67,10 @@ namespace dest {
             Proceedings of IEEE Int’l Conf. on Computer Vision (ICCV-W 2013), 300 Faces in-the-Wild Challenge (300-W). Sydney, Australia, December 2013
             http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
          */
-        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes);
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory,
+                                             std::vector<core::Image> &images,
+                                             std::vector<core::Shape> &shapes,
+                                             const ImportParameters &opts = ImportParameters());
     }
 }
 
