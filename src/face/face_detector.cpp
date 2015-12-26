@@ -113,6 +113,8 @@ namespace dest {
             if (!detectFaces(img, faces))
                 return false;
             
+            std::sort(faces.begin(), faces.end(), [](const cv::Rect &a, const cv::Rect &b) {return a.area() > b.area();});
+            
             face = faces.front();
             return true;
             
@@ -120,11 +122,14 @@ namespace dest {
 
         bool FaceDetector::detectSingleFace(const core::Image &img, core::Rect &face) const
         {
-            std::vector<core::Rect> faces;
-            if (!detectFaces(img, faces))
+            cv::Rect r;
+            cv::Mat tmp;
+            util::toCV(img, tmp);
+            
+            if (!detectSingleFace(tmp, r))
                 return false;
             
-            face = faces.front();
+            util::toDest(r, face);
             return true;
         }
     }
