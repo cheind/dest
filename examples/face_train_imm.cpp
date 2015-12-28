@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         return 0;
     }
     
-    if (!fdProfile.loadClassifiers("classifier_frontalface.xml")) {
+    if (!fdProfile.loadClassifiers("classifier_profileface.xml")) {
         std::cout << "Failed to load classifiers." << std::endl;
         return 0;
     }
