@@ -18,6 +18,7 @@
  */
 
 #include <dest/core/tree.h>
+#include <dest/core/config.h>
 #include <dest/util/log.h>
 #include <dest/io/matrix_io.h>
 #include <queue>
@@ -214,24 +215,26 @@ namespace dest {
             // Generate random split positions
             std::vector<SplitInfo> splits;
             sampleSplitPositions(t, splits);
+
+            if (splits.empty())
+                return false;
             
             const ShapeResidual meanResidualParent = meanResidualOfRange(parent.range, t.numLandmarks);
+
+            const int numSplits = static_cast<int>(splits.size());
+            std::vector<float> energies(splits.size());
             
+#ifdef DEST_WITH_OPENMP
+            #pragma omp parallel for
+#endif
+            for (int i = 0; i < numSplits; ++i) {
+                energies[i] = splitEnergy(t, parent, meanResidualParent, splits[i]);
+            }
+
+
             // Choose best split according to minimization of residual energy
-            float maxEnergy = -std::numeric_limits<float>::max();
-            size_t bestSplit = std::numeric_limits<size_t>::max();
-            
-            for (size_t i = 0; i < splits.size(); ++i) {
-                float e = splitEnergy(t, parent, meanResidualParent, splits[i]);
-                if (e > maxEnergy) {
-                    maxEnergy = e;
-                    bestSplit = i;
-                }
-            }
-            
-            if (maxEnergy == -std::numeric_limits<float>::max()) {
-                return false;
-            }
+            std::vector<float>::iterator maxIter = std::max_element(energies.begin(), energies.end());
+            int bestSplit = static_cast<int>(std::distance(energies.begin(), maxIter));
             
             TreeNode &parentNode = _data->nodes[parent.node];
             parentNode.split = splits[bestSplit];

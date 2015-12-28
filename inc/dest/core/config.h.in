@@ -26,4 +26,7 @@
 /** Whether or not OpenCV is available. */
 #cmakedefine DEST_WITH_OPENCV
 
+/** Whether or not to enable parallelism through OpenMP */
+#cmakedefine DEST_WITH_OPENMP
+
 #endif
