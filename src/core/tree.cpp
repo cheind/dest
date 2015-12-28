@@ -225,7 +225,7 @@ namespace dest {
             std::vector<float> energies(splits.size());
             
 #ifdef DEST_WITH_OPENMP
-            #pragma omp parallel for
+            #pragma omp parallel for schedule(static)
 #endif
             for (int i = 0; i < numSplits; ++i) {
                 energies[i] = splitEnergy(t, parent, meanResidualParent, splits[i]);
