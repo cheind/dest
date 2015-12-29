@@ -29,9 +29,14 @@
 int main(int argc, char **argv)
 {
     
-    dest::core::Tracker t;
-    if (!t.load(argv[1])) {
-        std::cout << "Failed to load tracker." << std::endl;
+    dest::core::Tracker t[2];
+    if (!t[0].load(argv[1])) {
+        std::cout << "Failed to load tier 1tracker." << std::endl;
+        return 0;
+    }
+    
+    if (!t[1].load(argv[2])) {
+        std::cout << "Failed to load tier 1tracker." << std::endl;
         return 0;
     }
     
@@ -43,13 +48,13 @@ int main(int argc, char **argv)
     
     cv::VideoCapture cap;
     
-    if (argc > 2) {
-        if (isdigit(argv[2][0])) {
+    if (argc > 3) {
+        if (isdigit(argv[3][0])) {
             // Open capture device by index
-            cap.open(atoi(argv[2]));
+            cap.open(atoi(argv[3]));
         } else {
             // Open video video
-            cap.open(argv[2]);
+            cap.open(argv[3]);
         }
     } else {
         // Open default device;
@@ -63,26 +68,39 @@ int main(int argc, char **argv)
     
     cv::Mat imgCV, grayCV;
     dest::core::Image img;
+    dest::core::Rect r;
+    dest::core::Shape s;
+    dest::core::ShapeTransform shapeToImage;
     bool done = false;
+    bool detect = false;
     while (!done) {
         cap >> imgCV;
         
         if (imgCV.empty())
             break;
         
-        //cv::resize(imgCV, imgCV, cv::Size(320, 240));
         cv::cvtColor(imgCV, grayCV, CV_BGR2GRAY);
-        
-        cv::Rect cvRect;
-        if (!fd.detectSingleFace(imgCV, cvRect))
-            continue;
-        
-        dest::core::Rect r;
         dest::util::toDest(grayCV, img);
-        dest::util::toDest(cvRect, r);
         
-        dest::core::ShapeTransform shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
-        dest::core::Shape s = t.predict(img, shapeToImage);
+        if (detect) {
+            cv::Rect cvRect;
+            if (!fd.detectSingleFace(imgCV, cvRect))
+                continue;
+            
+            dest::util::toDest(cvRect, r);
+            shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+            s = t[0].predict(img, shapeToImage);
+            r = dest::core::shapeBounds(s);
+            detect = false;
+        }
+        
+        for (int i = 0; i < 5; ++i) {
+            shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+            s = t[1].predict(img, shapeToImage);
+            r = dest::core::shapeBounds(s);
+        }
+
+        
 
         //dest::util::drawShape(imgCV, steps[0], cv::Scalar(0,255,0));
         dest::util::drawShape(imgCV, s, cv::Scalar(0,0,255));
@@ -92,6 +110,8 @@ int main(int argc, char **argv)
         int key = cv::waitKey(1);
         if (key == 'x')
             done = true;
+        else if (key > 0)
+            detect = true;
         
     }
 
