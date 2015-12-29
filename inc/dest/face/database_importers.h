@@ -38,6 +38,16 @@ namespace dest {
             ImportParameters();
         };
         
+        /** 
+            Import a list of rectangles from a single CSV file.
+        */
+        bool importRectangles(const std::string &pathToCSV, std::vector<core::Rect> &rects);
+        
+        /** 
+            Export a list of rectangles to a single CSV file.
+         */
+        bool exportRectangles(const std::string &pathToCSV, const std::vector<core::Rect> &rects);
+        
         /**
             Load the IMM face database.
          
