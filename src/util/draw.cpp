@@ -30,7 +30,7 @@ namespace dest {
         void drawShape(cv::Mat &img, const core::Shape &s, const cv::Scalar &color) {
             
             for (core::Shape::Index i = 0; i < s.cols(); ++i) {
-                cv::circle(img, cv::Point2f(s(0, i), s(1 ,i)), 2.f, color, -1, CV_AA);
+                cv::circle(img, cv::Point2f(s(0, i), s(1 ,i)), 1.f, color, -1, CV_AA);
             }
             
         }
