@@ -15,32 +15,30 @@
  
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include "catch.hpp"
+#ifndef DEST_RECT_IO_H
+#define DEST_RECT_IO_H
 
 #include <dest/core/shape.h>
-#include <dest/io/rect_io.h>
-#include <iostream>
+#include <string>
+#include <vector>
 
-TEST_CASE("rect-io")
-{
-    std::vector<dest::core::Rect> rects;
-    dest::core::Rect r0;
-    r0 << 0.f, 1.f, 2.f, 3.f,
-          5.f, 6.f, 7.f, 8.f;
-    rects.push_back(r0);
-    
-    dest::core::Rect r1;
-    r1 << 10.f, 11.f, 12.f, 13.f,
-          15.f, 16.f, 17.f, 18.f;
-    rects.push_back(r1);
-    
-    REQUIRE(dest::io::exportRectangles("rects.csv", rects));
-    rects.clear();
-    REQUIRE(dest::io::importRectangles("rects.csv", rects));
-    REQUIRE(rects.size() == 2);
-    
-    REQUIRE(r0.isApprox(rects[0]));
-    REQUIRE(r1.isApprox(rects[1]));
+namespace dest {
+    namespace io {
+      
+        /**
+         Import a list of rectangles from a single CSV file.
+         */
+        bool importRectangles(const std::string &pathToCSV, std::vector<core::Rect> &rects);
+        
+        /**
+         Export a list of rectangles to a single CSV file.
+         */
+        bool exportRectangles(const std::string &pathToCSV, const std::vector<core::Rect> &rects);
+
+        
+    }
 }
+
+#endif

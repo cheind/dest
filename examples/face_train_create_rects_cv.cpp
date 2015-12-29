@@ -21,6 +21,7 @@
 
 #include <dest/face/database_importers.h>
 #include <dest/face/face_detector.h>
+#include <dest/io/rect_io.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
 #include <iostream>
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
         */
     }
     
-    dest::face::exportRectangles("rects.csv", rects);
+    dest::io::exportRectangles("rects.csv", rects);
 
     return 0;
 }
