@@ -39,21 +39,22 @@ int main(int argc, char **argv)
         return 0;
     }
     
-    dest::core::Rect r;
-    if (!fd.detectSingleFace(img, r)) {
-        std::cout << "Failed to detect face" << std::endl;
-        return 0;
-    }
-
-    
     dest::core::Tracker t;
     if (!t.load(argv[1])) {
         std::cout << "Failed to load tracker." << std::endl;
         return 0;
     }
 
+    dest::core::Rect r;
+    if (!fd.detectSingleFace(img, r)) {
+        std::cout << "Failed to detect face" << std::endl;
+        return 0;
+    }
+
+    dest::core::ShapeTransform shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+
     std::vector<dest::core::Shape> steps;
-    dest::core::Shape s = t.predict(img, r, &steps);
+    dest::core::Shape s = t.predict(img, shapeToImage, &steps);
 
     bool done = false;
     int id = 0;

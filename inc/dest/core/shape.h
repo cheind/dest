@@ -29,6 +29,7 @@ namespace dest {
         typedef Eigen::Matrix<float, 2, 4, Eigen::DontAlign> Rect;
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> Shape;
         typedef Shape ShapeResidual;
+        typedef Eigen::AffineCompact2f ShapeTransform;
         
         Eigen::AffineCompact2f estimateSimilarityTransform(const Eigen::Ref<const Shape> &from, const Eigen::Ref<const Shape> &to);
         

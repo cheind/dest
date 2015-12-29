@@ -129,15 +129,15 @@ namespace dest {
             data.meanResidual = ShapeResidual::Zero(2, t.numLandmarks);
             for (size_t i = 0; i < tdata.samples.size(); ++i) {
 
-                tt.samples[i].residual = tdata.samples[i].targetInNormalizedSpace - tdata.samples[i].estimateInNormalizedSpace;
+                tt.samples[i].residual = tdata.samples[i].targetInShapeSpace - tdata.samples[i].estimateInShapeSpace;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimateInNormalizedSpace);
-                Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), tdata.samples[i].targetRectInImageSpace);
+                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimateInShapeSpace);
+                Eigen::AffineCompact2f tShapeToImage = tdata.samples[i].shapeToImage;
 
                 readPixelIntensities(tShapeToShape,
                                      tShapeToImage,
-                                     tdata.samples[i].estimateInNormalizedSpace,
+                                     tdata.samples[i].estimateInShapeSpace,
                                      t.input->images[tdata.samples[i].inputIdx],
                                      tt.samples[i].intensities);
                 
@@ -198,14 +198,13 @@ namespace dest {
             readImage(img, coords, intensities);
         }
         
-        ShapeResidual Regressor::predict(const Image &img, const Shape &shape, const Rect &rect) const
+        ShapeResidual Regressor::predict(const Image &img, const Shape &shape, const ShapeTransform &shapeToImage) const
         {
             Regressor::data &data = *_data;
             
             PixelIntensities intensities;
-            Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(data.meanShape, shape);
-            Eigen::AffineCompact2f tShapeToImage = estimateSimilarityTransform(unitRectangle(), rect);
-            readPixelIntensities(tShapeToShape, tShapeToImage, shape, img, intensities);
+            Eigen::AffineCompact2f shapeToShape = estimateSimilarityTransform(data.meanShape, shape);
+            readPixelIntensities(shapeToShape, shapeToImage, shape, img, intensities);
             
             const size_t numTrees = data.trees.size();
             

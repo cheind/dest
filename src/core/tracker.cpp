@@ -135,12 +135,12 @@ namespace dest {
 
             RegressorTraining rt;
             rt.training = &t;
-            rt.numLandmarks = static_cast<int>(t.samples.front().estimateInNormalizedSpace.cols());
+            rt.numLandmarks = static_cast<int>(t.samples.front().estimateInShapeSpace.cols());
             rt.input = t.input;
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numSamples; ++i) {
-                rt.meanShape += t.samples[i].estimateInNormalizedSpace;
+                rt.meanShape += t.samples[i].estimateInShapeSpace;
             }
             rt.meanShape /= static_cast<float>(numSamples);
 
@@ -155,10 +155,10 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    t.samples[s].estimateInNormalizedSpace +=
+                    t.samples[s].estimateInShapeSpace +=
                         data.cascade[i].predict(t.input->images[t.samples[s].inputIdx],
-                                                t.samples[s].estimateInNormalizedSpace,
-                                                t.samples[s].targetRectInImageSpace);
+                                                t.samples[s].estimateInShapeSpace,
+                                                t.samples[s].shapeToImage);
                 }
             }
 
@@ -170,7 +170,7 @@ namespace dest {
 
         }
         
-        Shape Tracker::predict(const Image &img, const Rect &rect, std::vector<Shape> *stepResults) const
+        Shape Tracker::predict(const Image &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults) const
         {
             Tracker::data &data = *_data;
 
@@ -178,13 +178,12 @@ namespace dest {
             const int numCascades = static_cast<int>(data.cascade.size());
             for (int i = 0; i < numCascades; ++i) {
                 if (stepResults) {
-                    stepResults->push_back(estimateSimilarityTransform(unitRectangle(), rect) * estimate.colwise().homogeneous());
+                    stepResults->push_back(shapeToImage * estimate.colwise().homogeneous());
                 }
-                estimate += data.cascade[i].predict(img, estimate, rect);               
+                estimate += data.cascade[i].predict(img, estimate, shapeToImage);
             }
 
-            Eigen::AffineCompact2f t = estimateSimilarityTransform(unitRectangle(), rect);
-            Shape final = t * estimate.colwise().homogeneous();
+            Shape final = shapeToImage * estimate.colwise().homogeneous();
 
             if (stepResults) {
                 stepResults->push_back(final);

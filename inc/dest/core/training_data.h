@@ -42,24 +42,26 @@ namespace dest {
         
         struct InputData {
             typedef std::vector<Rect> RectVector;
+            typedef std::vector<ShapeTransform> ShapeTransformVector;
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
             
-            RectVector rects;
             ShapeVector shapes;
             ImageVector images;
+            ShapeTransformVector shapeToImage;
             std::mt19937 rnd;
             
-            static void randomPartition(InputData &train, InputData &validate, float validatePercent = 0.1f);
+            static void randomPartition(InputData &input, InputData &validate, float validatePercent = 0.1f);
+            static void normalizeShapes(InputData &input, const RectVector &rects);
         };
         
         struct TrainingData {
             
             struct Sample {
                 int inputIdx;
-                Shape estimateInNormalizedSpace;
-                Shape targetInNormalizedSpace;
-                Rect targetRectInImageSpace;
+                Shape estimateInShapeSpace;
+                Shape targetInShapeSpace;
+                ShapeTransform shapeToImage;
             };
             typedef std::vector<Sample> SampleVector;
 
@@ -68,8 +70,7 @@ namespace dest {
             AlgorithmParameters params;
 
             static void createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
-            static void createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
-            static void convertShapesToNormalizedShapeSpace(SampleVector &samples);
+            static void createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);            
         };
         
         struct RegressorTraining {

@@ -38,6 +38,18 @@ namespace dest {
             int operator()() { return m_value++; }
             int m_value;
         };
+
+        void InputData::normalizeShapes(InputData & input, const RectVector & rects)
+        {
+            const int numShapes = static_cast<int>(input.shapes.size());
+
+            input.shapeToImage.resize(numShapes);
+            for (size_t i = 0; i < numShapes; ++i) {
+                ShapeTransform t = estimateSimilarityTransform(rects[i], unitRectangle());
+                input.shapes[i] = t * input.shapes[i].colwise().homogeneous();
+                input.shapeToImage[i] = t.inverse();
+            }
+        }
         
         void InputData::randomPartition(InputData &train, InputData &validate, float validatePercent)
         {
@@ -48,12 +60,12 @@ namespace dest {
             std::shuffle(ids.begin(), ids.end(), train.rnd);
             
             validate.shapes.clear();
-            validate.rects.clear();
+            validate.shapeToImage.clear();
             validate.images.clear();
             
             for (size_t i = 0; i < numValidate; ++i) {
                 validate.shapes.push_back(train.shapes[ids[i]]);
-                validate.rects.push_back(train.rects[ids[i]]);
+                validate.shapeToImage.push_back(train.shapeToImage[ids[i]]);
                 validate.images.push_back(train.images[ids[i]]);
             }
             
@@ -61,7 +73,7 @@ namespace dest {
             for (size_t i = numValidate; i < ids.size(); ++i)
             {
                 train2.shapes.push_back(train.shapes[ids[i]]);
-                train2.rects.push_back(train.rects[ids[i]]);
+                train2.shapeToImage.push_back(train.shapeToImage[ids[i]]);
                 train2.images.push_back(train.images[ids[i]]);
             }
             
@@ -73,19 +85,13 @@ namespace dest {
             const int numShapes = static_cast<int>(input.shapes.size());
             const int numSamples = numShapes * numInitializationsPerImage;
             
-            InputData::ShapeVector nshapes(numShapes);
-            for (size_t i = 0; i < nshapes.size(); ++i) {
-                Eigen::AffineCompact2f t = estimateSimilarityTransform(input.rects[i], unitRectangle());
-                nshapes[i] = t * input.shapes[i].colwise().homogeneous();
-            }
-            
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
                 samples[i].inputIdx = i % numShapes;
-                samples[i].estimateInNormalizedSpace = nshapes[dist(rnd)];
-                samples[i].targetInNormalizedSpace = nshapes[samples[i].inputIdx];
-                samples[i].targetRectInImageSpace = input.rects[samples[i].inputIdx];
+                samples[i].estimateInShapeSpace = input.shapes[dist(rnd)];
+                samples[i].targetInShapeSpace = input.shapes[samples[i].inputIdx];
+                samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
             }
 
         }
@@ -97,12 +103,6 @@ namespace dest {
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             std::uniform_real_distribution<float> zeroOne(0, 1);
-            
-            InputData::ShapeVector nshapes(numShapes);
-            for (size_t i = 0; i < nshapes.size(); ++i) {
-                Eigen::AffineCompact2f t = estimateSimilarityTransform(input.rects[i], unitRectangle());
-                nshapes[i] = t * input.shapes[i].colwise().homogeneous();
-            }
             
             samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
@@ -116,9 +116,9 @@ namespace dest {
                 c /= sum;
                 
                 samples[i].inputIdx = i % numShapes;
-                samples[i].estimateInNormalizedSpace = nshapes[dist(rnd)] * a + nshapes[dist(rnd)] * b + nshapes[dist(rnd)] * c;
-                samples[i].targetInNormalizedSpace = nshapes[samples[i].inputIdx];
-                samples[i].targetRectInImageSpace = input.rects[samples[i].inputIdx];
+                samples[i].estimateInShapeSpace = input.shapes[dist(rnd)] * a + input.shapes[dist(rnd)] * b + input.shapes[dist(rnd)] * c;
+                samples[i].targetInShapeSpace = input.shapes[samples[i].inputIdx];
+                samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
             }
         }
     }

@@ -38,7 +38,7 @@ namespace dest {
             
             bool fit(TrainingData &t);
             
-            Shape predict(const Image &img, const Rect &rect, std::vector<Shape> *stepResults = 0) const;
+            Shape predict(const Image &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults = 0) const;
 
             flatbuffers::Offset<io::Tracker> save(flatbuffers::FlatBufferBuilder &fbb) const;
             void load(const io::Tracker &fbs);

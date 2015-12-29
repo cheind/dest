@@ -38,7 +38,7 @@ namespace dest {
             
             bool fit(RegressorTraining &t);
             
-            ShapeResidual predict(const Image &img, const Shape &shape, const Rect &rect) const;
+            ShapeResidual predict(const Image &img, const Shape &shape, const ShapeTransform &shapeToImage) const;
 
             flatbuffers::Offset<io::Regressor> save(flatbuffers::FlatBufferBuilder &fbb) const;
             void load(const io::Regressor &fbs);

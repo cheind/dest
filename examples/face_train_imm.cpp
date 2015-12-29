@@ -63,8 +63,8 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    inputs.rects.resize(inputs.shapes.size());
-    for (size_t i = 0; i < inputs.rects.size(); ++i) {
+    std::vector<dest::core::Rect> rects(inputs.shapes.size());
+    for (size_t i = 0; i < rects.size(); ++i) {
         std::vector<dest::core::Rect> faces, facesFront, facesProfile;
         fdFront.detectFaces(inputs.images[i], facesFront);
         fdProfile.detectFaces(inputs.images[i], facesProfile);
@@ -85,9 +85,9 @@ int main(int argc, char **argv)
         }
         
         if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.6f) {
-            inputs.rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
+            rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
         } else {
-            inputs.rects[i] = faces[bestId];
+            rects[i] = faces[bestId];
         }
         
         if (i % 10 == 0)
@@ -103,6 +103,8 @@ int main(int argc, char **argv)
         cv::waitKey();
         */
     }
+
+    dest::core::InputData::normalizeShapes(inputs, rects);
     
     dest::core::InputData validation;
     dest::core::InputData::randomPartition(inputs, validation, 0.01f);
@@ -125,7 +127,7 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < validationSamples.size(); ++i) {
         dest::core::TrainingData::Sample &s = validationSamples[i];
         
-        dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.targetRectInImageSpace);
+        dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.shapeToImage);
         cv::Mat tmp = dest::util::drawShape(validation.images[s.inputIdx], shape, cv::Scalar(0, 255, 0));
         cv::imshow("result", tmp);
         cv::waitKey();
