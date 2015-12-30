@@ -22,7 +22,6 @@
 
 #include <dest/core/training_data.h>
 #include <dest/core/tracker.h>
-
 #include <dest/io/database_io.h>
 #include <dest/io/rect_io.h>
 

@@ -48,9 +48,11 @@ namespace dest {
                 - ibug annotated database, see importIBugAnnotatedFaceDatabase
         */
         bool importDatabase(const std::string &directory,
-                                std::vector<core::Image> &images,
-                                std::vector<core::Shape> &shapes,
-                                const ImportParameters &opts = ImportParameters());
+                            const std::string &rectangleFile, 
+                            std::vector<core::Image> &images,
+                            std::vector<core::Shape> &shapes, 
+                            std::vector<core::Rect> &rects,
+                            const ImportParameters &opts = ImportParameters());
     
         /**
             Load the IMM face database.
@@ -62,8 +64,10 @@ namespace dest {
             http://www.imm.dtu.dk/~aam/datasets/datasets.html
         */
         bool importIMMFaceDatabase(const std::string &directory,
+                                   const std::string &rectangleFile,
                                    std::vector<core::Image> &images,
                                    std::vector<core::Shape> &shapes,
+                                   std::vector<core::Rect> &rects,
                                    const ImportParameters &opts = ImportParameters());
         
         
@@ -82,8 +86,10 @@ namespace dest {
             http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
          */
         bool importIBugAnnotatedFaceDatabase(const std::string &directory,
+                                             const std::string &rectangleFile,
                                              std::vector<core::Image> &images,
                                              std::vector<core::Shape> &shapes,
+                                             std::vector<core::Rect> &rects,
                                              const ImportParameters &opts = ImportParameters());
     }
 }

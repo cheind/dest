@@ -75,7 +75,8 @@ int main(int argc, char **argv)
     }
    
     dest::core::InputData inputs;
-    if (!dest::io::importDatabase(opts.db, inputs.images, inputs.shapes)) {
+    std::vector<dest::core::Rect> rects;
+    if (!dest::io::importDatabase(opts.db, "", inputs.images, inputs.shapes, rects)) {
         std::cout << "Failed to load database" << std::endl;
         return -1;
     }
@@ -89,7 +90,6 @@ int main(int argc, char **argv)
     }
 
     size_t countDetectionSuccess = 0;
-    std::vector<dest::core::Rect> rects(inputs.shapes.size());
     for (size_t i = 0; i < rects.size(); ++i) {
 
         std::vector<dest::core::Rect> faces;

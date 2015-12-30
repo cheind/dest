@@ -75,20 +75,19 @@ target_link_libraries(dest ${DEST_LINK_TARGETS})
 	
 # Samples
 
-add_executable(dest_facetrain_tier1 examples/face_train_tier1.cpp)
-target_link_libraries(dest_facetrain_tier1 dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_facetrain_tier2 examples/face_train_tier2.cpp)
-target_link_libraries(dest_facetrain_tier2 dest ${DEST_LINK_TARGETS})
+add_executable(dest_detect_viola_jones examples/dest_detect_viola_jones.cpp)
+target_link_libraries(dest_detect_viola_jones dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_facetrack examples/face_track.cpp)
-target_link_libraries(dest_facetrack dest ${DEST_LINK_TARGETS})
+add_executable(dest_train examples/dest_train.cpp)
+target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
+
+add_executable(dest_align examples/dest_align.cpp)
+target_link_libraries(dest_align dest ${DEST_LINK_TARGETS})
 
 add_executable(dest_facetrack_video examples/face_track_video.cpp)
 target_link_libraries(dest_facetrack_video dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_detect_viola_jones examples/dest_detect_viola_jones.cpp)
-target_link_libraries(dest_detect_viola_jones dest ${DEST_LINK_TARGETS})
 
 # Tests
 

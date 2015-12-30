@@ -22,6 +22,7 @@
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
 #include <dest/util/glob.h>
+#include <dest/io/rect_io.h>
 #include <opencv2/opencv.hpp>
 #include <iomanip>
 #include <fstream>
@@ -34,15 +35,15 @@ namespace dest {
             generateVerticallyMirrored = false;
         }
 
-        bool importDatabase(const std::string & directory, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, const ImportParameters & opts)
+        bool importDatabase(const std::string & directory, const std::string &rectangleFile, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, std::vector<core::Rect>& rects, const ImportParameters & opts)
         {
             const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
             const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;
 
             if (isIMM)
-                return importIMMFaceDatabase(directory, images, shapes, opts);
+                return importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
             else if (isIBUG)
-                return importIBugAnnotatedFaceDatabase(directory, images, shapes, opts);
+                return importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
             else {
                 DEST_LOG("Unknown database format." << std::endl);
                 return false;
@@ -59,17 +60,23 @@ namespace dest {
             }
         }
         
-        void scaleImageAndShape(cv::Mat &img, core::Shape &s, float factor) {
+        void scaleImageShapeAndRect(cv::Mat &img, core::Shape &s, core::Rect &r, float factor) {
             cv::resize(img, img, cv::Size(0,0), factor, factor, CV_INTER_CUBIC);
             s *= factor;
+            r *= factor;
         }
         
-        void mirrorImageAndShapeVertically(const cv::Mat &img, const core::Shape &s, cv::Mat &dstImage, core::Shape &dstShape) {
+        void mirrorImageShapeAndRectVertically(const cv::Mat &img, const core::Shape &s, const core::Rect &r, cv::Mat &dstImage, core::Shape &dstShape, core::Rect &dstRect) {
             cv::flip(img, dstImage, 1);
             dstShape.resize(2, s.cols());
             for (core::Shape::Index i = 0; i < s.cols(); ++i) {
                 dstShape(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
                 dstShape(1, i) = s(1, i);
+            }
+
+            for (core::Rect::Index i = 0; i < r.cols(); ++i) {
+                dstRect(0, i) = static_cast<float>(img.cols - 1) - r(0, i);
+                dstRect(1, i) = r(1, i);
             }
         }
         
@@ -114,11 +121,22 @@ namespace dest {
             return s.rows() > 0 && s.cols() > 0;
         }
         
-        bool importIMMFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, const ImportParameters &opts) {
-            
-            
+        bool importIMMFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect>& rects, const ImportParameters &opts) {
+                                    
             std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
             DEST_LOG("Loading IMM database. Found " << paths.size() << " canditate entries." << std::endl);
+
+            std::vector<core::Rect> loadedRects;
+            io::importRectangles(rectangleFile, loadedRects);
+
+            if (loadedRects.empty()) {
+                DEST_LOG("No rectangles found, using tight bounds." << std::endl);
+            } else {
+                if (paths.size() != loadedRects.size()) {
+                    DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
+                    return false;
+                }
+            }
             
             size_t initialSize = images.size();
             
@@ -127,6 +145,7 @@ namespace dest {
                 const std::string fileNamePts = paths[i] + ".asf";
                 
                 core::Shape s;
+                core::Rect r;
                 bool asfOk = parseAsfFile(fileNamePts, s);
                 cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
                 
@@ -135,10 +154,16 @@ namespace dest {
                     // Scale to image dimensions
                     s.row(0) *= static_cast<float>(cvImg.cols);
                     s.row(1) *= static_cast<float>(cvImg.rows);
+
+                    if (loadedRects.empty()) {
+                        r = core::shapeBounds(s);
+                    } else {
+                        r = loadedRects[i];
+                    }
                     
                     float f;
                     if (imageNeedsScaling(cvImg.size(), opts, f)) {
-                        scaleImageAndShape(cvImg, s, f);
+                        scaleImageShapeAndRect(cvImg, s, r, f);
                     }
                     
                     core::Image img;
@@ -146,17 +171,20 @@ namespace dest {
                     
                     images.push_back(img);
                     shapes.push_back(s);
+                    rects.push_back(r);
                     
                     if (opts.generateVerticallyMirrored) {
                         cv::Mat cvFlipped;
                         core::Shape shapeFlipped;
-                        mirrorImageAndShapeVertically(cvImg, s, cvFlipped, shapeFlipped);
+                        core::Rect rectFlipped;
+                        mirrorImageShapeAndRectVertically(cvImg, s, r, cvFlipped, shapeFlipped, rectFlipped);
                         
                         core::Image imgFlipped;
                         util::toDest(cvFlipped, imgFlipped);
                         
                         images.push_back(imgFlipped);
                         shapes.push_back(shapeFlipped);
+                        rects.push_back(rectFlipped);
                     }
                 }
             }
@@ -202,10 +230,23 @@ namespace dest {
             
         }
         
-        bool importIBugAnnotatedFaceDatabase(const std::string &directory, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, const ImportParameters &opts) {
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect> &rects, const ImportParameters &opts) {
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
             DEST_LOG("Loading ibug database. Found " << paths.size() << " canditate entries." << std::endl);
+
+            std::vector<core::Rect> loadedRects;
+            io::importRectangles(rectangleFile, loadedRects);
+
+            if (loadedRects.empty()) {
+                DEST_LOG("No rectangles found, using tight bounds." << std::endl);
+            }
+            else {
+                if (paths.size() != loadedRects.size()) {
+                    DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
+                    return false;
+                }
+            }
             
             size_t initialSize = images.size();
             
@@ -214,14 +255,22 @@ namespace dest {
                 const std::string fileNamePts = paths[i] + ".pts";
                 
                 core::Shape s;
+                core::Rect r;
                 bool ptsOk = parsePtsFile(fileNamePts, s);
                 cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
                 
                 if(ptsOk && !cvImg.empty()) {
+
+                    if (loadedRects.empty()) {
+                        r = core::shapeBounds(s);
+                    }
+                    else {
+                        r = loadedRects[i];
+                    }
                     
                     float f;
                     if (imageNeedsScaling(cvImg.size(), opts, f)) {
-                        scaleImageAndShape(cvImg, s, f);
+                        scaleImageShapeAndRect(cvImg, s, r, f);
                     }
                     
                     core::Image img;
@@ -229,18 +278,21 @@ namespace dest {
                     
                     images.push_back(img);
                     shapes.push_back(s);
+                    rects.push_back(r);
                     
                     
                     if (opts.generateVerticallyMirrored) {
                         cv::Mat cvFlipped;
                         core::Shape shapeFlipped;
-                        mirrorImageAndShapeVertically(cvImg, s, cvFlipped, shapeFlipped);
+                        core::Rect rectFlipped;
+                        mirrorImageShapeAndRectVertically(cvImg, s, r, cvFlipped, shapeFlipped, rectFlipped);
                         
                         core::Image imgFlipped;
                         util::toDest(cvFlipped, imgFlipped);
                         
                         images.push_back(imgFlipped);
                         shapes.push_back(shapeFlipped);
+                        shapes.push_back(rectFlipped);
                     }
                 }
             }

@@ -24,22 +24,49 @@
 #include <dest/util/convert.h>
 #include <random>
 #include <opencv2/opencv.hpp>
+#include <tclap/CmdLine.h>
 
 int main(int argc, char **argv)
 {
+    struct {
+        std::string detector;
+        std::string regressor;
+        std::string image;
+    } opts;
 
-    cv::Mat imgCV = cv::imread(argv[2], cv::IMREAD_GRAYSCALE);
+    try {
+        TCLAP::CmdLine cmd("Generate initial bounding boxes for face detection using Viola-Jones algorithm in OpenCV.", ' ', "0.9");
+        TCLAP::ValueArg<std::string> detectorArg("d", "detector", "OpenCV face detector to load", true, "cascade.xml", "string");
+        TCLAP::ValueArg<std::string> regressorArg("r", "regressor", "Trained regressor to load", true, "dest.bin", "string");
+        TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align", true, "img.png", "string");
+
+        cmd.add(&detectorArg);
+        cmd.add(&regressorArg);
+        cmd.add(&imageArg);
+
+        cmd.parse(argc, argv);
+
+        opts.detector = detectorArg.getValue();
+        opts.regressor = regressorArg.getValue();
+        opts.image = imageArg.getValue();
+    }
+    catch (TCLAP::ArgException &e) {
+        std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
+        return -1;
+    }
+
+    cv::Mat imgCV = cv::imread(opts.image, cv::IMREAD_GRAYSCALE);
     dest::core::Image img;
     dest::util::toDest(imgCV, img);
 
     dest::face::FaceDetector fd;
-    if (!fd.loadClassifiers("classifier_frontalface.xml")) {
+    if (!fd.loadClassifiers(opts.detector)) {
         std::cout << "Failed to load classifiers." << std::endl;
         return 0;
     }
     
     dest::core::Tracker t;
-    if (!t.load(argv[1])) {
+    if (!t.load(opts.regressor)) {
         std::cout << "Failed to load tracker." << std::endl;
         return 0;
     }
