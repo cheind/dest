@@ -17,8 +17,8 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DEST_DATABASE_IMPORTERS_H
-#define DEST_DATABASE_IMPORTERS_H
+#ifndef DEST_DATABASE_IO_H
+#define DEST_DATABASE_IO_H
 
 #include <dest/core/shape.h>
 #include <dest/core/image.h>
@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace dest {
-    namespace face {
+    namespace io {
         
 
         /**
@@ -40,14 +40,14 @@ namespace dest {
         };
 
         /**
-            Import a face database.
+            Import a training / testing database.
 
             Automatically tries to derive type of database from files in the directory. 
             Currently supported databases are
                 - IMM face database, see importIMMFaceDatabase
                 - ibug annotated database, see importIBugAnnotatedFaceDatabase
         */
-        bool importFaceDatabase(const std::string &directory,
+        bool importDatabase(const std::string &directory,
                                 std::vector<core::Image> &images,
                                 std::vector<core::Shape> &shapes,
                                 const ImportParameters &opts = ImportParameters());

@@ -17,7 +17,7 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dest/face/database_importers.h>
+#include <dest/io/database_io.h>
 #include <dest/util/log.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
@@ -27,14 +27,14 @@
 #include <fstream>
 
 namespace dest {
-    namespace face {
+    namespace io {
         
         ImportParameters::ImportParameters() {
             maxImageSideLength = std::numeric_limits<int>::max();
             generateVerticallyMirrored = false;
         }
 
-        bool importFaceDatabase(const std::string & directory, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, const ImportParameters & opts)
+        bool importDatabase(const std::string & directory, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, const ImportParameters & opts)
         {
             const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
             const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;

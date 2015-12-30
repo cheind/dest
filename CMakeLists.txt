@@ -47,9 +47,9 @@ add_library(dest
     inc/dest/core/training_data.h
     inc/dest/core/tracker.h
     inc/dest/core/regressor.h
-    inc/dest/core/tree.h
-    inc/dest/face/database_importers.h
+    inc/dest/core/tree.h    
     inc/dest/face/face_detector.h
+    inc/dest/io/database_io.h
     inc/dest/io/dest_io.fbs
     inc/dest/io/dest_io_generated.h
     inc/dest/io/matrix_io.h
@@ -65,7 +65,7 @@ add_library(dest
     src/core/regressor.cpp
     src/core/tree.cpp
     src/io/rect_io.cpp
-    src/face/database_importers.cpp
+    src/io/database_io.cpp   
     src/face/face_detector.cpp
     src/util/draw.cpp
     src/util/glob.cpp

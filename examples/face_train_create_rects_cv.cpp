@@ -19,7 +19,7 @@
 
 #include <dest/dest.h>
 
-#include <dest/face/database_importers.h>
+#include <dest/io/database_io.h>
 #include <dest/face/face_detector.h>
 #include <dest/io/rect_io.h>
 #include <dest/util/draw.h>
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
    
     dest::core::InputData inputs;
     for (int i = 1; i < argc; ++i) {
-        dest::face::importFaceDatabase(argv[i], inputs.images, inputs.shapes);
+        dest::io::importDatabase(argv[i], inputs.images, inputs.shapes);
     }
 
     dest::face::FaceDetector fdFront, fdProfile;

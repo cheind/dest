@@ -19,7 +19,6 @@
 
 #include <dest/dest.h>
 
-#include <dest/face/database_importers.h>
 #include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>

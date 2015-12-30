@@ -19,7 +19,7 @@
 
 #include <dest/dest.h>
 
-#include <dest/face/database_importers.h>
+#include <dest/io/database_io.h>
 #include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
@@ -44,12 +44,12 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 
 int main(int argc, char **argv)
 {
-    dest::face::ImportParameters params;
+    dest::io::ImportParameters params;
     params.maxImageSideLength = 640;
     
     dest::core::InputData inputs;
     for (int i = 1; i < argc; ++i) {
-        dest::face::importFaceDatabase(argv[i], inputs.images, inputs.shapes, params);
+        dest::io::importDatabase(argv[i], inputs.images, inputs.shapes, params);
     }
 
     dest::face::FaceDetector fdFront, fdProfile;
