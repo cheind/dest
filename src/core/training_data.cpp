@@ -39,13 +39,13 @@ namespace dest {
             int m_value;
         };
 
-        void InputData::normalizeShapes(InputData & input, const RectVector & rects)
+        void InputData::normalizeShapes(InputData & input)
         {
             const int numShapes = static_cast<int>(input.shapes.size());
 
             input.shapeToImage.resize(numShapes);
             for (size_t i = 0; i < numShapes; ++i) {
-                ShapeTransform t = estimateSimilarityTransform(rects[i], unitRectangle());
+                ShapeTransform t = estimateSimilarityTransform(input.rects[i], unitRectangle());
                 input.shapes[i] = t * input.shapes[i].colwise().homogeneous();
                 input.shapeToImage[i] = t.inverse();
             }
@@ -62,11 +62,13 @@ namespace dest {
             validate.shapes.clear();
             validate.shapeToImage.clear();
             validate.images.clear();
+            validate.rects.clear();
             
             for (size_t i = 0; i < numValidate; ++i) {
                 validate.shapes.push_back(train.shapes[ids[i]]);
                 validate.shapeToImage.push_back(train.shapeToImage[ids[i]]);
                 validate.images.push_back(train.images[ids[i]]);
+                validate.rects.push_back(train.rects[ids[i]]);
             }
             
             InputData train2;
@@ -75,6 +77,7 @@ namespace dest {
                 train2.shapes.push_back(train.shapes[ids[i]]);
                 train2.shapeToImage.push_back(train.shapeToImage[ids[i]]);
                 train2.images.push_back(train.images[ids[i]]);
+                train2.rects.push_back(train.rects[ids[i]]);
             }
             
             std::swap(train2, train);

@@ -46,13 +46,14 @@ namespace dest {
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
             
+            RectVector rects;
             ShapeVector shapes;
             ImageVector images;
             ShapeTransformVector shapeToImage;
             std::mt19937 rnd;
             
             static void randomPartition(InputData &input, InputData &validate, float validatePercent = 0.1f);
-            static void normalizeShapes(InputData &input, const RectVector &rects);
+            static void normalizeShapes(InputData &input);
         };
         
         struct TrainingData {

@@ -62,13 +62,12 @@ int main(int argc, char **argv)
     }
 
     dest::core::InputData inputs;
-    std::vector<dest::core::Rect> rects;
-    if (!dest::io::importDatabase(opts.db, opts.rects, inputs.images, inputs.shapes, rects, opts.importParams)) {
+    if (!dest::io::importDatabase(opts.db, opts.rects, inputs.images, inputs.shapes, inputs.rects, opts.importParams)) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
     }
 
-    dest::core::InputData::normalizeShapes(inputs, rects);    
+    dest::core::InputData::normalizeShapes(inputs);
     dest::core::InputData validation;
     dest::core::InputData::randomPartition(inputs, validation, 0.01f);
     
