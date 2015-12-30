@@ -130,7 +130,7 @@ namespace dest {
             io::importRectangles(rectangleFile, loadedRects);
 
             if (loadedRects.empty()) {
-                DEST_LOG("No rectangles found, using tight bounds." << std::endl);
+                DEST_LOG("No rectangles found, using tight axis aligned bounds." << std::endl);
             } else {
                 if (paths.size() != loadedRects.size()) {
                     DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
@@ -239,7 +239,7 @@ namespace dest {
             io::importRectangles(rectangleFile, loadedRects);
 
             if (loadedRects.empty()) {
-                DEST_LOG("No rectangles found, using tight bounds." << std::endl);
+                DEST_LOG("No rectangles found, using tight axis aligned bounds." << std::endl);
             }
             else {
                 if (paths.size() != loadedRects.size()) {
