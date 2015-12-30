@@ -129,15 +129,15 @@ namespace dest {
             data.meanResidual = ShapeResidual::Zero(2, t.numLandmarks);
             for (size_t i = 0; i < tdata.samples.size(); ++i) {
 
-                tt.samples[i].residual = tdata.samples[i].targetInShapeSpace - tdata.samples[i].estimateInShapeSpace;
+                tt.samples[i].residual = tdata.samples[i].target - tdata.samples[i].estimate;
                 data.meanResidual += tt.samples[i].residual;
                 
-                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimateInShapeSpace);
+                Eigen::AffineCompact2f tShapeToShape = estimateSimilarityTransform(t.meanShape, tdata.samples[i].estimate);
                 Eigen::AffineCompact2f tShapeToImage = tdata.samples[i].shapeToImage;
 
                 readPixelIntensities(tShapeToShape,
                                      tShapeToImage,
-                                     tdata.samples[i].estimateInShapeSpace,
+                                     tdata.samples[i].estimate,
                                      t.input->images[tdata.samples[i].inputIdx],
                                      tt.samples[i].intensities);
                 

@@ -59,8 +59,8 @@ namespace dest {
             
             struct Sample {
                 int inputIdx;
-                Shape estimateInShapeSpace;
-                Shape targetInShapeSpace;
+                Shape estimate;
+                Shape target;
                 ShapeTransform shapeToImage;
             };
             typedef std::vector<Sample> SampleVector;

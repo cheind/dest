@@ -135,12 +135,12 @@ namespace dest {
 
             RegressorTraining rt;
             rt.training = &t;
-            rt.numLandmarks = static_cast<int>(t.samples.front().estimateInShapeSpace.cols());
+            rt.numLandmarks = static_cast<int>(t.samples.front().estimate.cols());
             rt.input = t.input;
             
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numSamples; ++i) {
-                rt.meanShape += t.samples[i].estimateInShapeSpace;
+                rt.meanShape += t.samples[i].estimate;
             }
             rt.meanShape /= static_cast<float>(numSamples);
 
@@ -155,9 +155,9 @@ namespace dest {
                 
                 // Update shape estimate
                 for (int s = 0; s < numSamples; ++s) {
-                    t.samples[s].estimateInShapeSpace +=
+                    t.samples[s].estimate +=
                         data.cascade[i].predict(t.input->images[t.samples[s].inputIdx],
-                                                t.samples[s].estimateInShapeSpace,
+                                                t.samples[s].estimate,
                                                 t.samples[s].shapeToImage);
                 }
             }

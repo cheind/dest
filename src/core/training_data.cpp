@@ -89,8 +89,8 @@ namespace dest {
             samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
                 samples[i].inputIdx = i % numShapes;
-                samples[i].estimateInShapeSpace = input.shapes[dist(rnd)];
-                samples[i].targetInShapeSpace = input.shapes[samples[i].inputIdx];
+                samples[i].estimate = input.shapes[dist(rnd)];
+                samples[i].target = input.shapes[samples[i].inputIdx];
                 samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
             }
 
@@ -116,8 +116,8 @@ namespace dest {
                 c /= sum;
                 
                 samples[i].inputIdx = i % numShapes;
-                samples[i].estimateInShapeSpace = input.shapes[dist(rnd)] * a + input.shapes[dist(rnd)] * b + input.shapes[dist(rnd)] * c;
-                samples[i].targetInShapeSpace = input.shapes[samples[i].inputIdx];
+                samples[i].estimate = input.shapes[dist(rnd)] * a + input.shapes[dist(rnd)] * b + input.shapes[dist(rnd)] * c;
+                samples[i].target = input.shapes[samples[i].inputIdx];
                 samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
             }
         }
