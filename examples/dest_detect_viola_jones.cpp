@@ -27,6 +27,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+#include <tclap/CmdLine.h>
+
 float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &s) {
     Eigen::Vector2f minC = r.col(0);
     Eigen::Vector2f maxC = r.col(3);
@@ -45,32 +47,58 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 
 int main(int argc, char **argv)
 {
+    struct {
+        std::vector<std::string> detectors;
+        std::string db;
+        std::string output;
+    } opts;
+
+    try {
+        TCLAP::CmdLine cmd("Generate initial bounding boxes for face detection using Viola-Jones algorithm in OpenCV.", ' ', "0.9");
+        TCLAP::MultiArg<std::string> detectorsArg("d", "detector", "OpenCV classifier to load", true, "string");
+        TCLAP::ValueArg<std::string> outputArg("o", "output", "CSV output file", false, "rectangles.csv", "string");
+        TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string");
+
+        cmd.add(&detectorsArg);
+        cmd.add(&outputArg);
+        cmd.add(&databaseArg);
+
+        cmd.parse(argc, argv);
+
+        opts.detectors.insert(opts.detectors.end(), detectorsArg.begin(), detectorsArg.end());
+        opts.db = databaseArg.getValue();
+        opts.output = outputArg.getValue();
+    }
+    catch (TCLAP::ArgException &e) {
+        std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
+        return -1;
+    }
    
     dest::core::InputData inputs;
-    for (int i = 1; i < argc; ++i) {
-        dest::io::importDatabase(argv[i], inputs.images, inputs.shapes);
+    if (!dest::io::importDatabase(opts.db, inputs.images, inputs.shapes)) {
+        std::cout << "Failed to load database" << std::endl;
+        return -1;
     }
 
-    dest::face::FaceDetector fdFront, fdProfile;
-    if (!fdFront.loadClassifiers("classifier_frontalface.xml")) {
-        std::cout << "Failed to load classifiers." << std::endl;
-        return 0;
-    }
-    
-    if (!fdProfile.loadClassifiers("classifier_profileface.xml")) {
-        std::cout << "Failed to load classifiers." << std::endl;
-        return 0;
+    std::vector<dest::face::FaceDetector> detectors(opts.detectors.size());
+    for (size_t i = 0; i < opts.detectors.size(); ++i) {
+        if (!detectors[i].loadClassifiers(opts.detectors[i])) {
+            std::cout << "Failed to load detector " << opts.detectors[i];
+            return -1;
+        }
     }
 
+    size_t countDetectionSuccess = 0;
     std::vector<dest::core::Rect> rects(inputs.shapes.size());
     for (size_t i = 0; i < rects.size(); ++i) {
-        std::vector<dest::core::Rect> faces, facesFront, facesProfile;
-        fdFront.detectFaces(inputs.images[i], facesFront);
-        fdProfile.detectFaces(inputs.images[i], facesProfile);
-        
-        faces.insert(faces.end(), facesFront.begin(), facesFront.end());
-        faces.insert(faces.end(), facesProfile.begin(), facesProfile.end());
-        
+
+        std::vector<dest::core::Rect> faces;
+        for (size_t j = 0; j < detectors.size(); ++j) {
+            std::vector<dest::core::Rect> rects;
+            detectors[j].detectFaces(inputs.images[i], rects);
+            faces.insert(faces.end(), rects.begin(), rects.end());
+        }
+               
         // Find the face rect with a meaningful shape overlap
         float bestOverlap = 0.f;
         size_t bestId = std::numeric_limits<size_t>::max();
@@ -86,6 +114,7 @@ int main(int argc, char **argv)
         if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.6f) {
             rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
         } else {
+            ++countDetectionSuccess;
             rects[i] = faces[bestId];
         }
         
@@ -93,8 +122,10 @@ int main(int argc, char **argv)
             std::cout << "Processing " << i << "\r" << std::flush;
         }
     }
+
+    std::cout << "Detector successful on " << countDetectionSuccess << "/" << rects.size() << " shapes." << std::endl;
     
-    dest::io::exportRectangles("rects.csv", rects);
+    dest::io::exportRectangles(opts.output, rects);
 
     return 0;
 }
