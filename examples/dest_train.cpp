@@ -32,6 +32,7 @@ int main(int argc, char **argv)
 {
     struct {
         dest::core::TrainingParameters trainingParams;
+        dest::core::SampleCreationParameters createParams;
         dest::io::ImportParameters importParams;
         std::string db;
         std::string rects;
@@ -49,14 +50,21 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<float> lambdaArg("", "train-lambda", "Prior that favors closer pixel coordinates.", false, 0.1f, "float", cmd);
         TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
         
+        TCLAP::ValueArg<int> numShapesPerImageArg("", "create-num-shapes", "Number of shapes per image to create.", false, 20, "int", cmd);
+        TCLAP::SwitchArg noCombinationsArg("", "create-no-combinations", "Disable linear combinations of shapes.", cmd, false);
+        
         
         TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string", cmd);
         TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained cascade of regressors file.", false, "dest.bin", "string", cmd);
-        TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 640, "int", cmd);
+        TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int", cmd);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
 
         cmd.parse(argc, argv);
+        
+        opts.createParams.numShapesPerImage = numShapesPerImageArg.getValue();
+        opts.createParams.numTransformPertubationsPerShape = 0;
+        opts.createParams.useLinearCombinationsOfShapes = !noCombinationsArg.getValue();
 
         opts.trainingParams.numCascades = numCascadesArg.getValue();
         opts.trainingParams.numTrees = numTreesArg.getValue();
@@ -90,16 +98,23 @@ int main(int argc, char **argv)
     
     dest::core::TrainingData td(inputs);
     td.params = opts.trainingParams;
-    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 200);
+    dest::core::TrainingData::createTrainingSamples(td, opts.createParams);
 
     dest::core::Tracker t;
     t.fit(td);
+    
+    std::cout << "Saving tracker to " << opts.output << std::endl;
     t.save(opts.output);
     
-    dest::core::TrainingData::SampleVector validationSamples;
-    dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(validation, validationSamples, inputs.rnd, 1);
-    for (size_t i = 0; i < validationSamples.size(); ++i) {
-        dest::core::TrainingData::Sample &s = validationSamples[i];
+    dest::core::TrainingData tdValidation(validation);
+    dest::core::SampleCreationParameters validationCreateParams;
+    validationCreateParams.numShapesPerImage = 1;
+    validationCreateParams.numTransformPertubationsPerShape = 10;
+    validationCreateParams.useLinearCombinationsOfShapes = false;
+    
+    dest::core::TrainingData::createTrainingSamples(tdValidation, validationCreateParams);
+    for (size_t i = 0; i < tdValidation.samples.size(); ++i) {
+        dest::core::TrainingData::Sample &s = tdValidation.samples[i];
         
         dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.shapeToImage);
         cv::Mat tmp = dest::util::drawShape(validation.images[s.inputIdx], shape, cv::Scalar(0, 255, 0));

@@ -59,6 +59,15 @@ namespace dest {
             static void normalizeShapes(InputData &input);
         };
         
+        struct SampleCreationParameters {
+            int numShapesPerImage;
+            int numTransformPertubationsPerShape;
+            bool useLinearCombinationsOfShapes;
+            
+            SampleCreationParameters();
+        };
+        std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj);
+        
         struct TrainingData {
             
             struct Sample {
@@ -75,8 +84,7 @@ namespace dest {
             SampleVector samples;
             TrainingParameters params;
 
-            static void createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
-            static void createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);            
+            static void createTrainingSamples(TrainingData &td, const SampleCreationParameters &params);
         };
         
         struct RegressorTraining {

@@ -19,6 +19,7 @@
 
 #include <dest/core/training_data.h>
 #include <iomanip>
+#include <dest/util/log.h>
 
 namespace dest {
     namespace core {
@@ -42,6 +43,21 @@ namespace dest {
                    << std::setw(30) << std::left << "Random split tests" << std::setw(10) << obj.numRandomSplitTestsPerNode << std::endl
                    << std::setw(30) << std::left << "Exponential lambda" << std::setw(10) << obj.exponentialLambda << std::endl
                    << std::setw(30) << std::left << "Learning rate" << std::setw(10) << obj.learningRate;
+            return stream;
+        }
+        
+        SampleCreationParameters::SampleCreationParameters()
+        {
+            numShapesPerImage = 20;
+            numTransformPertubationsPerShape = 0;
+            useLinearCombinationsOfShapes = true;
+        }
+        
+        std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj) {
+            stream  << std::setw(40) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
+                    << std::setw(40) << std::left << "Number of transforms per shape" << std::setw(10) << obj.numTransformPertubationsPerShape << std::endl
+                    << std::setw(40) << std::left << "Use linear combination" << std::setw(10) << (obj.useLinearCombinationsOfShapes ? "true" : "false");
+            
             return stream;
         }
         
@@ -99,44 +115,43 @@ namespace dest {
         : input(&input_)
         {}
         
-        void TrainingData::createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage) {
-            const int numShapes = static_cast<int>(input.shapes.size());
-            const int numSamples = numShapes * numInitializationsPerImage;
+        
+        void TrainingData::createTrainingSamples(TrainingData &td, const SampleCreationParameters &params) {
             
-            std::uniform_int_distribution<int> dist(0, numShapes - 1);
-            samples.resize(numSamples);
-            for (int i = 0; i < numSamples; ++i) {
-                samples[i].inputIdx = i % numShapes;
-                samples[i].estimate = input.shapes[dist(rnd)];
-                samples[i].target = input.shapes[samples[i].inputIdx];
-                samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
-            }
-
-        }
-        
-        
-        void TrainingData::createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage) {
-            const int numShapes = static_cast<int>(input.shapes.size());
-            const int numSamples = numShapes * numInitializationsPerImage;
+            DEST_LOG("Creating training samples. " << std::endl);
+            DEST_LOG(std::string(30, '-') << std::endl << "SampleCreationParameters" << std::endl << params << std::endl << std::string(30, '-') << std::endl);
+            
+            const int numShapes = static_cast<int>(td.input->shapes.size());
+            const int numSamples = numShapes * params.numShapesPerImage;
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             std::uniform_real_distribution<float> zeroOne(0, 1);
             
-            samples.resize(numSamples);
+            td.samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
-                float a = zeroOne(rnd);
-                float b = zeroOne(rnd);
-                float c = zeroOne(rnd);
-                float sum = a + b + c;
                 
-                a /= sum;
-                b /= sum;
-                c /= sum;
+                td.samples[i].inputIdx = i % numShapes;
+                td.samples[i].target = td.input->shapes[td.samples[i].inputIdx];
                 
-                samples[i].inputIdx = i % numShapes;
-                samples[i].estimate = input.shapes[dist(rnd)] * a + input.shapes[dist(rnd)] * b + input.shapes[dist(rnd)] * c;
-                samples[i].target = input.shapes[samples[i].inputIdx];
-                samples[i].shapeToImage = input.shapeToImage[samples[i].inputIdx];
+                if (params.useLinearCombinationsOfShapes) {
+                    float a = zeroOne(td.input->rnd);
+                    float b = zeroOne(td.input->rnd);
+                    float c = zeroOne(td.input->rnd);
+                    float sum = a + b + c;
+                    
+                    a /= sum;
+                    b /= sum;
+                    c /= sum;
+                    
+                    
+                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)] * a +
+                                             td.input->shapes[dist(td.input->rnd)] * b +
+                                             td.input->shapes[dist(td.input->rnd)] * c;
+                } else {
+                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)];
+                }
+                
+                td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
             }
         }
     }
