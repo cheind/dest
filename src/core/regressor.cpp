@@ -145,7 +145,7 @@ namespace dest {
             data.meanResidual /= static_cast<float>(tdata.samples.size());
             
             for (int k = 0; k < t.training->params.numTrees; ++k) {
-                DEST_LOG("Building tree " << std::setw(3) << k + 1 << "\r");
+                DEST_LOG("Building tree " << std::setw(5) << k + 1 << "\r" << std::flush);
                 for (size_t i = 0; i < tdata.samples.size(); ++i) {
                     
                     if (k == 0) {

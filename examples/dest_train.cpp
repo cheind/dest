@@ -31,6 +31,7 @@
 int main(int argc, char **argv)
 {
     struct {
+        dest::core::TrainingParameters trainingParams;
         dest::io::ImportParameters importParams;
         std::string db;
         std::string rects;
@@ -39,19 +40,35 @@ int main(int argc, char **argv)
 
     try {
         TCLAP::CmdLine cmd("Train cascade of regressors using a landmark database and initial rectangles.", ' ', "0.9");
-        TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string");
-        TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained cascade of regressors file.", false, "dest.bin", "string");
-        TCLAP::ValueArg<int> maxImageSize("", "max-image-size", "Maximum size of images in the database", false, 640, "int");
-        TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string");
+        
+        TCLAP::ValueArg<int> numCascadesArg("", "train-num-cascades", "Number of cascades to train.", false, 10, "int", cmd);
+        TCLAP::ValueArg<int> numTreesArg("", "train-num-trees", "Number of trees per cascade.", false, 500, "int", cmd);
+        TCLAP::ValueArg<int> maxTreeDepthArg("", "train-max-depth", "Maximum tree depth.", false, 5, "int", cmd);
+        TCLAP::ValueArg<int> numPixelsArg("", "train-num-pixels", "Number of random pixel coordinates", false, 400, "int", cmd);
+        TCLAP::ValueArg<int> numSplitTestsArg("", "train-num-splits", "Number of random split tests at each tree node", false, 20, "int", cmd);
+        TCLAP::ValueArg<float> lambdaArg("", "train-lambda", "Prior that favors closer pixel coordinates.", false, 0.1f, "float", cmd);
+        TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
+        
+        
+        TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string", cmd);
+        TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained cascade of regressors file.", false, "dest.bin", "string", cmd);
+        TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 640, "int", cmd);
+        TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
-        cmd.add(&rectsArg);
-        cmd.add(&outputArg);
-        cmd.add(&maxImageSize);
-        cmd.add(&databaseArg);
 
         cmd.parse(argc, argv);
 
-        opts.importParams.maxImageSideLength = maxImageSize.getValue();
+        opts.trainingParams.numCascades = numCascadesArg.getValue();
+        opts.trainingParams.numTrees = numTreesArg.getValue();
+        opts.trainingParams.maxTreeDepth = maxTreeDepthArg.getValue();
+        opts.trainingParams.numRandomPixelCoordinates = numPixelsArg.getValue();
+        opts.trainingParams.numRandomSplitTestsPerNode = numSplitTestsArg.getValue();
+        opts.trainingParams.exponentialLambda = lambdaArg.getValue();
+        opts.trainingParams.learningRate = learnArg.getValue();
+        
+        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
+        
+    
         opts.db = databaseArg.getValue();
         opts.rects = rectsArg.getValue();
         opts.output = outputArg.getValue();        
@@ -71,13 +88,8 @@ int main(int argc, char **argv)
     dest::core::InputData validation;
     dest::core::InputData::randomPartition(inputs, validation, 0.01f);
     
-    dest::core::TrainingData td;
-    td.params.numCascades = 10;
-    td.params.numTrees = 50;
-    td.params.learningRate = 0.1f;
-    td.params.maxTreeDepth = 5;
-    td.params.exponentialLambda = 0.1f;
-    td.input = &inputs;
+    dest::core::TrainingData td(inputs);
+    td.params = opts.trainingParams;
     dest::core::TrainingData::createTrainingSamplesThroughLinearCombinations(inputs, td.samples, inputs.rnd, 200);
 
     dest::core::Tracker t;

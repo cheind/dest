@@ -18,11 +18,12 @@
  */
 
 #include <dest/core/training_data.h>
+#include <iomanip>
 
 namespace dest {
     namespace core {
        
-        AlgorithmParameters::AlgorithmParameters()
+        TrainingParameters::TrainingParameters()
         {
             numCascades = 10;
             numTrees = 500;
@@ -31,6 +32,17 @@ namespace dest {
             numRandomSplitTestsPerNode = 20;
             exponentialLambda = 0.1f;
             learningRate = 0.05f;
+        }
+        
+        std::ostream& operator<<(std::ostream &stream, const TrainingParameters &obj) {
+            stream << std::setw(30) << std::left << "Number of Cascades" << std::setw(10) << obj.numCascades << std::endl
+                   << std::setw(30) << std::left << "Number of Trees" << std::setw(10) << obj.numTrees << std::endl
+                   << std::setw(30) << std::left << "Maximum Tree depth" << std::setw(10) << obj.maxTreeDepth << std::endl
+                   << std::setw(30) << std::left << "Random pixel locations" << std::setw(10) << obj.numRandomPixelCoordinates << std::endl
+                   << std::setw(30) << std::left << "Random split tests" << std::setw(10) << obj.numRandomSplitTestsPerNode << std::endl
+                   << std::setw(30) << std::left << "Exponential lambda" << std::setw(10) << obj.exponentialLambda << std::endl
+                   << std::setw(30) << std::left << "Learning rate" << std::setw(10) << obj.learningRate;
+            return stream;
         }
         
         struct Generator {
@@ -83,6 +95,9 @@ namespace dest {
             std::swap(train2, train);
         }
 
+        TrainingData::TrainingData(InputData &input_)
+        : input(&input_)
+        {}
         
         void TrainingData::createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage) {
             const int numShapes = static_cast<int>(input.shapes.size());

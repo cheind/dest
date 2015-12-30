@@ -128,6 +128,9 @@ namespace dest {
         
         bool Tracker::fit(TrainingData &t) {
             eigen_assert(!t.samples.empty());
+            
+            DEST_LOG("Starting to fit tracker on " << t.samples.size() << " samples." << std::endl);
+            DEST_LOG("Training parameters are" << std::endl << t.params << std::endl);
 
             Tracker::data &data = *_data;
             

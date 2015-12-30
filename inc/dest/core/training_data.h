@@ -24,11 +24,12 @@
 #include <dest/core/image.h>
 #include <vector>
 #include <random>
+#include <iosfwd>
 
 namespace dest {
     namespace core {
         
-        struct AlgorithmParameters {
+        struct TrainingParameters {
             int numCascades;
             int numTrees;
             int maxTreeDepth;
@@ -37,8 +38,10 @@ namespace dest {
             float exponentialLambda;
             float learningRate;
             
-            AlgorithmParameters();
+            TrainingParameters();
         };
+        
+        std::ostream& operator<<(std::ostream &stream, const TrainingParameters &obj);
         
         struct InputData {
             typedef std::vector<Rect> RectVector;
@@ -65,16 +68,19 @@ namespace dest {
                 ShapeTransform shapeToImage;
             };
             typedef std::vector<Sample> SampleVector;
+            
+            TrainingData(InputData &input);
 
             InputData *input;
             SampleVector samples;
-            AlgorithmParameters params;
+            TrainingParameters params;
 
             static void createTrainingSamplesKazemi(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);
             static void createTrainingSamplesThroughLinearCombinations(const InputData &input, SampleVector &samples, std::mt19937 &rnd, int numInitializationsPerImage = 20);            
         };
         
         struct RegressorTraining {
+            
             InputData *input;
             TrainingData *training;
             Shape meanShape;            
