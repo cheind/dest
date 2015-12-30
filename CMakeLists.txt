@@ -87,8 +87,8 @@ target_link_libraries(dest_facetrack dest ${DEST_LINK_TARGETS})
 add_executable(dest_facetrack_video examples/face_track_video.cpp)
 target_link_libraries(dest_facetrack_video dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_facetrain_create_rects_cv examples/face_train_create_rects_cv)
-target_link_libraries(dest_facetrain_create_rects_cv dest ${DEST_LINK_TARGETS})
+add_executable(dest_detect_viola_jones examples/dest_detect_viola_jones.cpp)
+target_link_libraries(dest_detect_viola_jones dest ${DEST_LINK_TARGETS})
 
 # Tests
 
