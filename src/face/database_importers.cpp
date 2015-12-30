@@ -33,6 +33,21 @@ namespace dest {
             maxImageSideLength = std::numeric_limits<int>::max();
             generateVerticallyMirrored = false;
         }
+
+        bool importFaceDatabase(const std::string & directory, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, const ImportParameters & opts)
+        {
+            const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
+            const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;
+
+            if (isIMM)
+                return importIMMFaceDatabase(directory, images, shapes, opts);
+            else if (isIBUG)
+                return importIBugAnnotatedFaceDatabase(directory, images, shapes, opts);
+            else {
+                DEST_LOG("Unknown database format." << std::endl);
+                return false;
+            }
+        }
         
         bool imageNeedsScaling(cv::Size s, const ImportParameters &p, float &factor) {
             int maxLen = std::max<int>(s.width, s.height);

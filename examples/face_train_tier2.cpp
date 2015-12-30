@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     
     dest::core::InputData inputs;
     for (int i = 2; i < argc; ++i) {
-        dest::face::importIBugAnnotatedFaceDatabase(argv[i], inputs.images, inputs.shapes, params);
+        dest::face::importFaceDatabase(argv[i], inputs.images, inputs.shapes, params);
     }
 
     dest::core::Tracker tier1Tracker;

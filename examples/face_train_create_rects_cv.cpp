@@ -45,12 +45,10 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 
 int main(int argc, char **argv)
 {
-    dest::face::ImportParameters params;
-    params.maxImageSideLength = 640;
-    
+   
     dest::core::InputData inputs;
     for (int i = 1; i < argc; ++i) {
-        dest::face::importIMMFaceDatabase(argv[i], inputs.images, inputs.shapes, params);
+        dest::face::importFaceDatabase(argv[i], inputs.images, inputs.shapes);
     }
 
     dest::face::FaceDetector fdFront, fdProfile;
@@ -94,16 +92,6 @@ int main(int argc, char **argv)
         if (i % 10 == 0) {
             std::cout << "Processing " << i << "\r" << std::flush;
         }
-        
-        /*
-        cv::Mat tmp = dest::util::drawShape(inputs.images[i], inputs.shapes[i], cv::Scalar(0,255,0));
-        cv::Rect_<float> cr;
-        dest::util::toCV(inputs.rects[i], cr);
-        cv::rectangle(tmp, cr, cv::Scalar(0,255,0));
-        
-        cv::imshow("img", tmp);
-        cv::waitKey();
-        */
     }
     
     dest::io::exportRectangles("rects.csv", rects);

@@ -28,6 +28,7 @@
 namespace dest {
     namespace face {
         
+
         /**
             Options when importing databases
          */
@@ -37,6 +38,19 @@ namespace dest {
             
             ImportParameters();
         };
+
+        /**
+            Import a face database.
+
+            Automatically tries to derive type of database from files in the directory. 
+            Currently supported databases are
+                - IMM face database, see importIMMFaceDatabase
+                - ibug annotated database, see importIBugAnnotatedFaceDatabase
+        */
+        bool importFaceDatabase(const std::string &directory,
+                                std::vector<core::Image> &images,
+                                std::vector<core::Shape> &shapes,
+                                const ImportParameters &opts = ImportParameters());
     
         /**
             Load the IMM face database.
