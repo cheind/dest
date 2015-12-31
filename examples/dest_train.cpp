@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     dest::core::TrainingData tdValidation(validation);
     dest::core::SampleCreationParameters validationCreateParams;
     validationCreateParams.numShapesPerImage = 1;
-    validationCreateParams.numTransformPertubationsPerShape = 10;
+    validationCreateParams.numTransformPertubationsPerShape = 1;
     validationCreateParams.useLinearCombinationsOfShapes = false;
     
     dest::core::TrainingData::createTrainingSamples(tdValidation, validationCreateParams);
