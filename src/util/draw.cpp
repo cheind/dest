@@ -35,6 +35,13 @@ namespace dest {
             
         }
         
+        void drawRect(cv::Mat &img, const core::Rect &r, const cv::Scalar &color) {
+            cv::line(img, cv::Point2f(r(0,0), r(1,0)), cv::Point2f(r(0,1), r(1,1)), color, 1, CV_AA);
+            cv::line(img, cv::Point2f(r(0,1), r(1,1)), cv::Point2f(r(0,3), r(1,3)), color, 1, CV_AA);
+            cv::line(img, cv::Point2f(r(0,3), r(1,3)), cv::Point2f(r(0,2), r(1,2)), color, 1, CV_AA);
+            cv::line(img, cv::Point2f(r(0,2), r(1,2)), cv::Point2f(r(0,0), r(1,0)), color, 1, CV_AA);
+        }
+        
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color)
         {
             cv::Mat tmp, tmp2;

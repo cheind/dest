@@ -106,20 +106,20 @@ namespace dest {
             Rect r(2, 4);
 
             // Top-left
-            r(0, 0) = 0.f;
-            r(1, 0) = 0.f;
+            r(0, 0) = -0.5f;
+            r(1, 0) = -0.5f;
 
             // Top-right
-            r(0, 1) = 1.f;
-            r(1, 1) = 0.f;
+            r(0, 1) = 0.5f;
+            r(1, 1) = -0.5f;
 
             // Bottom-left
-            r(0, 2) = 0.f;
-            r(1, 2) = 1.f;
+            r(0, 2) = -0.5f;
+            r(1, 2) = 0.5f;
 
             // Bottom-right
-            r(0, 3) = 1.f;
-            r(1, 3) = 1.f;
+            r(0, 3) = 0.5f;
+            r(1, 3) = 0.5f;
 
             return r;
         }

@@ -37,6 +37,7 @@ int main(int argc, char **argv)
         std::string db;
         std::string rects;
         std::string output;
+        bool showInitialSamples;
     } opts;
 
     try {
@@ -51,11 +52,13 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
         
         TCLAP::ValueArg<int> numShapesPerImageArg("", "create-num-shapes", "Number of shapes per image to create.", false, 20, "int", cmd);
+        TCLAP::ValueArg<int> numTransformsPerShapeArg("", "create-num-transforms", "Number of transform perturbation per shape", false, 10, "int", cmd);
+        
         TCLAP::SwitchArg noCombinationsArg("", "create-no-combinations", "Disable linear combinations of shapes.", cmd, false);
         
-        
+        TCLAP::SwitchArg showInitialSamplesArg("", "show-samples", "Show generated samples", cmd, false);
         TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string", cmd);
-        TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained cascade of regressors file.", false, "dest.bin", "string", cmd);
+        TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained regressor output.", false, "dest.bin", "string", cmd);
         TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int", cmd);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
@@ -63,7 +66,7 @@ int main(int argc, char **argv)
         cmd.parse(argc, argv);
         
         opts.createParams.numShapesPerImage = numShapesPerImageArg.getValue();
-        opts.createParams.numTransformPertubationsPerShape = 0;
+        opts.createParams.numTransformPertubationsPerShape = numTransformsPerShapeArg.getValue();
         opts.createParams.useLinearCombinationsOfShapes = !noCombinationsArg.getValue();
 
         opts.trainingParams.numCascades = numCascadesArg.getValue();
@@ -76,7 +79,7 @@ int main(int argc, char **argv)
         
         opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
         
-    
+        opts.showInitialSamples = showInitialSamplesArg.getValue();
         opts.db = databaseArg.getValue();
         opts.rects = rectsArg.getValue();
         opts.output = outputArg.getValue();        
@@ -98,7 +101,26 @@ int main(int argc, char **argv)
     
     dest::core::TrainingData td(inputs);
     td.params = opts.trainingParams;
+    
     dest::core::TrainingData::createTrainingSamples(td, opts.createParams);
+    
+    if (opts.showInitialSamples) {
+        size_t i = 0;
+        bool done = false;
+        while (i < td.samples.size() && !done) {
+            dest::core::TrainingData::Sample &s = td.samples[i];
+            
+            cv::Mat tmp = dest::util::drawShape(td.input->images[s.inputIdx], s.shapeToImage * s.estimate.colwise().homogeneous(), cv::Scalar(0, 255, 0));
+            dest::core::Rect r = s.shapeToImage * dest::core::unitRectangle().colwise().homogeneous();
+            dest::util::drawRect(tmp, r, cv::Scalar(0,255,0));
+            
+            cv::imshow("Samples - Press ESC to skip", tmp);
+            if (cv::waitKey() == 27)
+                done = true;
+            ++i;
+        }
+    }
+
 
     dest::core::Tracker t;
     t.fit(td);

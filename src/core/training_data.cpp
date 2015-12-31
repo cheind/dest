@@ -36,9 +36,9 @@ namespace dest {
         }
         
         std::ostream& operator<<(std::ostream &stream, const TrainingParameters &obj) {
-            stream << std::setw(30) << std::left << "Number of Cascades" << std::setw(10) << obj.numCascades << std::endl
-                   << std::setw(30) << std::left << "Number of Trees" << std::setw(10) << obj.numTrees << std::endl
-                   << std::setw(30) << std::left << "Maximum Tree depth" << std::setw(10) << obj.maxTreeDepth << std::endl
+            stream << std::setw(30) << std::left << "Number of cascades" << std::setw(10) << obj.numCascades << std::endl
+                   << std::setw(30) << std::left << "Number of trees" << std::setw(10) << obj.numTrees << std::endl
+                   << std::setw(30) << std::left << "Maximum tree depth" << std::setw(10) << obj.maxTreeDepth << std::endl
                    << std::setw(30) << std::left << "Random pixel locations" << std::setw(10) << obj.numRandomPixelCoordinates << std::endl
                    << std::setw(30) << std::left << "Random split tests" << std::setw(10) << obj.numRandomSplitTestsPerNode << std::endl
                    << std::setw(30) << std::left << "Exponential lambda" << std::setw(10) << obj.exponentialLambda << std::endl
@@ -49,13 +49,26 @@ namespace dest {
         SampleCreationParameters::SampleCreationParameters()
         {
             numShapesPerImage = 20;
-            numTransformPertubationsPerShape = 0;
+            numTransformPertubationsPerShape = 1;
             useLinearCombinationsOfShapes = true;
+            transformRotateRange = std::pair<float, float>(0.f,0.f);
+            transformScaleRange = std::pair<float, float>(0.85f, 1.15f);
+            transformTranslateRangeX = std::pair<float, float>(-10.f, -10.f);
+            transformTranslateRangeY = std::pair<float, float>(-10.f, 10.f);
+        }
+        
+        std::ostream& operator<<(std::ostream &stream, const std::pair<float,float> &obj) {
+            stream << std::setw(1) << "[" << obj.first << "," << obj.second << "]";
+            return stream;
         }
         
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj) {
             stream  << std::setw(40) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
                     << std::setw(40) << std::left << "Number of transforms per shape" << std::setw(10) << obj.numTransformPertubationsPerShape << std::endl
+                    << std::setw(40) << std::left << "Random rotate angle range" << std::setw(10) << obj.transformRotateRange << std::endl
+                    << std::setw(40) << std::left << "Random scale factor range" << std::setw(10) << obj.transformScaleRange << std::endl
+                    << std::setw(40) << std::left << "Random translate x range" << std::setw(10) << obj.transformTranslateRangeX << std::endl
+                    << std::setw(40) << std::left << "Random translate y range" << std::setw(10) << obj.transformTranslateRangeY << std::endl
                     << std::setw(40) << std::left << "Use linear combination" << std::setw(10) << (obj.useLinearCombinationsOfShapes ? "true" : "false");
             
             return stream;
@@ -118,14 +131,22 @@ namespace dest {
         
         void TrainingData::createTrainingSamples(TrainingData &td, const SampleCreationParameters &params) {
             
+            SampleCreationParameters validatedParams = params;
+            validatedParams.numShapesPerImage = std::max<int>(validatedParams.numShapesPerImage, 1);
+            validatedParams.numTransformPertubationsPerShape = std::max<int>(validatedParams.numTransformPertubationsPerShape, 1);
+            
             DEST_LOG("Creating training samples. " << std::endl);
-            DEST_LOG(std::string(30, '-') << std::endl << "SampleCreationParameters" << std::endl << params << std::endl << std::string(30, '-') << std::endl);
+            DEST_LOG(validatedParams << std::endl);
             
             const int numShapes = static_cast<int>(td.input->shapes.size());
-            const int numSamples = numShapes * params.numShapesPerImage;
+            const int numSamples = numShapes * validatedParams.numShapesPerImage * validatedParams.numTransformPertubationsPerShape;
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             std::uniform_real_distribution<float> zeroOne(0, 1);
+            std::uniform_real_distribution<float> rotate(validatedParams.transformRotateRange.first, validatedParams.transformRotateRange.second);
+            std::uniform_real_distribution<float> scale(validatedParams.transformScaleRange.first, validatedParams.transformScaleRange.second);
+            std::uniform_real_distribution<float> tx(validatedParams.transformTranslateRangeX.first, validatedParams.transformTranslateRangeX.second);
+            std::uniform_real_distribution<float> ty(validatedParams.transformTranslateRangeY.first, validatedParams.transformTranslateRangeY.second);
             
             td.samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
@@ -151,7 +172,19 @@ namespace dest {
                     td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)];
                 }
                 
-                td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
+                if (i % validatedParams.numTransformPertubationsPerShape == 0) {
+                    td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
+                } else {
+                    ShapeTransform trans = td.input->shapeToImage[td.samples[i].inputIdx];
+                    ShapeTransform t;
+                    t = Eigen::Translation2f(tx(td.input->rnd), ty(td.input->rnd)) *
+                        Eigen::Translation2f(trans.translation()) *
+                        Eigen::Rotation2Df(rotate(td.input->rnd)) *
+                        Eigen::Scaling(scale(td.input->rnd)) *
+                        Eigen::Translation2f(-trans.translation()) *
+                        trans;
+                    td.samples[i].shapeToImage = t;
+                }
             }
         }
     }

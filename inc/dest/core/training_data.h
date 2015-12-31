@@ -63,6 +63,10 @@ namespace dest {
             int numShapesPerImage;
             int numTransformPertubationsPerShape;
             bool useLinearCombinationsOfShapes;
+            std::pair<float, float> transformScaleRange;
+            std::pair<float, float> transformTranslateRangeX;
+            std::pair<float, float> transformTranslateRangeY;
+            std::pair<float, float> transformRotateRange;
             
             SampleCreationParameters();
         };
