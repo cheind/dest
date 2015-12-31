@@ -175,6 +175,8 @@ namespace dest {
                 if (i % validatedParams.numTransformPertubationsPerShape == 0) {
                     td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
                 } else {
+                    // Note, the following code works well when the shapeToImage transform was generated
+                    // with respect to centered unit rectangle. See normalizeShapes and unitRectangle()
                     ShapeTransform trans = td.input->shapeToImage[td.samples[i].inputIdx];
                     ShapeTransform t;
                     t = Eigen::Translation2f(tx(td.input->rnd), ty(td.input->rnd)) *
