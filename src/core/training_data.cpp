@@ -178,6 +178,7 @@ namespace dest {
                     // Note, the following code works well when the shapeToImage transform was generated
                     // with respect to centered unit rectangle. See normalizeShapes and unitRectangle()
                     ShapeTransform trans = td.input->shapeToImage[td.samples[i].inputIdx];
+                    
                     ShapeTransform t;
                     t = Eigen::Translation2f(tx(td.input->rnd), ty(td.input->rnd)) *
                         Eigen::Translation2f(trans.translation()) *
@@ -185,6 +186,8 @@ namespace dest {
                         Eigen::Scaling(scale(td.input->rnd)) *
                         Eigen::Translation2f(-trans.translation()) *
                         trans;
+                    
+                    td.samples[i].target = t.inverse() * trans * td.samples[i].target.colwise().homogeneous();
                     td.samples[i].shapeToImage = t;
                 }
             }

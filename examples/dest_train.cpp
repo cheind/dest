@@ -112,6 +112,8 @@ int main(int argc, char **argv)
             
             cv::Mat tmp = dest::util::drawShape(td.input->images[s.inputIdx], s.shapeToImage * s.estimate.colwise().homogeneous(), cv::Scalar(0, 255, 0));
             dest::core::Rect r = s.shapeToImage * dest::core::unitRectangle().colwise().homogeneous();
+            dest::core::Shape target = s.shapeToImage * s.target.colwise().homogeneous();
+            dest::util::drawShape(tmp, target, cv::Scalar(255,255,255));
             dest::util::drawRect(tmp, r, cv::Scalar(0,255,0));
             
             cv::imshow("Samples - Press ESC to skip", tmp);
@@ -139,6 +141,8 @@ int main(int argc, char **argv)
         dest::core::TrainingData::Sample &s = tdValidation.samples[i];
         
         dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.shapeToImage);
+        
+        
         cv::Mat tmp = dest::util::drawShape(validation.images[s.inputIdx], shape, cv::Scalar(0, 255, 0));
         cv::imshow("result", tmp);
         cv::waitKey();
