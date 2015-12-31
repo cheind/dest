@@ -140,6 +140,7 @@ namespace dest {
             
             const int numShapes = static_cast<int>(td.input->shapes.size());
             const int numSamples = numShapes * validatedParams.numShapesPerImage * validatedParams.numTransformPertubationsPerShape;
+            const int numShapesTimesShapesPerImage = numShapes * validatedParams.numShapesPerImage;
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
             std::uniform_real_distribution<float> zeroOne(0, 1);
@@ -172,7 +173,7 @@ namespace dest {
                     td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)];
                 }
                 
-                if (i % validatedParams.numTransformPertubationsPerShape == 0) {
+                if (i < numShapesTimesShapesPerImage) {
                     td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
                 } else {
                     // Note, the following code works well when the shapeToImage transform was generated
