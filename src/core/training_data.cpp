@@ -128,6 +128,17 @@ namespace dest {
         : input(&input_)
         {}
         
+        void TrainingData::createTestingSamples(TrainingData &td) {
+            const int numSamples = static_cast<int>(td.input->shapes.size());
+            td.samples.resize(numSamples);
+            
+            for (int i = 0; i < numSamples; ++i) {
+                td.samples[i].inputIdx = i;
+                td.samples[i].target = td.input->shapes[i];
+                td.samples[i].shapeToImage = td.input->shapeToImage[i];
+                // Note, estimate is not set by this method as it is not used during testing.
+            }
+        }
         
         void TrainingData::createTrainingSamples(TrainingData &td, const SampleCreationParameters &params) {
             

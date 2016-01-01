@@ -38,6 +38,12 @@ namespace dest {
             
             ImportParameters();
         };
+        
+        enum DatabaseType {
+            DATABASE_ERROR = 0,
+            DATABASE_IMM = 1,
+            DATABASE_IBUG = 2
+        };
 
         /**
             Import a training / testing database.
@@ -47,12 +53,12 @@ namespace dest {
                 - IMM face database, see importIMMFaceDatabase
                 - ibug annotated database, see importIBugAnnotatedFaceDatabase
         */
-        bool importDatabase(const std::string &directory,
-                            const std::string &rectangleFile, 
-                            std::vector<core::Image> &images,
-                            std::vector<core::Shape> &shapes, 
-                            std::vector<core::Rect> &rects,
-                            const ImportParameters &opts = ImportParameters());
+        DatabaseType importDatabase(const std::string &directory,
+                                    const std::string &rectangleFile,
+                                    std::vector<core::Image> &images,
+                                    std::vector<core::Shape> &shapes,
+                                    std::vector<core::Rect> &rects,
+                                    const ImportParameters &opts = ImportParameters());
     
         /**
             Load the IMM face database.

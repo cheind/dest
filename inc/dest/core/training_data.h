@@ -89,6 +89,7 @@ namespace dest {
             TrainingParameters params;
 
             static void createTrainingSamples(TrainingData &td, const SampleCreationParameters &params);
+            static void createTestingSamples(TrainingData &td);
         };
         
         struct RegressorTraining {

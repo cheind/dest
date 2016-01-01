@@ -35,18 +35,20 @@ namespace dest {
             generateVerticallyMirrored = false;
         }
 
-        bool importDatabase(const std::string & directory, const std::string &rectangleFile, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, std::vector<core::Rect>& rects, const ImportParameters & opts)
+        DatabaseType importDatabase(const std::string & directory, const std::string &rectangleFile, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, std::vector<core::Rect>& rects, const ImportParameters & opts)
         {
             const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
             const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;
 
-            if (isIMM)
-                return importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
-            else if (isIBUG)
-                return importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
-            else {
+            if (isIMM) {
+                bool ok = importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
+                return ok ? DATABASE_IMM : DATABASE_ERROR;
+            } else if (isIBUG) {
+                bool ok = importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
+                return ok ? DATABASE_IBUG : DATABASE_ERROR;
+            } else {
                 DEST_LOG("Unknown database format." << std::endl);
-                return false;
+                return DATABASE_ERROR;
             }
         }
         

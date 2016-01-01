@@ -47,7 +47,8 @@ add_library(dest
     inc/dest/core/training_data.h
     inc/dest/core/tracker.h
     inc/dest/core/regressor.h
-    inc/dest/core/tree.h    
+    inc/dest/core/tree.h
+    inc/dest/core/tester.h
     inc/dest/face/face_detector.h
     inc/dest/io/database_io.h
     inc/dest/io/dest_io.fbs
@@ -64,6 +65,7 @@ add_library(dest
     src/core/tracker.cpp
     src/core/regressor.cpp
     src/core/tree.cpp
+    src/core/tester.cpp
     src/io/rect_io.cpp
     src/io/database_io.cpp   
     src/face/face_detector.cpp
@@ -84,6 +86,9 @@ target_link_libraries(dest_generate_rects_regressor dest ${DEST_LINK_TARGETS})
 
 add_executable(dest_train examples/dest_train.cpp)
 target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
+
+add_executable(dest_evaluate examples/dest_evaluate.cpp)
+target_link_libraries(dest_evaluate dest ${DEST_LINK_TARGETS})
 
 add_executable(dest_align examples/dest_align.cpp)
 target_link_libraries(dest_align dest ${DEST_LINK_TARGETS})
