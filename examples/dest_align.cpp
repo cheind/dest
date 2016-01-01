@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     } opts;
 
     try {
-        TCLAP::CmdLine cmd("Generate initial bounding boxes for face detection using Viola-Jones algorithm in OpenCV.", ' ', "0.9");
+        TCLAP::CmdLine cmd("Test regressor on a single image.", ' ', "0.9");
         TCLAP::ValueArg<std::string> detectorArg("d", "detector", "OpenCV face detector to load", true, "cascade.xml", "string");
         TCLAP::ValueArg<std::string> regressorArg("r", "regressor", "Trained regressor to load", true, "dest.bin", "string");
         TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align", true, "img.png", "string");
