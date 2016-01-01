@@ -206,7 +206,7 @@ namespace dest {
         bool importIMMFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect>& rects, const ImportParameters &opts) {
                                     
             std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
-            DEST_LOG("Loading IMM database. Found " << paths.size() << " canditate entries." << std::endl);
+            DEST_LOG("Loading IMM database. Found " << paths.size() << " candidate entries." << std::endl);
 
             std::vector<core::Rect> loadedRects;
             io::importRectangles(rectangleFile, loadedRects);
@@ -387,7 +387,7 @@ namespace dest {
         bool importIBugAnnotatedFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect> &rects, const ImportParameters &opts) {
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
-            DEST_LOG("Loading ibug database. Found " << paths.size() << " canditate entries." << std::endl);
+            DEST_LOG("Loading ibug database. Found " << paths.size() << " candidate entries." << std::endl);
 
             std::vector<core::Rect> loadedRects;
             io::importRectangles(rectangleFile, loadedRects);
@@ -443,7 +443,7 @@ namespace dest {
                         
                         images.push_back(imgFlipped);
                         shapes.push_back(s);
-                        shapes.push_back(r);
+                        rects.push_back(r);
                     }
                 }
             }
