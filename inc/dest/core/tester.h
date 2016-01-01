@@ -26,24 +26,33 @@
 namespace dest {
     namespace core {
         
+        /**
+            Base class for objects providing distance normalization used during tracker evaluation.
+        */
         class DistanceNormalizer {
         public:
-            virtual float operator()(const TrainingData::Sample &s) const = 0;
+            virtual float operator()(const SampleData::Sample &s) const = 0;
         };
         
+        /**
+            Constant normalization
+        */
         class ConstantDistanceNormalizer : public DistanceNormalizer {
         public:
             ConstantDistanceNormalizer(float c);
-            virtual float operator()(const TrainingData::Sample &s) const;
+            virtual float operator()(const SampleData::Sample &s) const;
         private:
             float _c;
         };
         
+        /**
+            Normalize by inter landmark distance.
+        */
         class LandmarkDistanceNormalizer : public DistanceNormalizer {
         public:
             LandmarkDistanceNormalizer();
             LandmarkDistanceNormalizer(int landmarkId0, int landmarkId1);
-            virtual float operator()(const TrainingData::Sample &s) const;
+            virtual float operator()(const SampleData::Sample &s) const;
             
             static LandmarkDistanceNormalizer createInterocularNormalizerIMM();
             static LandmarkDistanceNormalizer createInterocularNormalizerIBug();
@@ -55,7 +64,17 @@ namespace dest {
             float meanNormalizedDistance;
         };
         
-        TestResult testTracker(TrainingData &td, const Tracker &t, const DistanceNormalizer &norm);
+        /** 
+            Test tracker performance.
+         
+            Computes the average Euclidean distance between target and predicted landmark positions.
+            Distances per sample are normlized by the given functor.
+         
+            \param td SampleData to run tests on. Fills sample estimate with normalized tracker prediction.
+            \param t Tracker to evaluate
+            \param norm Functor providing a distance normalization factor per sample.
+        */ 
+        TestResult testTracker(SampleData &td, const Tracker &t, const DistanceNormalizer &norm);
         
     }
 }

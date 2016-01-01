@@ -126,7 +126,7 @@ namespace dest {
             return true;
         }
         
-        bool Tracker::fit(TrainingData &t) {
+        bool Tracker::fit(SampleData &t) {
             eigen_assert(!t.samples.empty());
             
             DEST_LOG("Starting to fit tracker on " << t.samples.size() << " samples." << std::endl);

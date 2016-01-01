@@ -72,7 +72,7 @@ namespace dest {
         };
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj);
         
-        struct TrainingData {
+        struct SampleData {
             
             struct Sample {
                 int inputIdx;
@@ -82,20 +82,20 @@ namespace dest {
             };
             typedef std::vector<Sample> SampleVector;
             
-            TrainingData(InputData &input);
+            SampleData(InputData &input);
 
             InputData *input;
             SampleVector samples;
             TrainingParameters params;
 
-            static void createTrainingSamples(TrainingData &td, const SampleCreationParameters &params);
-            static void createTestingSamples(TrainingData &td);
+            static void createTrainingSamples(SampleData &td, const SampleCreationParameters &params);
+            static void createTestingSamples(SampleData &td);
         };
         
         struct RegressorTraining {
             
             InputData *input;
-            TrainingData *training;
+            SampleData *training;
             Shape meanShape;            
             int numLandmarks;
         };
@@ -115,7 +115,7 @@ namespace dest {
             typedef std::vector<Sample> SampleVector;
             
             InputData *input;
-            TrainingData *training;
+            SampleData *training;
             SampleVector samples;
             PixelCoordinates pixelCoordinates;
             int numLandmarks;

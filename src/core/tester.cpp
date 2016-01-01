@@ -27,7 +27,7 @@ namespace dest {
         :_c(c)
         {}
         
-        float ConstantDistanceNormalizer::operator()(const TrainingData::Sample &s) const {
+        float ConstantDistanceNormalizer::operator()(const SampleData::Sample &s) const {
             return _c;
         }
         
@@ -39,7 +39,7 @@ namespace dest {
         :_l0(0), _l1(0)
         {}
         
-        float LandmarkDistanceNormalizer::operator()(const TrainingData::Sample &s) const {
+        float LandmarkDistanceNormalizer::operator()(const SampleData::Sample &s) const {
             return 1.f / (s.target.col(_l0) - s.target.col(_l1)).norm();
         }
         
@@ -58,7 +58,7 @@ namespace dest {
         }
         
 
-        TestResult testTracker(TrainingData &td, const Tracker &t, const DistanceNormalizer &norm) {
+        TestResult testTracker(SampleData &td, const Tracker &t, const DistanceNormalizer &norm) {
             TestResult r;
             r.meanNormalizedDistance = 0.f;
             

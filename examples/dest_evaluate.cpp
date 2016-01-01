@@ -59,8 +59,8 @@ int main(int argc, char **argv)
     }
     
     dest::core::InputData::normalizeShapes(inputs);
-    dest::core::TrainingData td(inputs);
-    dest::core::TrainingData::createTestingSamples(td);
+    dest::core::SampleData td(inputs);
+    dest::core::SampleData::createTestingSamples(td);
     
     dest::core::LandmarkDistanceNormalizer ldn;
     switch (dbt) {

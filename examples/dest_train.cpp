@@ -101,16 +101,16 @@ int main(int argc, char **argv)
     dest::core::InputData validation;
     dest::core::InputData::randomPartition(inputs, validation, 0.01f);
     
-    dest::core::TrainingData td(inputs);
+    dest::core::SampleData td(inputs);
     td.params = opts.trainingParams;
     
-    dest::core::TrainingData::createTrainingSamples(td, opts.createParams);
+    dest::core::SampleData::createTrainingSamples(td, opts.createParams);
     
     if (opts.showInitialSamples) {
         size_t i = 0;
         bool done = false;
         while (i < td.samples.size() && !done) {
-            dest::core::TrainingData::Sample &s = td.samples[i];
+            dest::core::SampleData::Sample &s = td.samples[i];
             
             cv::Mat tmp = dest::util::drawShape(td.input->images[s.inputIdx], s.shapeToImage * s.estimate.colwise().homogeneous(), cv::Scalar(0, 255, 0));
             dest::core::Rect r = s.shapeToImage * dest::core::unitRectangle().colwise().homogeneous();
@@ -132,15 +132,15 @@ int main(int argc, char **argv)
     std::cout << "Saving tracker to " << opts.output << std::endl;
     t.save(opts.output);
     
-    dest::core::TrainingData tdValidation(validation);
+    dest::core::SampleData tdValidation(validation);
     dest::core::SampleCreationParameters validationCreateParams;
     validationCreateParams.numShapesPerImage = 1;
     validationCreateParams.numTransformPertubationsPerShape = 1;
     validationCreateParams.useLinearCombinationsOfShapes = false;
     
-    dest::core::TrainingData::createTrainingSamples(tdValidation, validationCreateParams);
+    dest::core::SampleData::createTrainingSamples(tdValidation, validationCreateParams);
     for (size_t i = 0; i < tdValidation.samples.size(); ++i) {
-        dest::core::TrainingData::Sample &s = tdValidation.samples[i];
+        dest::core::SampleData::Sample &s = tdValidation.samples[i];
         
         dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.shapeToImage);
         

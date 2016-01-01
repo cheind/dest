@@ -36,7 +36,7 @@ namespace dest {
             ~Tracker();
             Tracker(const Tracker &other);
             
-            bool fit(TrainingData &t);
+            bool fit(SampleData &t);
             
             Shape predict(const Image &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults = 0) const;
 

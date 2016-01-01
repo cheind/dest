@@ -124,11 +124,11 @@ namespace dest {
             std::swap(train2, train);
         }
 
-        TrainingData::TrainingData(InputData &input_)
+        SampleData::SampleData(InputData &input_)
         : input(&input_)
         {}
         
-        void TrainingData::createTestingSamples(TrainingData &td) {
+        void SampleData::createTestingSamples(SampleData &td) {
             const int numSamples = static_cast<int>(td.input->shapes.size());
             td.samples.resize(numSamples);
             
@@ -140,7 +140,7 @@ namespace dest {
             }
         }
         
-        void TrainingData::createTrainingSamples(TrainingData &td, const SampleCreationParameters &params) {
+        void SampleData::createTrainingSamples(SampleData &td, const SampleCreationParameters &params) {
             
             SampleCreationParameters validatedParams = params;
             validatedParams.numShapesPerImage = std::max<int>(validatedParams.numShapesPerImage, 1);

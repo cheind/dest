@@ -107,7 +107,7 @@ namespace dest {
         bool Regressor::fit(RegressorTraining &t)
         {
             Regressor::data &data = *_data;
-            TrainingData &tdata = *t.training;
+            SampleData &tdata = *t.training;
 
             data.learningRate = t.training->params.learningRate;
             data.trees.resize(t.training->params.numTrees);
