@@ -66,19 +66,99 @@ namespace dest {
             r *= factor;
         }
         
-        void mirrorImageShapeAndRectVertically(const cv::Mat &img, const core::Shape &s, const core::Rect &r, cv::Mat &dstImage, core::Shape &dstShape, core::Rect &dstRect) {
-            cv::flip(img, dstImage, 1);
-            dstShape.resize(2, s.cols());
+        void mirrorImageShapeAndRectVertically(cv::Mat &img,
+                                               core::Shape &s,
+                                               core::Rect &r,
+                                               const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> &permLandmarks,
+                                               const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> &permRectangle)
+        {
+            cv::flip(img, img, 1);
             for (core::Shape::Index i = 0; i < s.cols(); ++i) {
-                dstShape(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
-                dstShape(1, i) = s(1, i);
+                s(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
             }
-
+            s = (s * permLandmarks).eval();
+            
+            
             for (core::Rect::Index i = 0; i < r.cols(); ++i) {
-                dstRect(0, i) = static_cast<float>(img.cols - 1) - r(0, i);
-                dstRect(1, i) = r(1, i);
+                r(0, i) = static_cast<float>(img.cols - 1) - r(0, i);
             }
+            
+            r = (r * permRectangle).eval();
         }
+        
+        Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredRectangle() {
+            Eigen::PermutationMatrix<Eigen::Dynamic> perm(4);
+            perm.setIdentity();
+            Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
+            
+            std::swap(ids(0), ids(1));
+            std::swap(ids(2), ids(3));
+            
+            return perm;
+        }
+        
+        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredRectangle() {
+            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredRectangle();
+            return _instance;
+        }
+        
+        Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredIMM() {
+            Eigen::PermutationMatrix<Eigen::Dynamic> perm(58);
+            perm.setIdentity();
+            Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
+            
+            // http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+            
+            // Contour
+            std::swap(ids(0), ids(12));
+            std::swap(ids(1), ids(11));
+            std::swap(ids(2), ids(10));
+            std::swap(ids(3), ids(9));
+            std::swap(ids(4), ids(8));
+            std::swap(ids(5), ids(7));
+            std::swap(ids(6), ids(6));
+            
+            // Eye
+            std::swap(ids(13), ids(21));
+            std::swap(ids(14), ids(22));
+            std::swap(ids(15), ids(23));
+            std::swap(ids(16), ids(24));
+            std::swap(ids(17), ids(25));
+            std::swap(ids(18), ids(26));
+            std::swap(ids(19), ids(27));
+            std::swap(ids(20), ids(28));
+            
+            // Eyebrow
+            std::swap(ids(29), ids(34));
+            std::swap(ids(30), ids(35));
+            std::swap(ids(31), ids(36));
+            std::swap(ids(32), ids(37));
+            std::swap(ids(33), ids(38));
+            
+            // Mouth
+            std::swap(ids(39), ids(44));
+            std::swap(ids(40), ids(42));
+            std::swap(ids(41), ids(41));
+            std::swap(ids(44), ids(46));
+            std::swap(ids(45), ids(45));
+            
+            // Nose
+            std::swap(ids(47), ids(57));
+            std::swap(ids(48), ids(56));
+            std::swap(ids(49), ids(55));
+            std::swap(ids(50), ids(54));
+            std::swap(ids(51), ids(53));
+            std::swap(ids(52), ids(52));
+            
+            
+            return perm;
+        }
+        
+        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredIMM() {
+            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredIMM();
+            return _instance;
+        }
+
         
         bool parseAsfFile(const std::string& fileName, core::Shape &s) {
             
@@ -175,16 +255,21 @@ namespace dest {
                     
                     if (opts.generateVerticallyMirrored) {
                         cv::Mat cvFlipped;
-                        core::Shape shapeFlipped;
-                        core::Rect rectFlipped;
-                        mirrorImageShapeAndRectVertically(cvImg, s, r, cvFlipped, shapeFlipped, rectFlipped);
+                        mirrorImageShapeAndRectVertically(cvImg, s, r, permutationMatrixForMirroredIMM(), permutationMatrixForMirroredRectangle());
                         
                         core::Image imgFlipped;
-                        util::toDest(cvFlipped, imgFlipped);
+                        util::toDest(cvImg, imgFlipped);
                         
+                        /*
+                        util::drawShape(cvImg, s, cv::Scalar(0,255,0));
+                        util::drawRect(cvImg, r, cv::Scalar(0));
+                        cv::imshow("a", cvImg);
+                        cv::waitKey();
+                        */
+                         
                         images.push_back(imgFlipped);
-                        shapes.push_back(shapeFlipped);
-                        rects.push_back(rectFlipped);
+                        shapes.push_back(s);
+                        rects.push_back(r);
                     }
                 }
             }
@@ -193,6 +278,73 @@ namespace dest {
             return shapes.size() > 0;
         }
         
+        Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredIBug() {
+            Eigen::PermutationMatrix<Eigen::Dynamic> perm(68);
+            perm.setIdentity();
+            Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
+            
+            // http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+            
+            // Contour
+            std::swap(ids(0), ids(16));
+            std::swap(ids(1), ids(15));
+            std::swap(ids(2), ids(14));
+            std::swap(ids(3), ids(13));
+            std::swap(ids(4), ids(12));
+            std::swap(ids(5), ids(11));
+            std::swap(ids(6), ids(10));
+            std::swap(ids(7), ids(9));
+            std::swap(ids(8), ids(8));
+            
+            // Eyebrow
+            std::swap(ids(17), ids(22));
+            std::swap(ids(18), ids(23));
+            std::swap(ids(19), ids(24));
+            std::swap(ids(20), ids(25));
+            std::swap(ids(21), ids(26));
+            
+            // Nose
+            std::swap(ids(27), ids(27));
+            std::swap(ids(28), ids(28));
+            std::swap(ids(29), ids(29));
+            std::swap(ids(30), ids(30));
+            
+            std::swap(ids(31), ids(35));
+            std::swap(ids(32), ids(34));
+            std::swap(ids(33), ids(33));
+            
+            // Eye
+            std::swap(ids(36), ids(42));
+            std::swap(ids(37), ids(43));
+            std::swap(ids(38), ids(44));
+            std::swap(ids(39), ids(45));
+            std::swap(ids(40), ids(46));
+            std::swap(ids(41), ids(47));
+            
+            // Mouth
+            std::swap(ids(48), ids(54));
+            std::swap(ids(49), ids(53));
+            std::swap(ids(50), ids(52));
+            std::swap(ids(51), ids(51));
+            
+            std::swap(ids(59), ids(55));
+            std::swap(ids(58), ids(56));
+            std::swap(ids(57), ids(57));
+            
+            std::swap(ids(60), ids(64));
+            std::swap(ids(61), ids(63));
+            std::swap(ids(62), ids(62));
+            
+            std::swap(ids(67), ids(65));
+            std::swap(ids(66), ids(66));
+            
+            return perm;
+        }
+        
+        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredIBug() {
+            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredIBug();
+            return _instance;
+        }
         
         bool parsePtsFile(const std::string& fileName, core::Shape &s) {
             
@@ -282,17 +434,14 @@ namespace dest {
                     
                     
                     if (opts.generateVerticallyMirrored) {
-                        cv::Mat cvFlipped;
-                        core::Shape shapeFlipped;
-                        core::Rect rectFlipped;
-                        mirrorImageShapeAndRectVertically(cvImg, s, r, cvFlipped, shapeFlipped, rectFlipped);
+                        mirrorImageShapeAndRectVertically(cvImg, s, r, permutationMatrixForMirroredIBug(), permutationMatrixForMirroredRectangle());
                         
                         core::Image imgFlipped;
-                        util::toDest(cvFlipped, imgFlipped);
+                        util::toDest(cvImg, imgFlipped);
                         
                         images.push_back(imgFlipped);
-                        shapes.push_back(shapeFlipped);
-                        shapes.push_back(rectFlipped);
+                        shapes.push_back(s);
+                        shapes.push_back(r);
                     }
                 }
             }

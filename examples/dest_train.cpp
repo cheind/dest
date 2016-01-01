@@ -60,6 +60,7 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string", cmd);
         TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained regressor output.", false, "dest.bin", "string", cmd);
         TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int", cmd);
+        TCLAP::SwitchArg mirrorImageArg("", "load-mirrored", "Additionally mirror each database image, shape and rects.", cmd, false);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
 
@@ -78,6 +79,7 @@ int main(int argc, char **argv)
         opts.trainingParams.learningRate = learnArg.getValue();
         
         opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
+        opts.importParams.generateVerticallyMirrored = mirrorImageArg.getValue();
         
         opts.showInitialSamples = showInitialSamplesArg.getValue();
         opts.db = databaseArg.getValue();
