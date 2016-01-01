@@ -71,7 +71,7 @@ namespace dest {
                 
                 double dev = (td.samples[i].target - td.samples[i].estimate).colwise().norm().sum();
                 sumDevs += dev * norm(td.samples[i]);
-                elements += td.samples[i].target.cols();
+                elements += static_cast<long>(td.samples[i].target.cols());
                 
                 
                 if (i % 100 == 0)
