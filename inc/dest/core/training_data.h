@@ -37,6 +37,7 @@ namespace dest {
             int numRandomSplitTestsPerNode;
             float exponentialLambda;
             float learningRate;
+            float expansionRandomPixelCoordinates;
             
             TrainingParameters();
         };

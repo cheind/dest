@@ -164,8 +164,8 @@ namespace dest {
         
         PixelCoordinates Regressor::sampleCoordinates(RegressorTraining &t) const {
             
-            Eigen::Vector2f minC = t.meanShape.rowwise().minCoeff();
-            Eigen::Vector2f maxC = t.meanShape.rowwise().maxCoeff();
+            Eigen::Vector2f minC = t.meanShape.rowwise().minCoeff() - Eigen::Vector2f::Constant(t.training->params.expansionRandomPixelCoordinates);
+            Eigen::Vector2f maxC = t.meanShape.rowwise().maxCoeff() + Eigen::Vector2f::Constant(t.training->params.expansionRandomPixelCoordinates);
 
             const int numCoords = t.training->params.numRandomPixelCoordinates;
             PixelCoordinates result(2, numCoords);

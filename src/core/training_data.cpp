@@ -33,6 +33,7 @@ namespace dest {
             numRandomSplitTestsPerNode = 20;
             exponentialLambda = 0.1f;
             learningRate = 0.05f;
+            expansionRandomPixelCoordinates = 0.05f;
         }
         
         std::ostream& operator<<(std::ostream &stream, const TrainingParameters &obj) {
@@ -41,6 +42,7 @@ namespace dest {
                    << std::setw(30) << std::left << "Maximum tree depth" << std::setw(10) << obj.maxTreeDepth << std::endl
                    << std::setw(30) << std::left << "Random pixel locations" << std::setw(10) << obj.numRandomPixelCoordinates << std::endl
                    << std::setw(30) << std::left << "Random split tests" << std::setw(10) << obj.numRandomSplitTestsPerNode << std::endl
+                   << std::setw(30) << std::left << "Random pixel expansion" << std::setw(10) << obj.expansionRandomPixelCoordinates << std::endl
                    << std::setw(30) << std::left << "Exponential lambda" << std::setw(10) << obj.exponentialLambda << std::endl
                    << std::setw(30) << std::left << "Learning rate" << std::setw(10) << obj.learningRate;
             return stream;
