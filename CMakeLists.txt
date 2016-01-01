@@ -88,8 +88,8 @@ target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
 add_executable(dest_align examples/dest_align.cpp)
 target_link_libraries(dest_align dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_facetrack_video examples/face_track_video.cpp)
-target_link_libraries(dest_facetrack_video dest ${DEST_LINK_TARGETS})
+add_executable(dest_track_video examples/dest_track_video.cpp)
+target_link_libraries(dest_track_video dest ${DEST_LINK_TARGETS})
 
 
 # Tests
