@@ -138,10 +138,10 @@ namespace dest {
             std::swap(ids(33), ids(38));
             
             // Mouth
-            std::swap(ids(39), ids(44));
-            std::swap(ids(40), ids(42));
+            std::swap(ids(39), ids(43));
+            std::swap(ids(46), ids(44));
             std::swap(ids(41), ids(41));
-            std::swap(ids(44), ids(46));
+            std::swap(ids(40), ids(42));
             std::swap(ids(45), ids(45));
             
             // Nose
@@ -256,18 +256,11 @@ namespace dest {
                     rects.push_back(r);
                     
                     if (opts.generateVerticallyMirrored) {
-                        cv::Mat cvFlipped;
-                        mirrorImageShapeAndRectVertically(cvImg, s, r, permutationMatrixForMirroredIMM(), permutationMatrixForMirroredRectangle());
+                        cv::Mat cvFlipped = cvImg.clone();
+                        mirrorImageShapeAndRectVertically(cvFlipped, s, r, permutationMatrixForMirroredIMM(), permutationMatrixForMirroredRectangle());
                         
                         core::Image imgFlipped;
-                        util::toDest(cvImg, imgFlipped);
-                        
-                        /*
-                        util::drawShape(cvImg, s, cv::Scalar(0,255,0));
-                        util::drawRect(cvImg, r, cv::Scalar(0));
-                        cv::imshow("a", cvImg);
-                        cv::waitKey();
-                        */
+                        util::toDest(cvFlipped, imgFlipped);
                          
                         images.push_back(imgFlipped);
                         shapes.push_back(s);
@@ -283,6 +276,7 @@ namespace dest {
         Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredIBug() {
             Eigen::PermutationMatrix<Eigen::Dynamic> perm(68);
             perm.setIdentity();
+            //return perm;
             Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
             
             // http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
@@ -299,11 +293,11 @@ namespace dest {
             std::swap(ids(8), ids(8));
             
             // Eyebrow
-            std::swap(ids(17), ids(22));
-            std::swap(ids(18), ids(23));
+            std::swap(ids(17), ids(26));
+            std::swap(ids(18), ids(25));
             std::swap(ids(19), ids(24));
-            std::swap(ids(20), ids(25));
-            std::swap(ids(21), ids(26));
+            std::swap(ids(20), ids(23));
+            std::swap(ids(21), ids(22));
             
             // Nose
             std::swap(ids(27), ids(27));
@@ -316,12 +310,12 @@ namespace dest {
             std::swap(ids(33), ids(33));
             
             // Eye
-            std::swap(ids(36), ids(42));
-            std::swap(ids(37), ids(43));
-            std::swap(ids(38), ids(44));
-            std::swap(ids(39), ids(45));
-            std::swap(ids(40), ids(46));
-            std::swap(ids(41), ids(47));
+            std::swap(ids(39), ids(42));
+            std::swap(ids(38), ids(43));
+            std::swap(ids(37), ids(44));
+            std::swap(ids(36), ids(45));
+            std::swap(ids(40), ids(47));
+            std::swap(ids(41), ids(46));
             
             // Mouth
             std::swap(ids(48), ids(54));
@@ -436,10 +430,11 @@ namespace dest {
                     
                     
                     if (opts.generateVerticallyMirrored) {
-                        mirrorImageShapeAndRectVertically(cvImg, s, r, permutationMatrixForMirroredIBug(), permutationMatrixForMirroredRectangle());
+                        cv::Mat cvFlipped = cvImg.clone();
+                        mirrorImageShapeAndRectVertically(cvFlipped, s, r, permutationMatrixForMirroredIBug(), permutationMatrixForMirroredRectangle());
                         
                         core::Image imgFlipped;
-                        util::toDest(cvImg, imgFlipped);
+                        util::toDest(cvFlipped, imgFlipped);
                         
                         images.push_back(imgFlipped);
                         shapes.push_back(s);

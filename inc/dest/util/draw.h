@@ -31,6 +31,8 @@ namespace dest {
     namespace util {
         
         void drawShape(cv::Mat &img, const core::Shape &s, const cv::Scalar &color);
+        void drawShape(cv::Mat &img, const core::Shape &s, int colormap);
+        void drawShapeText(cv::Mat &img, const core::Shape &s, const cv::Scalar &color);
         void drawRect(cv::Mat &img, const core::Rect &r, const cv::Scalar &color);
         
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color);
