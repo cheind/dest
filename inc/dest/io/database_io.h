@@ -25,10 +25,11 @@
 #include <string>
 #include <vector>
 
+#include <memory>
+
 namespace dest {
     namespace io {
         
-
         /**
             Options when importing databases
          */
@@ -58,7 +59,8 @@ namespace dest {
                                     std::vector<core::Image> &images,
                                     std::vector<core::Shape> &shapes,
                                     std::vector<core::Rect> &rects,
-                                    const ImportParameters &opts = ImportParameters());
+                                    const ImportParameters &opts = ImportParameters(),
+                                    std::vector<float> *scaleFactors = 0);
     
         /**
             Load the IMM face database.
@@ -74,7 +76,8 @@ namespace dest {
                                    std::vector<core::Image> &images,
                                    std::vector<core::Shape> &shapes,
                                    std::vector<core::Rect> &rects,
-                                   const ImportParameters &opts = ImportParameters());
+                                   const ImportParameters &opts = ImportParameters(),
+                                   std::vector<float> *scaleFactors = 0);
         
         
         /** 
@@ -96,7 +99,8 @@ namespace dest {
                                              std::vector<core::Image> &images,
                                              std::vector<core::Shape> &shapes,
                                              std::vector<core::Rect> &rects,
-                                             const ImportParameters &opts = ImportParameters());
+                                             const ImportParameters &opts = ImportParameters(),
+                                             std::vector<float> *scaleFactors = 0);
     }
 }
 

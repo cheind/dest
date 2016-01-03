@@ -24,6 +24,7 @@
 #include <dest/io/rect_io.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
+#include <dest/util/log.h>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -51,16 +52,19 @@ int main(int argc, char **argv)
         std::vector<std::string> detectors;
         std::string db;
         std::string output;
+        dest::io::ImportParameters importParams;
     } opts;
 
     try {
         TCLAP::CmdLine cmd("Generate initial bounding boxes for face detection using Viola-Jones algorithm in OpenCV.", ' ', "0.9");
         TCLAP::MultiArg<std::string> detectorsArg("d", "detector", "OpenCV classifier to load", true, "string");
         TCLAP::ValueArg<std::string> outputArg("o", "output", "CSV output file", false, "rectangles.csv", "string");
+        TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int");
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string");
 
         cmd.add(&detectorsArg);
         cmd.add(&outputArg);
+        cmd.add(&maxImageSizeArg);
         cmd.add(&databaseArg);
 
         cmd.parse(argc, argv);
@@ -68,6 +72,7 @@ int main(int argc, char **argv)
         opts.detectors.insert(opts.detectors.end(), detectorsArg.begin(), detectorsArg.end());
         opts.db = databaseArg.getValue();
         opts.output = outputArg.getValue();
+        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -76,7 +81,8 @@ int main(int argc, char **argv)
    
     dest::core::InputData inputs;
     std::vector<dest::core::Rect> rects;
-    if (!dest::io::importDatabase(opts.db, "", inputs.images, inputs.shapes, rects)) {
+    std::vector<float> scalings;
+    if (!dest::io::importDatabase(opts.db, "", inputs.images, inputs.shapes, rects, opts.importParams, &scalings)) {
         std::cout << "Failed to load database" << std::endl;
         return -1;
     }
@@ -98,7 +104,7 @@ int main(int argc, char **argv)
             detectors[j].detectFaces(inputs.images[i], rects);
             faces.insert(faces.end(), rects.begin(), rects.end());
         }
-               
+        
         // Find the face rect with a meaningful shape overlap
         float bestOverlap = 0.f;
         size_t bestId = std::numeric_limits<size_t>::max();
@@ -112,10 +118,10 @@ int main(int argc, char **argv)
         }
         
         if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.6f) {
-            rects[i] = dest::core::shapeBounds(inputs.shapes[i]);
+            rects[i] = dest::core::shapeBounds(inputs.shapes[i]) / scalings[i];
         } else {
             ++countDetectionSuccess;
-            rects[i] = faces[bestId];
+            rects[i] = faces[bestId] / scalings[i];
         }
         
         if (i % 10 == 0) {

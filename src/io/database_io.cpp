@@ -35,16 +35,22 @@ namespace dest {
             generateVerticallyMirrored = false;
         }
 
-        DatabaseType importDatabase(const std::string & directory, const std::string &rectangleFile, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, std::vector<core::Rect>& rects, const ImportParameters & opts)
+        DatabaseType importDatabase(const std::string & directory,
+                                    const std::string &rectangleFile,
+                                    std::vector<core::Image>& images,
+                                    std::vector<core::Shape>& shapes,
+                                    std::vector<core::Rect>& rects,
+                                    const ImportParameters & opts,
+                                    std::vector<float> *scaleFactors)
         {
             const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
             const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;
 
             if (isIMM) {
-                bool ok = importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
+                bool ok = importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts, scaleFactors);
                 return ok ? DATABASE_IMM : DATABASE_ERROR;
             } else if (isIBUG) {
-                bool ok = importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts);
+                bool ok = importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts, scaleFactors);
                 return ok ? DATABASE_IBUG : DATABASE_ERROR;
             } else {
                 DEST_LOG("Unknown database format." << std::endl);
@@ -58,6 +64,7 @@ namespace dest {
                 factor = static_cast<float>(p.maxImageSideLength) / static_cast<float>(maxLen);
                 return true;
             } else {
+                factor = 1.f;
                 return false;
             }
         }
@@ -203,7 +210,14 @@ namespace dest {
             return s.rows() > 0 && s.cols() > 0;
         }
         
-        bool importIMMFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect>& rects, const ImportParameters &opts) {
+        bool importIMMFaceDatabase(const std::string &directory,
+                                   const std::string &rectangleFile,
+                                   std::vector<core::Image> &images,
+                                   std::vector<core::Shape> &shapes,
+                                   std::vector<core::Rect>& rects,
+                                   const ImportParameters &opts,
+                                   std::vector<float> *scaleFactors)
+        {
                                     
             std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
             DEST_LOG("Loading IMM database. Found " << paths.size() << " candidate entries." << std::endl);
@@ -248,6 +262,11 @@ namespace dest {
                         scaleImageShapeAndRect(cvImg, s, r, f);
                     }
                     
+                    if (scaleFactors) {
+                        scaleFactors->push_back(f);
+                    }
+                        
+                    
                     core::Image img;
                     util::toDest(cvImg, img);
                     
@@ -265,6 +284,10 @@ namespace dest {
                         images.push_back(imgFlipped);
                         shapes.push_back(s);
                         rects.push_back(r);
+                        
+                        if (scaleFactors) {
+                            scaleFactors->push_back(f);
+                        }
                     }
                 }
             }
@@ -378,7 +401,14 @@ namespace dest {
             
         }
         
-        bool importIBugAnnotatedFaceDatabase(const std::string &directory, const std::string &rectangleFile, std::vector<core::Image> &images, std::vector<core::Shape> &shapes, std::vector<core::Rect> &rects, const ImportParameters &opts) {
+        bool importIBugAnnotatedFaceDatabase(const std::string &directory,
+                                             const std::string &rectangleFile,
+                                             std::vector<core::Image> &images,
+                                             std::vector<core::Shape> &shapes,
+                                             std::vector<core::Rect> &rects,
+                                             const ImportParameters &opts,
+                                             std::vector<float> *scaleFactors)
+        {
             
             std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
             DEST_LOG("Loading ibug database. Found " << paths.size() << " candidate entries." << std::endl);
@@ -428,6 +458,10 @@ namespace dest {
                     shapes.push_back(s);
                     rects.push_back(r);
                     
+                    if (scaleFactors) {
+                        scaleFactors->push_back(f);
+                    }
+                    
                     
                     if (opts.generateVerticallyMirrored) {
                         cv::Mat cvFlipped = cvImg.clone();
@@ -439,6 +473,10 @@ namespace dest {
                         images.push_back(imgFlipped);
                         shapes.push_back(s);
                         rects.push_back(r);
+                        
+                        if (scaleFactors) {
+                            scaleFactors->push_back(f);
+                        }
                     }
                 }
             }
