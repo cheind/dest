@@ -53,6 +53,7 @@ int main(int argc, char **argv)
         std::string db;
         std::string output;
         dest::io::ImportParameters importParams;
+        bool matchCV;
     } opts;
 
     try {
@@ -60,11 +61,13 @@ int main(int argc, char **argv)
         TCLAP::MultiArg<std::string> detectorsArg("d", "detector", "OpenCV classifier to load", true, "string");
         TCLAP::ValueArg<std::string> outputArg("o", "output", "CSV output file", false, "rectangles.csv", "string");
         TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int");
+        TCLAP::SwitchArg noMatchCVArg("", "no-match-opencv", "Match tight rectangles to OpenCV detector rectangles", false);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string");
 
         cmd.add(&detectorsArg);
         cmd.add(&outputArg);
         cmd.add(&maxImageSizeArg);
+        cmd.add(&noMatchCVArg);
         cmd.add(&databaseArg);
 
         cmd.parse(argc, argv);
@@ -73,6 +76,7 @@ int main(int argc, char **argv)
         opts.db = databaseArg.getValue();
         opts.output = outputArg.getValue();
         opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
+        opts.matchCV = !noMatchCVArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -96,6 +100,13 @@ int main(int argc, char **argv)
     }
 
     size_t countDetectionSuccess = 0;
+
+    // The OpenCV detector rectangles are significantly different from tight bounds.
+    // The values below attempt to match tight rects and OpenCV rects.
+    float scaleToCV = 1.14f; // Scale between rectangles
+    float txToCV = -0.07f; // Translation in x normalized by image width
+    float tyToCV = -0.14f; // Translation in y normalized by image height
+
     for (size_t i = 0; i < rects.size(); ++i) {
 
         std::vector<dest::core::Rect> faces;
@@ -116,9 +127,21 @@ int main(int argc, char **argv)
                 bestOverlap = o;
             }
         }
-        
-        if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.6f) {
-            rects[i] = dest::core::shapeBounds(inputs.shapes[i]) / scalings[i];
+
+
+        if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.3f) {
+
+            dest::core::Rect r = dest::core::shapeBounds(inputs.shapes[i]);
+            // Match CV detector
+            if (opts.matchCV) {
+                Eigen::AffineCompact2f t;
+                t.setIdentity();
+                t = Eigen::Translation2f(txToCV * inputs.images[i].cols(), tyToCV * inputs.images[i].rows()) * Eigen::Scaling(scaleToCV);
+                r = t * r.colwise().homogeneous();
+            }
+            // Match original image size.
+            rects[i] =  r / scalings[i];
+            
         } else {
             ++countDetectionSuccess;
             rects[i] = faces[bestId] / scalings[i];
@@ -128,7 +151,6 @@ int main(int argc, char **argv)
             std::cout << "Processing " << i << "\r" << std::flush;
         }
     }
-
     std::cout << "Detector successful on " << countDetectionSuccess << "/" << rects.size() << " shapes." << std::endl;
     
     dest::io::exportRectangles(opts.output, rects);
