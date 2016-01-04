@@ -37,6 +37,7 @@ int main(int argc, char **argv)
         std::string db;
         std::string rects;
         std::string output;
+        int randomSeed;
         bool showInitialSamples;
     } opts;
 
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<int> maxTreeDepthArg("", "train-max-depth", "Maximum tree depth.", false, 5, "int", cmd);
         TCLAP::ValueArg<int> numPixelsArg("", "train-num-pixels", "Number of random pixel coordinates", false, 400, "int", cmd);
         TCLAP::ValueArg<int> numSplitTestsArg("", "train-num-splits", "Number of random split tests at each tree node", false, 20, "int", cmd);
+        TCLAP::ValueArg<int> randomSeedArg("", "train-rnd-seed", "Seed for the random number generator", false, 10, "int", cmd);
         TCLAP::ValueArg<float> lambdaArg("", "train-lambda", "Prior that favors closer pixel coordinates.", false, 0.1f, "float", cmd);
         TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
         
@@ -77,6 +79,7 @@ int main(int argc, char **argv)
         opts.trainingParams.numRandomSplitTestsPerNode = numSplitTestsArg.getValue();
         opts.trainingParams.exponentialLambda = lambdaArg.getValue();
         opts.trainingParams.learningRate = learnArg.getValue();
+        opts.randomSeed = randomSeedArg.getValue();
         
         opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
         opts.importParams.generateVerticallyMirrored = mirrorImageArg.getValue();
@@ -92,6 +95,7 @@ int main(int argc, char **argv)
     }
 
     dest::core::InputData inputs;
+    inputs.rnd.seed(static_cast<unsigned int>(opts.randomSeed));
     if (!dest::io::importDatabase(opts.db, opts.rects, inputs.images, inputs.shapes, inputs.rects, opts.importParams)) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
