@@ -31,12 +31,12 @@ int main(int argc, char **argv)
     try {
         TCLAP::CmdLine cmd("Evaluate regressor on test database.", ' ', "0.9");
         TCLAP::ValueArg<std::string> regressorArg("r", "regressor", "Trained regressor to load", true, "dest.bin", "string", cmd);
-        TCLAP::ValueArg<std::string> rectanglesArg("", "rect", "Initial rectangles to provide to tracker", true, "rectangles.csv", "string", cmd);
+        TCLAP::ValueArg<std::string> rectanglesArg("", "rect", "Initial rectangles to provide to tracker", false, "rectangles.csv", "string", cmd);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
         cmd.parse(argc, argv);
 
-        opts.rectangles = rectanglesArg.getValue();
+        opts.rectangles = rectanglesArg.isSet() ? rectanglesArg.getValue() : "";
         opts.database = databaseArg.getValue();
         opts.regressor = regressorArg.getValue();
     }
