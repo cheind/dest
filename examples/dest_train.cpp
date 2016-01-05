@@ -59,7 +59,7 @@ int main(int argc, char **argv)
         TCLAP::SwitchArg noCombinationsArg("", "create-no-combinations", "Disable linear combinations of shapes.", cmd, false);
         
         TCLAP::SwitchArg showInitialSamplesArg("", "show-samples", "Show generated samples", cmd, false);
-        TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", true, "rectangles.csv", "string", cmd);
+        TCLAP::ValueArg<std::string> rectsArg("r", "rectangles", "Initial detection rectangles to train on.", false, "rectangles.csv", "string", cmd);
         TCLAP::ValueArg<std::string> outputArg("o", "output", "Trained regressor output.", false, "dest.bin", "string", cmd);
         TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int", cmd);
         TCLAP::SwitchArg mirrorImageArg("", "load-mirrored", "Additionally mirror each database image, shape and rects.", cmd, false);
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         
         opts.showInitialSamples = showInitialSamplesArg.getValue();
         opts.db = databaseArg.getValue();
-        opts.rects = rectsArg.getValue();
+        opts.rects = rectsArg.isSet() ? rectsArg.getValue() : "";
         opts.output = outputArg.getValue();        
     }
     catch (TCLAP::ArgException &e) {
