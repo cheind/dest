@@ -30,11 +30,51 @@
 namespace dest {
     namespace util {
         
+        /**
+            Draw shape to OpenCV image.
+
+            \param img Image to draw to.
+            \param s Shape to draw.
+            \param color Color to use.
+        */
         void drawShape(cv::Mat &img, const core::Shape &s, const cv::Scalar &color);
+
+        /**
+            Draw shape to OpenCV image using different colors for each landmark.
+
+            \param img Image to draw to.
+            \param s Shape to draw.
+            \param colormap OpenCV colormap see cv::applyColorMap.
+        */
         void drawShape(cv::Mat &img, const core::Shape &s, int colormap);
+
+        /**
+            Draw landmark ids rendered as text.
+
+            \param img Image to draw to.
+            \param s Shape to draw.
+            \param color Color to use.
+        */
         void drawShapeText(cv::Mat &img, const core::Shape &s, const cv::Scalar &color);
+
+        /**
+            Draw rectangle.
+
+            \param img Image to draw to.
+            \param r Rectangle to draw.
+            \param color Color to use.
+        */
         void drawRect(cv::Mat &img, const core::Rect &r, const cv::Scalar &color);
         
+        /**
+            Draw shape.
+
+            Usually used as a kick-starter to get initial OpenCV image with rendered shape.
+
+            \param img Image to draw to. Copy will be made and returned by this method.
+            \param s Shape to draw.
+            \param color Color to use.
+        */
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color);
         
     }

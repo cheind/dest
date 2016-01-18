@@ -29,18 +29,37 @@
 namespace dest {
     namespace core {
         
-            
+        /**
+            Multi-dimensional regressor based on GBDT (Gradient boosted decision trees).
+        */
         class Regressor {
         public:
             Regressor();
             Regressor(const Regressor &other);
             ~Regressor();
             
+            /**
+                Fit to training data.
+            */
             bool fit(RegressorTraining &t);
             
+            /** 
+                Predict incremental shape from current shape estimate.
+
+                \param img Image to sample from
+                \param shape Current shape estimate
+                \param shapeToImage Global similarity transform from normalized shape space to image.
+            */
             ShapeResidual predict(const Image &img, const Shape &shape, const ShapeTransform &shapeToImage) const;
 
+            /**
+                Save trained regressor to flatbuffers.
+            */
             flatbuffers::Offset<io::Regressor> save(flatbuffers::FlatBufferBuilder &fbb) const;
+
+            /**
+                Load trained regressor from flatbuffers.
+            */
             void load(const io::Regressor &fbs);
             
         private:

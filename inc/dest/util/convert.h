@@ -30,6 +30,9 @@
 namespace dest {
     namespace util {
 
+        /**
+            Convert OpenCV image to DEST.
+        */
         inline void toDest(const cv::Mat &src, core::Image &dst) {
             dst.resize(src.rows, src.cols);
 
@@ -48,6 +51,9 @@ namespace dest {
             dst = map;
         }
 
+        /**
+            Convert DEST image to OpenCV header.
+        */
         inline void toCVHeaderOnly(const core::Image &src, cv::Mat &dst) {
 
             const int rows = static_cast<int>(src.rows());
@@ -56,6 +62,9 @@ namespace dest {
             dst = cv::Mat(rows, cols, CV_8UC1, const_cast<unsigned char*>(src.data()));
         }
 
+        /**
+            Convert DEST image to OpenCV.
+        */
         inline void toCV(const core::Image &src, cv::Mat &dst) {
 
             cv::Mat hdr;
@@ -63,10 +72,16 @@ namespace dest {
             hdr.copyTo(dst);
         }
         
+        /**
+            Convert OpenCV rectangle to DEST.
+        */
         inline void toDest(const cv::Rect &src, core::Rect &dst) {
             dst = core::createRectangle(Eigen::Vector2f(src.tl().x, src.tl().y), Eigen::Vector2f(src.br().x, src.br().y));
         }
         
+        /**
+            Convert DEST rectangle to OpenCV.
+        */
         inline void toCV(const core::Rect &src, cv::Rect_<float> &dst) {
             dst.x = src(0,0);
             dst.y = src(1,0);

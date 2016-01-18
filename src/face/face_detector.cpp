@@ -18,6 +18,8 @@
  */
 
 #include <dest/face/face_detector.h>
+
+#ifdef DEST_WITH_OPENCV
 #include <dest/util/convert.h>
 #include <opencv2/opencv.hpp>
 
@@ -134,3 +136,5 @@ namespace dest {
         }
     }
 }
+
+#endif

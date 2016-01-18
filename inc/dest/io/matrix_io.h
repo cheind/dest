@@ -26,6 +26,9 @@
 namespace dest {
     namespace io {
         
+        /**
+            Convert generic matrix to flatbuffers.
+        */
         template<int Rows, int Cols, int Options, int MaxRows, int MaxCols>
         flatbuffers::Offset<MatrixF> toFbs(flatbuffers::FlatBufferBuilder &fbb, const Eigen::Matrix<float, Rows, Cols, Options, MaxRows, MaxCols> &m)
         {
@@ -39,6 +42,9 @@ namespace dest {
             return mb.Finish();
         }
         
+        /**
+            Convert generic matrix to flatbuffers.
+        */
         template<int Rows, int Cols, int Options, int MaxRows, int MaxCols>
         flatbuffers::Offset<MatrixI> toFbs(flatbuffers::FlatBufferBuilder &fbb, const Eigen::Matrix<int, Rows, Cols, Options, MaxRows, MaxCols> &m)
         {
@@ -52,6 +58,9 @@ namespace dest {
             return mb.Finish();
         }
         
+        /**
+            Convert flatbuffers to generic matrix.
+        */
         template<int Rows, int Cols, int Options, int MaxRows, int MaxCols>
         void fromFbs(const MatrixF &fbsValue, Eigen::Matrix<float, Rows, Cols, Options, MaxRows, MaxCols> &m)
         {
@@ -61,6 +70,9 @@ namespace dest {
             m = map;
         }
         
+        /**
+            Convert flatbuffers to generic matrix.
+        */
         template<int Rows, int Cols, int Options, int MaxRows, int MaxCols>
         void fromFbs(const MatrixI &fbsValue, Eigen::Matrix<int, Rows, Cols, Options, MaxRows, MaxCols> &m)
         {

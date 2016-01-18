@@ -26,6 +26,14 @@
 namespace dest {
     namespace util {
         
+        /**
+            Find all files in directory with options.
+
+            \param Directory to search in.
+            \param extension Necessary file extension.
+            \param stripExtension Whether or not to strip extension in results.
+            \returns List of found files.
+        */
         std::vector<std::string> findFilesInDir(const std::string &directory, const std::string &extension, bool stripExtension);
         
     }

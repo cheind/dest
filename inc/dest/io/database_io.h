@@ -40,6 +40,9 @@ namespace dest {
             ImportParameters();
         };
         
+        /**
+            Supported set of database importers.
+        */
         enum DatabaseType {
             DATABASE_ERROR = 0,
             DATABASE_IMM = 1,
@@ -53,6 +56,16 @@ namespace dest {
             Currently supported databases are
                 - IMM face database, see importIMMFaceDatabase
                 - ibug annotated database, see importIBugAnnotatedFaceDatabase
+
+            \param directory directory containing training files
+            \param rectangleFile File containing rectangles for each training sample.
+            \param images Loaded images
+            \param shapes Loaded shapes
+            \param rects Loaded rectangles
+            \param opts Import options.
+            \param scaleFactors If not null contains applied scale factors to images.
+            \returns Loaded database type or DATABASE_ERROR when unknown.
+
         */
         DatabaseType importDatabase(const std::string &directory,
                                     const std::string &rectangleFile,
@@ -70,6 +83,14 @@ namespace dest {
             The IMM face database-an annotated dataset of 240 face images. Technical
             University of Denmark, DTU Informatics, Building 321, 2004.
             http://www.imm.dtu.dk/~aam/datasets/datasets.html
+
+            \param directory directory containing training files
+            \param rectangleFile File containing rectangles for each training sample.
+            \param images Loaded images
+            \param shapes Loaded shapes
+            \param rects Loaded rectangles
+            \param opts Import options.
+            \param scaleFactors If not null contains applied scale factors to images.
         */
         bool importIMMFaceDatabase(const std::string &directory,
                                    const std::string &rectangleFile,
@@ -93,6 +114,14 @@ namespace dest {
             300 Faces in-the-Wild Challenge: The first facial landmark localization Challenge. 
             Proceedings of IEEE Int’l Conf. on Computer Vision (ICCV-W 2013), 300 Faces in-the-Wild Challenge (300-W). Sydney, Australia, December 2013
             http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+
+            \param directory directory containing training files
+            \param rectangleFile File containing rectangles for each training sample.
+            \param images Loaded images
+            \param shapes Loaded shapes
+            \param rects Loaded rectangles
+            \param opts Import options.
+            \param scaleFactors If not null contains applied scale factors to images.
          */
         bool importIBugAnnotatedFaceDatabase(const std::string &directory,
                                              const std::string &rectangleFile,
