@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         std::string tracker;
         std::string detector;
         std::string device;
-        bool detectInEveryFrame;
+        int detectRate;
     } opts;
     
     try {
@@ -54,14 +54,14 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<std::string> detectorArg("d", "detector", "Detector to provide initial bounds.", true, "classifier.xml", "string", cmd);
         TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Tracker to align landmarks based initial bounds", true, "dest.bin", "string", cmd);
         TCLAP::UnlabeledValueArg<std::string> device("device", "Device to be opened. Either filename of video or camera device id.", true, "0", "string", cmd);
-        TCLAP::SwitchArg detectInEveryFrame("", "always-detect", "Use detector in every frame. If false tries to mimick detector for fast tracking.", cmd, false);
+        TCLAP::ValueArg<int> detectInNthFrame("", "detect-rate", "Use detector in every frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
         
         cmd.parse(argc, argv);
         
         opts.tracker = trackerArg.getValue();
         opts.detector = detectorArg.getValue();
         opts.device = device.getValue();
-        opts.detectInEveryFrame = detectInEveryFrame.getValue();
+        opts.detectRate = detectInNthFrame.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -108,8 +108,9 @@ int main(int argc, char **argv)
     dest::core::Shape s;
     dest::core::ShapeTransform shapeToImage;
     bool done = false;
-    bool detect = false;
+    bool requestDetect = false;
     bool detectSuccess = false;
+    int frameCount = 0;
     while (!done) {
         cap >> imgCV;
         
@@ -119,14 +120,16 @@ int main(int argc, char **argv)
         cv::cvtColor(imgCV, grayCV, CV_BGR2GRAY);
         dest::util::toDest(grayCV, img);
         
-        if (detect || opts.detectInEveryFrame) {
+        const bool isDetectFrame = (frameCount % opts.detectRate == 0);
+
+        if (requestDetect || isDetectFrame) {
 
             if (fd.detectSingleFace(grayCV, cvRect)) {
                 dest::util::toDest(cvRect, r);
                 shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
                 s = t.predict(img, shapeToImage);
 
-                detect = false;
+                requestDetect = false;
                 detectSuccess = true;
             } else {
                 detectSuccess = false;
@@ -134,22 +137,20 @@ int main(int argc, char **argv)
         }
 
 
-        if (!opts.detectInEveryFrame && detectSuccess) {
-            for (int i = 0; i < 2; ++i) {
-                // Mimick detector behaviour. Only works for OpenCV face detectors.
-                r = dest::core::shapeBounds(s);
-                shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
-                Eigen::AffineCompact2f tr;
-                tr.setIdentity();
-                tr = Eigen::Translation2f(txToCV * img.cols(), tyToCV * img.rows()) *
-                    Eigen::Translation2f(shapeToImage.translation()) *
-                    Eigen::Scaling(scaleToCV) *
-                    Eigen::Translation2f(-shapeToImage.translation());
-                r = tr * r.colwise().homogeneous();
+        if (!isDetectFrame && detectSuccess) {
+            // Mimick detector behaviour. Only works for OpenCV face detectors.
+            r = dest::core::shapeBounds(s);
+            shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+            Eigen::AffineCompact2f tr;
+            tr.setIdentity();
+            tr = Eigen::Translation2f(txToCV * img.cols(), tyToCV * img.rows()) *
+                Eigen::Translation2f(shapeToImage.translation()) *
+                Eigen::Scaling(scaleToCV) *
+                Eigen::Translation2f(-shapeToImage.translation());
+            r = tr * r.colwise().homogeneous();
 
-                shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
-                s = t.predict(img, shapeToImage);
-            }
+            shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+            s = t.predict(img, shapeToImage);
         }
 
     
@@ -161,7 +162,9 @@ int main(int argc, char **argv)
         if (key == 'x')
             done = true;
         else if (key != -1)
-            detect = true;
+            requestDetect = true;
+
+        ++frameCount;
         
     }
 
