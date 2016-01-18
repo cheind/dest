@@ -20,25 +20,32 @@
 #include <dest/dest.h>
 #include <tclap/CmdLine.h>
 
+/**
+    Evaluate a trained tracker based on some test data.
+
+    This methods loads a database of test samples and evaluates the tracker. Deviations 
+    from the true shape are normalized by the inter-ocular distance.
+
+*/
 int main(int argc, char **argv)
 {
     struct {
-        std::string regressor;
+        std::string tracker;
         std::string database;
         std::string rectangles;
     } opts;
 
     try {
         TCLAP::CmdLine cmd("Evaluate regressor on test database.", ' ', "0.9");
-        TCLAP::ValueArg<std::string> regressorArg("r", "regressor", "Trained regressor to load", true, "dest.bin", "string", cmd);
-        TCLAP::ValueArg<std::string> rectanglesArg("", "rect", "Initial rectangles to provide to tracker", false, "rectangles.csv", "string", cmd);
+        TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Trained tracker to load", true, "dest.bin", "file", cmd);
+        TCLAP::ValueArg<std::string> rectanglesArg("r", "rectangles", "Initial rectangles to provide to tracker", false, "rectangles.csv", "file", cmd);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
 
         cmd.parse(argc, argv);
 
         opts.rectangles = rectanglesArg.isSet() ? rectanglesArg.getValue() : "";
         opts.database = databaseArg.getValue();
-        opts.regressor = regressorArg.getValue();
+        opts.tracker = trackerArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -46,7 +53,7 @@ int main(int argc, char **argv)
     }
     
     dest::core::Tracker t;
-    if (!t.load(opts.regressor)) {
+    if (!t.load(opts.tracker)) {
         std::cerr << "Failed to load tracker." << std::endl;
         return -1;
     }

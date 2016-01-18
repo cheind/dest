@@ -26,28 +26,44 @@
 #include <opencv2/opencv.hpp>
 #include <tclap/CmdLine.h>
 
+/**
+    Sample program to predict shape landmarks on images.
+
+    This program takes an image, a learnt tracker and an OpenCV face detector to
+    compute shape landmark positions. OpenCV face detection works based on Viola
+    Jones algorithm which requires a training phase as well. Suitable classifier 
+    files can be donwloaded from OpenCV or from the dest/etc directory.
+
+    Use any key to cycle throgh tracker cascades and see incremetal updates. Start
+    configuration of shape landmarks is given in red.
+
+    Note that his example uses an OpenCV face detector based on Viola Jones to
+    provide the initial face rectangle. Therefore, you should only trackers that
+    have been trained on the same input.
+
+*/
 int main(int argc, char **argv)
 {
     struct {
         std::string detector;
-        std::string regressor;
+        std::string tracker;
         std::string image;
     } opts;
 
     try {
         TCLAP::CmdLine cmd("Test regressor on a single image.", ' ', "0.9");
-        TCLAP::ValueArg<std::string> detectorArg("d", "detector", "OpenCV face detector to load", true, "cascade.xml", "string");
-        TCLAP::ValueArg<std::string> regressorArg("r", "regressor", "Trained regressor to load", true, "dest.bin", "string");
-        TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align", true, "img.png", "string");
+        TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Trained tracler to load", true, "dest.bin", "file");
+        TCLAP::ValueArg<std::string> detectorArg("d", "detector", "OpenCV face detector to load", true, "cascade.xml", "string");        
+        TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align", true, "img.png", "file");
 
         cmd.add(&detectorArg);
-        cmd.add(&regressorArg);
+        cmd.add(&trackerArg);
         cmd.add(&imageArg);
 
         cmd.parse(argc, argv);
 
         opts.detector = detectorArg.getValue();
-        opts.regressor = regressorArg.getValue();
+        opts.tracker = trackerArg.getValue();
         opts.image = imageArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
@@ -66,7 +82,7 @@ int main(int argc, char **argv)
     }
     
     dest::core::Tracker t;
-    if (!t.load(opts.regressor)) {
+    if (!t.load(opts.tracker)) {
         std::cout << "Failed to load tracker." << std::endl;
         return 0;
     }
@@ -77,6 +93,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    // Default inverse shape normalization. Needs to be equivalent to training.
     dest::core::ShapeTransform shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
 
     std::vector<dest::core::Shape> steps;

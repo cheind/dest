@@ -81,9 +81,6 @@ target_link_libraries(dest ${DEST_LINK_TARGETS})
 add_executable(dest_generate_rects_viola_jones examples/dest_generate_rects_viola_jones.cpp)
 target_link_libraries(dest_generate_rects_viola_jones dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_generate_rects_regressor examples/dest_generate_rects_regressor.cpp)
-target_link_libraries(dest_generate_rects_regressor dest ${DEST_LINK_TARGETS})
-
 add_executable(dest_train examples/dest_train.cpp)
 target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
 

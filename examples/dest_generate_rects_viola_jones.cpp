@@ -46,6 +46,12 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
     return (float)numOverlap / (float)s.cols();
 }
 
+/**
+    Generate face rectangles for tracker training using OpenCV face detector.
+
+    dest::Tracker training requires initial bounding rectangles to be learnt. Use this
+    tool to generate rectangles for an exisiting face/shape database.
+*/
 int main(int argc, char **argv)
 {
     struct {
@@ -102,10 +108,11 @@ int main(int argc, char **argv)
     size_t countDetectionSuccess = 0;
 
     // The OpenCV detector rectangles are significantly different from tight bounds.
-    // The values below attempt to match tight rects and OpenCV rects.
-    float scaleToCV = 1.14f; // Scale between rectangles
-    float txToCV = -0.07f; // Translation in x normalized by image width
-    float tyToCV = -0.14f; // Translation in y normalized by image height
+    // The values below attempt to match simulate face rects from tight bounds 
+    // (used when the detector fails).
+    float scaleToCV = 1.25f; // Scale between rectangles
+    float txToCV = -0.01f;   // Translation in x normalized by image width
+    float tyToCV = -0.05f;   // Translation in y normalized by image height
 
     for (size_t i = 0; i < rects.size(); ++i) {
 
