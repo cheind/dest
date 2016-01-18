@@ -2,7 +2,7 @@
 
 **Deformable Shape Tracking (DEST)** is a C++ library providing high performance 2D shape tracking leveraging
 machine learning methods. The video below shows the real-time capabilities of **DEST** in annotating video sequences
- / still images using with facial landmarks.
+ / still images with facial landmarks.
 
 [![Watch on Youtube](http://img.youtube.com/vi/Hewjc0oyqPQ/0.jpg)](https://youtu.be/Hewjc0oyqPQ)
 
