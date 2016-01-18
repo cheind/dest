@@ -32,7 +32,8 @@
 
     This tool supports two operation modes. 
         - Use face-detector then tracker on every frame (accurate but slow as face detector is the slowest component, 60ms in total per frame).
-        - Use face-detector only in first frame, and a combination of tracker and pseudo face-detector afterwards (fast 4ms in total per frame).
+        - Use face-detector only every n-th frame. 
+          In between detector frames, a combination of tracker and mock face-detector (fast 4ms in total per frame) is used.
 
     This application uses OpenCV capture device to open the input device. As such it supports web cams and video files.
     During execution press any key except 'x' to trigger a new face detection.
@@ -52,11 +53,11 @@ int main(int argc, char **argv)
     try {
         TCLAP::CmdLine cmd("Track on video stream.", ' ', "0.9");
         
-        TCLAP::ValueArg<std::string> detectorArg("d", "detector", "Detector to provide initial bounds.", true, "classifier.xml", "string", cmd);
-        TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Tracker to align landmarks based initial bounds", true, "dest.bin", "string", cmd);
+        TCLAP::ValueArg<std::string> detectorArg("d", "detector", "Detector to provide initial bounds.", true, "classifier.xml", "XML file", cmd);
+        TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Tracker to align landmarks based initial bounds", true, "dest.bin", "Tracker file", cmd);
         TCLAP::UnlabeledValueArg<std::string> deviceArg("device", "Device to be opened. Either filename of video or camera device id.", true, "0", "string", cmd);
         TCLAP::SwitchArg drawRectArg("", "draw-rect", "Draw face detector rectangle", cmd, false);
-        TCLAP::ValueArg<int> detectInNthFrameArg("", "detect-rate", "Use detector in every frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
+        TCLAP::ValueArg<int> detectInNthFrameArg("", "detect-rate", "Use detector in every n-th frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
         
         cmd.parse(argc, argv);
         
