@@ -5,7 +5,7 @@ machine learning methods. The video below shows the real-time capabilities of DE
 or still images using with facial landmarks. The **DEST** tracker was previously trained on thousands of
 training samples from available face databases.
 
-https://youtu.be/Hewjc0oyqPQ
+[![Watch on YouTube](http://img.youtube.com/vi/Hewjc0oyqPQ/0.jpg)](https://youtu.be/Hewjc0oyqPQ)
 
 ## Building from source
 **Deformable Shape Tracking** requires the following pre-requisites
