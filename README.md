@@ -1,13 +1,12 @@
 ## About this library
 
-**Deformable Shape Tracking (DEST)** is a C++ library providing high performance 2D shape tracking utilizing
-machine learning methods. The video below shows the real-time capabilities of DEST in annotating video sequences
-or still images using with facial landmarks.
+**Deformable Shape Tracking (DEST)** is a C++ library providing high performance 2D shape tracking leveraging
+machine learning methods. The video below shows the real-time capabilities of **DEST** in annotating video sequences
+ / still images using with facial landmarks.
 
 [![Watch on Youtube](http://img.youtube.com/vi/Hewjc0oyqPQ/0.jpg)](https://youtu.be/Hewjc0oyqPQ)
 
-The **DEST** tracker was previously trained on thousands of
-training samples from available face databases.
+This **DEST** tracker was previously trained on thousands of training samples from available face databases.
 
 **DEST** features
  - A generic framework for learning arbitrary shape transformations.
@@ -15,7 +14,7 @@ training samples from available face databases.
  - State of the art performance and accuracy.
  - Pre-trained trackers for a quick start.
  - Cross platform minimal disk footprint serialization.
- - Included support for IMM and ibug annotated face database import.
+ - Built in support for [IMM](http://www.imm.dtu.dk/~aam/datasets/datasets.html) and [ibug](http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/) annotated face database import.
 
 ## Using DEST
 
@@ -50,7 +49,7 @@ dest::core::Rect r;
 fd.detectSingleFace(img, r);
 ```
 
-Here `img` is either `dest::core::Image` or `cv::Mat`. Once we have a rough estimate of the face location, we need to find a shape normalizing transform. By default this is given by
+Here `img` is either `dest::core::Image` or `cv::Mat`. Once we have a rough estimate of the face location, we need to find a shape normalizing transform. By default the following is used
 
 ```cpp
 dest::core::Rect ur = dest::core::unitRectangle();
@@ -131,19 +130,20 @@ Type `dest_align --help` for detailed help.
 > dest_track_video -t destcv.bin -d classifier_frontalface.xml video.avi
 ```
 
-This tool can also handle camera input. Specify a numeric device id such as `0` to open a physical device.
+This tool can also handle camera input. Specify a numeric device id, such as `0`, to open a physical device.
 
-**DEST** requires a rough estimate of the shape by default. Here we use an OpenCV face detector for exactly
-this job. It works great but has the disadvantage of being slow compared to the `dest::core::Tracker`. For
-this reason `dest_track_video` supports a `--detect-rate` parameter. If set to 1, the face detector will
-be invoked in all frames. Setting it to higher will run the face detector only ever n-th frame. Between
-frames, the tool attempts to simulate a face detector based on the tracking result.
+**DEST** requires a rough estimate (global similarity transform) of the target shape. Here we use an OpenCV
+face detector for exactly this job. It works great but has the drawback of being slow compared to
+`dest::core::Tracker`. For this reason `dest_track_video` supports a `--detect-rate` parameter.
+If set to 1, the face detector will be invoked in all frames. Setting it to bigger values will run the face detector
+only every n-th frame. Between detection frames, the tool tracks the face through to simulation a face detector
+based on the previous tracking results.
 
 Type `dest_track_video --help` for detailed help.
 
 #### dest_train
-`dest_train` allows you to train your own tracker. For this you require a training database. **DEST**
-comes with a set of importers for common face databases (currently IMM and ibug). You can use your own
+`dest_train` allows you to train your own tracker. This step requires a training database. **DEST**
+comes with a set of importers for common face databases. You can use your own
 database as well: all you need to train are images, landmarks and initial estimates
 (usually rectangles) to provide a rough estimate of the shape.
 
@@ -153,7 +153,7 @@ To train a tracker using a supported database format type
 > dest_train --rectangles rectangles.csv --load-mirrowed --load-max-size 640 directory
 ```
 
-Here `directory` is the directory containing the shape database. `rectangles.csv` are
+Here `directory` is the directory containing the shape database. `rectangles.csv`
 provide estimates of rough shape location and size. `dest_train` makes no assumption on
 how those are generated, but make sure that you use the same method during training and
 running the tracker later on. In case you want to go with OpenCV face detector rectangles,
@@ -164,16 +164,20 @@ Type `dest_train --help` for detailed help.
 
 #### dest_evaluate
 `dest_evaluate` can is a tool used to evaluate a previously trained tracker. It loads a
-test database and and computes tracker statistics. These statistics include the mean distance
-of target and estimated shape landmarks normalized by the inter-ocular distance when the
-loaded database contains faces.
+test database and and computes tracker statistics. These statistics include the mean Euclidean
+distance between target and estimated shape landmarks normalized by the inter-ocular distance
+when the loaded database contains faces. Here is how you invoke it
 
 ```
 > dest_evaluate --rectangles rectangles.csv -t destcv.bin database
 ```
 
-When using one of the pre-trained trackers on the ibug annotated HELEN test database
-using Viola Jones estimated face rectangles, you should see similar values to
+When using
+ - a pre-trained tracker from our [release]([release](https://github.com/cheind/dest/releases)
+ - on the [ibug annotated HELEN](http://ibug.doc.ic.ac.uk/download/annotations/helen.zip) test database
+ - using OpenCV Viola Jones estimated face rectangles
+
+you should see roughly the following output
 
 ```
 Loading ibug database. Found 330 candidate entries.
@@ -182,10 +186,10 @@ Average normalized error: 0.0451457
 ```
 
 #### dest_generate_rects_viola_jones
-`dest_generate_rects_viola_jones` is a utility to generate Viola Jones rectangles for a training
-database. These rectangles can be fed into `dest_train` for learning. Note, if your application
-comes with a face detector built in, you will want to use your face detector to generate initial
-rectangles.
+`dest_generate_rects_viola_jones` is a utility to generate face rectangles for a training
+database using OpenCVs Viola Jones algorithm. These rectangles can be fed into `dest_train`
+for learning. Note, if your application comes with a face detector built in, you may want
+to use your face detector to generate these rectangles.
 
 Type `dest_generate_rects_viola_jones --help` for detailed help.
 
