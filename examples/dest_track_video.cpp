@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     }
 
     // The OpenCV detector rectangles are significantly different from tight bounds.
-    // The values below attempt to match tight rects and OpenCV rects.
+    // The values below attempt to match tight rects from landmarks and OpenCV rects.
     float scaleToCV = 1.25f; // Scale between rectangles
     float txToCV = -0.01f; // Translation in x normalized by image width
     float tyToCV = -0.05f; // Translation in y normalized by image height
