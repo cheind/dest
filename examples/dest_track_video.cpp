@@ -46,6 +46,7 @@ int main(int argc, char **argv)
         std::string detector;
         std::string device;
         int detectRate;
+        bool drawRect;
     } opts;
     
     try {
@@ -53,15 +54,17 @@ int main(int argc, char **argv)
         
         TCLAP::ValueArg<std::string> detectorArg("d", "detector", "Detector to provide initial bounds.", true, "classifier.xml", "string", cmd);
         TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Tracker to align landmarks based initial bounds", true, "dest.bin", "string", cmd);
-        TCLAP::UnlabeledValueArg<std::string> device("device", "Device to be opened. Either filename of video or camera device id.", true, "0", "string", cmd);
-        TCLAP::ValueArg<int> detectInNthFrame("", "detect-rate", "Use detector in every frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
+        TCLAP::UnlabeledValueArg<std::string> deviceArg("device", "Device to be opened. Either filename of video or camera device id.", true, "0", "string", cmd);
+        TCLAP::SwitchArg drawRectArg("", "draw-rect", "Draw face detector rectangle", cmd, false);
+        TCLAP::ValueArg<int> detectInNthFrameArg("", "detect-rate", "Use detector in every frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
         
         cmd.parse(argc, argv);
         
         opts.tracker = trackerArg.getValue();
         opts.detector = detectorArg.getValue();
-        opts.device = device.getValue();
-        opts.detectRate = detectInNthFrame.getValue();
+        opts.device = deviceArg.getValue();
+        opts.detectRate = detectInNthFrameArg.getValue();
+        opts.drawRect = drawRectArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -104,7 +107,7 @@ int main(int argc, char **argv)
     cv::Mat imgCV, grayCV;
     cv::Rect cvRect;
     dest::core::Image img;
-    dest::core::Rect r, r2;
+    dest::core::Rect r;
     dest::core::Shape s;
     dest::core::ShapeTransform shapeToImage;
     bool done = false;
@@ -153,10 +156,11 @@ int main(int argc, char **argv)
             s = t.predict(img, shapeToImage);
         }
 
-    
-        dest::util::drawShape(imgCV, s, cv::Scalar(0,0,255));
-        dest::util::drawRect(imgCV, r, cv::Scalar(0, 255, 0));
-        dest::util::drawRect(imgCV, r2, cv::Scalar(0, 0, 255));
+        dest::util::drawShape(imgCV, s, cv::COLORMAP_JET);
+       
+        if (opts.drawRect)
+            dest::util::drawRect(imgCV, r, cv::Scalar(0, 255, 0));
+
         cv::imshow("DEST Tracking", imgCV);
         int key = cv::waitKey(1);
         if (key == 'x')
