@@ -157,7 +157,7 @@ int main(int argc, char **argv)
             s = t.predict(img, shapeToImage);
         }
 
-        dest::util::drawShape(imgCV, s, cv::COLORMAP_JET);
+        dest::util::drawShape(imgCV, s, cv::Scalar(255, 0, 102));
        
         if (opts.drawRect)
             dest::util::drawRect(imgCV, r, cv::Scalar(0, 255, 0));
