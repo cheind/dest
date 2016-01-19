@@ -17,11 +17,13 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <dest/core/config.h>
+#ifdef DEST_WITH_OPENCV
+
 #include <dest/util/draw.h>
 #include <dest/util/log.h>
 #include <dest/util/convert.h>
 
-#ifdef DEST_WITH_OPENCV
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 

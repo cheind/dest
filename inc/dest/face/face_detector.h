@@ -21,14 +21,15 @@
 #define DEST_FACE_DETECTOR_H
 
 #include <dest/core/config.h>
+#if !defined(DEST_WITH_OPENCV)
+#error OpenCV is required for this part of DEST.
+#endif
+
 #include <dest/core/shape.h>
 #include <dest/core/image.h>
+#include <opencv2/core/core.hpp>
 #include <string>
 #include <memory>
-
-
-#ifdef DEST_WITH_OPENCV
-#include <opencv2/core/core.hpp>
 
 namespace dest {
     namespace face {
@@ -102,5 +103,4 @@ namespace dest {
     }
 }
 
-#endif
 #endif

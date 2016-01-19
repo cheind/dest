@@ -17,9 +17,11 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dest/face/face_detector.h>
 
+#include <dest/core/config.h>
 #ifdef DEST_WITH_OPENCV
+
+#include <dest/face/face_detector.h>
 #include <dest/util/convert.h>
 #include <opencv2/opencv.hpp>
 

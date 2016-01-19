@@ -20,11 +20,9 @@
 #include <dest/core/tracker.h>
 #include <dest/core/regressor.h>
 #include <dest/util/log.h>
-#include <dest/util/draw.h>
 #include <dest/io/matrix_io.h>
 #include <fstream>
 #include <iomanip>
-#include <opencv2/opencv.hpp>
 
 namespace dest {
     namespace core {

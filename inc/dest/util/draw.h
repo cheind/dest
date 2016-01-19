@@ -21,10 +21,12 @@
 #define DEST_DRAW_H
 
 #include <dest/core/config.h>
+#if !defined(DEST_WITH_OPENCV)
+#error OpenCV is required for this part of DEST.
+#endif
+
 #include <dest/core/shape.h>
 #include <dest/core/image.h>
-
-#ifdef DEST_WITH_OPENCV
 #include <opencv2/core/core.hpp>
 
 namespace dest {
@@ -79,7 +81,5 @@ namespace dest {
         
     }
 }
-
-#endif
 
 #endif

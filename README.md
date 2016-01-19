@@ -93,7 +93,7 @@ To build follow these steps
   1. Open generated solution and build `ALL_BUILD`.
 
 #### When is OpenCV is required?
-OpenCV is only required during training and when running the demo samples. **DEST** comes with its own Eigen based image type, OpenCV is mainly used for convenience functions such as image loading and rendering.
+OpenCV is required during training and when running the demo samples. **DEST** comes with its own Eigen based image type, OpenCV is mainly used for convenience functions such as image loading and rendering.
 
 #### Any other dependencies?
 Yes, those are inline [included](ext/) and are header only. **DEST** makes use of Google flatbuffers for serialization, tinydir for enumerating files and TCLAP for command line parsing.
@@ -106,7 +106,7 @@ Although **Deformable Shape Tracking** should build across multiple platforms an
 If the build should fail for a specific platform, don't hesitate to create an [issue](https://github.com/cheind/dest/issues).
 
 ## Running the tools
-**DEST** comes with a set of handy tools to train and evaluate and trackers.
+**DEST** comes with a set of handy tools to train and evaluate and trackers. The tools below require OpenCV support. Make sure to enable it before building the library.
 
 #### dest_align
 `dest_align` is a command line tool to test a previously trained tracker on sample images. It shows intermediate steps and is thus best used for debugging. Its main application is the face alignment.

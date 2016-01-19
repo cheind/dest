@@ -20,7 +20,6 @@
 #include "catch.hpp"
 
 #include <dest/core/image.h>
-#include <iostream>
 
 TEST_CASE("image-readpixels")
 {

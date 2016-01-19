@@ -26,7 +26,10 @@
 namespace dest {
     namespace core {
     
-        /** Type of single channel intensity image. */
+        /** 
+            Type of single channel intensity image. 
+            Memory order is row-major to provide non-copy mapping with OpenCV matrices.
+        */
         typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
 
         /** Type of list of image coordinates in columns. */

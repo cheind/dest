@@ -21,16 +21,23 @@ if(DEST_WITH_OPENCV)
 	find_package(OpenCV REQUIRED)
 	include_directories(${OpenCV_INCLUDE_DIRS})
 	list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
+    message(STATUS "Compiling with OpenCV support")
+else()
+    message(STATUS "Compiling without OpenCV support")
 endif()
 
 set(DEST_WITH_OPENMP OFF CACHE BOOL "Build DEST with OpenMP support")
 if(DEST_WITH_OPENMP)
-  find_package(OpenMP)
-  if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    message(STATUS "Compiling with OpenMP support")
-  endif()
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        message(STATUS "Compiling with OpenMP support")
+    else()
+        message(STATUS "No OpenMP support detected.")
+    endif()
+else()
+    message(STATUS "Compiling without OpenMP support")
 endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc" "ext")
@@ -77,21 +84,22 @@ target_link_libraries(dest ${DEST_LINK_TARGETS})
 	
 # Samples
 
+if(DEST_WITH_OPENCV)
+    add_executable(dest_generate_rects_viola_jones examples/dest_generate_rects_viola_jones.cpp)
+    target_link_libraries(dest_generate_rects_viola_jones dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_generate_rects_viola_jones examples/dest_generate_rects_viola_jones.cpp)
-target_link_libraries(dest_generate_rects_viola_jones dest ${DEST_LINK_TARGETS})
+    add_executable(dest_train examples/dest_train.cpp)
+    target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_train examples/dest_train.cpp)
-target_link_libraries(dest_train dest ${DEST_LINK_TARGETS})
+    add_executable(dest_evaluate examples/dest_evaluate.cpp)
+    target_link_libraries(dest_evaluate dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_evaluate examples/dest_evaluate.cpp)
-target_link_libraries(dest_evaluate dest ${DEST_LINK_TARGETS})
+    add_executable(dest_align examples/dest_align.cpp)
+    target_link_libraries(dest_align dest ${DEST_LINK_TARGETS})
 
-add_executable(dest_align examples/dest_align.cpp)
-target_link_libraries(dest_align dest ${DEST_LINK_TARGETS})
-
-add_executable(dest_track_video examples/dest_track_video.cpp)
-target_link_libraries(dest_track_video dest ${DEST_LINK_TARGETS})
+    add_executable(dest_track_video examples/dest_track_video.cpp)
+    target_link_libraries(dest_track_video dest ${DEST_LINK_TARGETS})
+endif()
 
 
 # Tests

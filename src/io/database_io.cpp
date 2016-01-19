@@ -17,6 +17,10 @@
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <dest/core/config.h>
+#ifdef DEST_WITH_OPENCV
+
 #include <dest/io/database_io.h>
 #include <dest/util/log.h>
 #include <dest/util/draw.h>
@@ -488,3 +492,5 @@ namespace dest {
         
     }
 }
+
+#endif

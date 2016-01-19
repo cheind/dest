@@ -19,7 +19,6 @@
 
 #include <dest/core/shape.h>
 #include <Eigen/Dense>
-#include <iostream>
 
 namespace dest {
     namespace core {

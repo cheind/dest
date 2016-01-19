@@ -21,9 +21,10 @@
 #define DEST_CONVERT_H
 
 #include <dest/core/config.h>
-#include <dest/core/image.h>
+#if !defined(DEST_WITH_OPENCV)
+#error OpenCV is required for this part of DEST.
+#endif
 
-#ifdef DEST_WITH_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -91,7 +92,5 @@ namespace dest {
 
     }
 }
-
-#endif
 
 #endif

@@ -23,10 +23,6 @@
 #include <dest/io/dest_io_generated.h>
 #include <dest/io/matrix_io.h>
 
-
-#include <dest/util/draw.h>
-#include <opencv2/opencv.hpp>
-
 namespace dest {
     namespace core {
         
