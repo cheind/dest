@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
         
         TCLAP::ValueArg<int> numShapesPerImageArg("", "create-num-shapes", "Number of shapes per image to create.", false, 20, "int", cmd);
-        TCLAP::ValueArg<int> numTransformsPerShapeArg("", "create-num-transforms", "Number of transform perturbation per shape", false, 10, "int", cmd);
+        TCLAP::ValueArg<int> numTransformsPerShapeArg("", "create-num-transforms", "Number of transform perturbation per shape", false, 1, "int", cmd);
         
         TCLAP::SwitchArg noCombinationsArg("", "create-no-combinations", "Disable linear combinations of shapes.", cmd, false);
         
