@@ -105,7 +105,7 @@ Although **Deformable Shape Tracking** should build across multiple platforms an
 
 If the build should fail for a specific platform, don't hesitate to create an [issue](https://github.com/cheind/dest/issues).
 
-## Running the tools
+## Using the tools
 **DEST** comes with a set of handy tools to train and evaluate and trackers. The tools below require OpenCV support. Make sure to enable it before building the library.
 
 #### dest_align
