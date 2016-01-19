@@ -39,7 +39,7 @@ Note that each [release](https://github.com/cheind/dest/releases) contains pre-t
 //...
 
 dest::face::FaceDetector fd;
-fd.loadClassifiers("classifier.xml");
+fd.loadClassifiers("classifier_frontalface.xml");
 ```
 
 OpenCV uses Viola Jones algorithm for face detection. This algorithm requires a training phase. You can find application ready files in OpenCV or [here](etc/cv/). Use the face detector to find a face in the given image.
