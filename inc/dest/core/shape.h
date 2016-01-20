@@ -1,18 +1,18 @@
 /**
  This file is part of Deformable Shape Tracking (DEST).
- 
+
  Copyright Christoph Heindl 2015
- 
+
  Deformable Shape Tracking is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  Deformable Shape Tracking is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -25,7 +25,7 @@
 
 namespace dest {
     namespace core {
-    
+
         /** Type of orientable rectangle. */
         typedef Eigen::Matrix<float, 2, 4, Eigen::DontAlign> Rect;
 
@@ -37,7 +37,7 @@ namespace dest {
 
         /** Type of global similarity transform to convert between normalized shape space and image space */
         typedef Eigen::AffineCompact2f ShapeTransform;
-        
+
         /**
             Estimate a best-fit similarity transform (rotation, translation, uniform scale) between shapes.
 
@@ -49,7 +49,7 @@ namespace dest {
             \returns Estimated transform.
         */
         Eigen::AffineCompact2f estimateSimilarityTransform(const Eigen::Ref<const Shape> &from, const Eigen::Ref<const Shape> &to);
-        
+
         /**
             Encode pixel coordinates relative to shape.
 
@@ -64,28 +64,28 @@ namespace dest {
             \param abscoords Absolute pixel coordinates.
             \param relcoords Relative pixel coordinates to nearest landmark neighbor.
             \param closestLandmarks Indices of closest landmarks.
-            
-            [1] Kazemi, Vahdat, and Josephine Sullivan. 
-                "One millisecond face alignment with an ensemble of regression trees." 
+
+            [1] Kazemi, Vahid, and Josephine Sullivan.
+                "One millisecond face alignment with an ensemble of regression trees."
                 Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on. IEEE, 2014.
 
         */
         void shapeRelativePixelCoordinates(
-            const Shape &s, 
-            const PixelCoordinates &abscoords, 
-            PixelCoordinates &relcoords, 
+            const Shape &s,
+            const PixelCoordinates &abscoords,
+            PixelCoordinates &relcoords,
             Eigen::VectorXi &closestLandmarks);
-        
+
         /**
             The unit square centered around the origin.
 
-            The unit rectangle is usually used to convert a shape from image space to 
+            The unit rectangle is usually used to convert a shape from image space to
             normalized shape space. Given an initial bounding rectangle of the face (as determined
             by a face detector) and the unit rectangle, use estimateSimilarityTransform to
-            retrieve a normalized shape transform (which you effectively is a PROCRUSTES analysis 
+            retrieve a normalized shape transform (which you effectively is a PROCRUSTES analysis
             between two shapes).
 
-            Note we have choses then origin as center for unit square so things are simplified 
+            Note we have choses then origin as center for unit square so things are simplified
             when arbitrarily rotating initial shape bounds.
 
             \returns the unit square centered around the origin.

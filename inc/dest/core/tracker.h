@@ -1,18 +1,18 @@
 /**
  This file is part of Deformable Shape Tracking (DEST).
- 
+
  Copyright Christoph Heindl 2015
- 
+
  Deformable Shape Tracking is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  Deformable Shape Tracking is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -29,7 +29,7 @@
 
 namespace dest {
     namespace core {
-        
+
         /**
             Provides alignment of shape landmarks.
 
@@ -39,9 +39,9 @@ namespace dest {
             While the normalization transform is is used to model global shape properties (rough
             translation, rotation and uniform scaling), the cascade is used to incrementally refine
             the landmark positions.
-            
+
             Based on the work of
-            [1] Kazemi, Vahdat, and Josephine Sullivan.
+            [1] Kazemi, Vahid, and Josephine Sullivan.
                 "One millisecond face alignment with an ensemble of regression trees."
                 Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on. IEEE, 2014.
         */
@@ -50,12 +50,12 @@ namespace dest {
             Tracker();
             ~Tracker();
             Tracker(const Tracker &other);
-            
+
             /**
                 Fit to training data.
             */
             bool fit(SampleData &t);
-            
+
             /**
                 Predict shape landmarks from image and a global transform.
 
@@ -64,9 +64,9 @@ namespace dest {
                 based on previously learnt samples.
 
                 \param img Single channel intensity input image.
-                \param shapeToImage Inverse of shape normalization transform. Note, you have to apply 
+                \param shapeToImage Inverse of shape normalization transform. Note, you have to apply
                                     the same normalization routine as used during training. If for example,
-                                    initial face locations have been found via the OpenCV face detector the 
+                                    initial face locations have been found via the OpenCV face detector the
                                     resulting face rectangle was used for normalization, you should use the
                                     same routine here. Deviating from this strategy will lead to errononeous
                                     results.
@@ -94,13 +94,13 @@ namespace dest {
                 Load trained tracker from file.
             */
             bool load(const std::string &path);
-            
+
         private:
 
             struct data;
             std::unique_ptr<data> _data;
         };
-        
+
     }
 }
 

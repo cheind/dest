@@ -195,7 +195,7 @@ Type `dest_generate_rects_viola_jones --help` for detailed help.
 
 ## References
 
- 1. <a name="Kazemi14"></a>Kazemi, Vahdat, and Josephine Sullivan. "One millisecond face alignment with an ensemble of regression trees." Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on. IEEE, 2014.
+ 1. <a name="Kazemi14"></a>Kazemi, Vahid, and Josephine Sullivan. "One millisecond face alignment with an ensemble of regression trees." Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on. IEEE, 2014.
  1. Viola, Paul, and Michael J. Jones. "Robust real-time face detection." International journal of computer vision 57.2 (2004): 137-154.
  1. Chrysos, Grigoris, et al. "Offline deformable face tracking in arbitrary videos." Proceedings of the IEEE International Conference on Computer Vision Workshops. 2015.
  1. Gower, John C. "Generalized procrustes analysis." Psychometrika 40.1 (1975): 33-51.

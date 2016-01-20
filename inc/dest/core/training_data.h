@@ -1,18 +1,18 @@
 /**
  This file is part of Deformable Shape Tracking (DEST).
- 
+
  Copyright Christoph Heindl 2015
- 
+
  Deformable Shape Tracking is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  Deformable Shape Tracking is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with Deformable Shape Tracking. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -28,13 +28,13 @@
 
 namespace dest {
     namespace core {
-        
-        /** 
-            Training parameters. 
+
+        /**
+            Training parameters.
 
             For more info consult the original paper.
 
-            [1] Kazemi, Vahdat, and Josephine Sullivan.
+            [1] Kazemi, Vahid, and Josephine Sullivan.
                 "One millisecond face alignment with an ensemble of regression trees."
                 Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on. IEEE, 2014.
         */
@@ -54,10 +54,10 @@ namespace dest {
             /** Number of split tests to evaluate to find the best possible split. Defaults to 20. */
             int numRandomSplitTestsPerNode;
 
-            /** 
-                Exponential lambda. Determines to which extend closer pixel coordinates are preferred. 
+            /**
+                Exponential lambda. Determines to which extend closer pixel coordinates are preferred.
                 Measured in normalized shape space units. Larger values tend to allow bigger distances.
-                Defaults to 0.1 
+                Defaults to 0.1
             */
             float exponentialLambda;
 
@@ -69,15 +69,15 @@ namespace dest {
                 Defaults to 0.05
             */
             float expansionRandomPixelCoordinates;
-            
+
             TrainingParameters();
         };
-        
+
         /**
             Inspect training parameters.
         */
         std::ostream& operator<<(std::ostream &stream, const TrainingParameters &obj);
-        
+
         /**
             Necessary input data derive generate training samples from.
 
@@ -88,10 +88,10 @@ namespace dest {
             typedef std::vector<ShapeTransform> ShapeTransformVector;
             typedef std::vector<Shape> ShapeVector;
             typedef std::vector<Image> ImageVector;
-            
-            /** 
-                Initial rectangles for each shape. 
-                Used for computing shape normalizing transforms. 
+
+            /**
+                Initial rectangles for each shape.
+                Used for computing shape normalizing transforms.
             */
             RectVector rects;
 
@@ -101,12 +101,12 @@ namespace dest {
             ShapeVector shapes;
 
             /**
-                A list of training images. 
+                A list of training images.
             */
             ImageVector images;
 
             /**
-                A list of inverse shape normalizing transforms. 
+                A list of inverse shape normalizing transforms.
                 Use normalizeShapes to fill with defaults based on rectangles and unit rectangles.
             */
             ShapeTransformVector shapeToImage;
@@ -115,7 +115,7 @@ namespace dest {
                 Random number generator used during training.
             */
             std::mt19937 rnd;
-            
+
             /**
                 Automatically partition input into a training and validation set.
 
@@ -133,7 +133,7 @@ namespace dest {
             */
             static void normalizeShapes(InputData &input);
         };
-        
+
         /**
             Parameters to control training sample creation from input data.
         */
@@ -142,12 +142,12 @@ namespace dest {
             /** Number of shapes to generate per image. Defaults to 20. */
             int numShapesPerImage;
 
-            /** 
-                Number of rectangle perturbations to generate per shape. 
-                Defaults to 1. 
+            /**
+                Number of rectangle perturbations to generate per shape.
+                Defaults to 1.
                 This is a rather experimental feature and at this point not enough experiments
                 have been carried out to validate its usefulness.
-            */            
+            */
             int numTransformPertubationsPerShape;
 
             /** Whether or not to extend shape space by linearly combining training shapes. Defaults to true. */
@@ -156,27 +156,27 @@ namespace dest {
             /** Scale perturbation range. Only applicable if numTransformPertubationsPerShape > 1. */
             std::pair<float, float> transformScaleRange;
 
-            /** 
-                Translate in x perturbation range. 
-                Only applicable if numTransformPertubationsPerShape > 1. 
+            /**
+                Translate in x perturbation range.
+                Only applicable if numTransformPertubationsPerShape > 1.
                 Measured in image dimensions. Set to empty range to prevent random perturbations of this category.
             */
             std::pair<float, float> transformTranslateRangeX;
 
-            /** 
-                Translate in y perturbation range. 
-                Only applicable if numTransformPertubationsPerShape > 1. 
+            /**
+                Translate in y perturbation range.
+                Only applicable if numTransformPertubationsPerShape > 1.
                 Measured in image dimensions. Set to empty range to prevent random perturbations of this category.
             */
             std::pair<float, float> transformTranslateRangeY;
 
-            /** 
-                Rotation range range. 
-                Only applicable if numTransformPertubationsPerShape > 1. 
+            /**
+                Rotation range range.
+                Only applicable if numTransformPertubationsPerShape > 1.
                 Measured in angles of radians.
             */
             std::pair<float, float> transformRotateRange;
-            
+
             SampleCreationParameters();
         };
 
@@ -184,13 +184,13 @@ namespace dest {
             Inspect sample creation parameters.
         */
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj);
-        
+
         /**
             Generated training samples.
         */
         struct SampleData {
-            
-            /** 
+
+            /**
                 A training sample.
             */
             struct Sample {
@@ -200,7 +200,7 @@ namespace dest {
                 ShapeTransform shapeToImage;
             };
             typedef std::vector<Sample> SampleVector;
-            
+
             SampleData(InputData &input);
 
             InputData *input;
@@ -213,24 +213,24 @@ namespace dest {
             static void createTrainingSamples(SampleData &td, const SampleCreationParameters &params);
 
             /**
-                Create standard test samples from validation set. 
+                Create standard test samples from validation set.
 
                 Treats each input data a single training sample.
             */
             static void createTestingSamples(SampleData &td);
         };
-        
+
         /**
             Input data for regressor training.
         */
         struct RegressorTraining {
-            
+
             InputData *input;
             SampleData *training;
-            Shape meanShape;            
+            Shape meanShape;
             int numLandmarks;
         };
-        
+
         /**
             Input data for tree training.
         */
@@ -238,7 +238,7 @@ namespace dest {
             struct Sample {
                 ShapeResidual residual;
                 PixelIntensities intensities;
-                
+
                 friend inline void swap(Sample& a, Sample& b)
                 {
                     using std::swap;
@@ -247,7 +247,7 @@ namespace dest {
                 }
             };
             typedef std::vector<Sample> SampleVector;
-            
+
             InputData *input;
             SampleData *training;
             SampleVector samples;
