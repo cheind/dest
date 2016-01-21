@@ -202,7 +202,7 @@ Type `dest_generate_rects_viola_jones --help` for detailed help.
 
 # License
 
-**DEST** is licensed under 'three-clause' BSD license below.
+**DEST** is licensed under 'three-clause' BSD license.
 
 ```
 Copyright (c) 2015/2016, Christoph Heindl
