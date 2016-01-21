@@ -38,8 +38,8 @@ namespace dest {
                                     const ImportParameters & opts,
                                     std::vector<float> *scaleFactors)
         {
-            const bool isIMM = util::findFilesInDir(directory, "asf", true).size() > 0;
-            const bool isIBUG = util::findFilesInDir(directory, "pts", true).size() > 0;
+            const bool isIMM = util::findFilesInDir(directory, "asf", true, true).size() > 0;
+            const bool isIBUG = util::findFilesInDir(directory, "pts", true, true).size() > 0;
 
             if (isIMM) {
                 bool ok = importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts, scaleFactors);
@@ -68,6 +68,20 @@ namespace dest {
             cv::resize(img, img, cv::Size(0,0), factor, factor, CV_INTER_CUBIC);
             s *= factor;
             r *= factor;
+        }
+
+        cv::Mat loadImageFromFilePrefix(const std::string &prefix) {
+            const std::string extensions[] = { ".png", ".jpg", ".jpeg", ".bmp", ""};
+
+            cv::Mat img;
+            const std::string *ext = extensions;
+
+            do {
+                img = cv::imread(prefix + *ext, cv::IMREAD_GRAYSCALE);
+                ++ext;
+            } while (*ext != "" && img.empty());
+
+            return img;
         }
         
         void mirrorImageShapeAndRectVertically(cv::Mat &img,
@@ -214,7 +228,7 @@ namespace dest {
                                    std::vector<float> *scaleFactors)
         {
                                     
-            std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true);
+            std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true, true);
             DEST_LOG("Loading IMM database. Found " << paths.size() << " candidate entries." << std::endl);
 
             std::vector<core::Rect> loadedRects;
@@ -232,13 +246,12 @@ namespace dest {
             size_t initialSize = images.size();
             
             for (size_t i = 0; i < paths.size(); ++i) {
-                const std::string fileNameImg = paths[i] + ".jpg";
-                const std::string fileNamePts = paths[i] + ".asf";
+                const std::string fileNameAsf = paths[i] + ".asf";
                 
                 core::Shape s;
                 core::Rect r;
-                bool asfOk = parseAsfFile(fileNamePts, s);
-                cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
+                bool asfOk = parseAsfFile(fileNameAsf, s);
+                cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
                 
                 if(asfOk && !cvImg.empty()) {
                     
@@ -405,7 +418,7 @@ namespace dest {
                                              std::vector<float> *scaleFactors)
         {
             
-            std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true);
+            std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true, true);
             DEST_LOG("Loading ibug database. Found " << paths.size() << " candidate entries." << std::endl);
 
             std::vector<core::Rect> loadedRects;
@@ -424,13 +437,12 @@ namespace dest {
             size_t initialSize = images.size();
             
             for (size_t i = 0; i < paths.size(); ++i) {
-                const std::string fileNameImg = paths[i] + ".jpg";
                 const std::string fileNamePts = paths[i] + ".pts";
                 
                 core::Shape s;
                 core::Rect r;
                 bool ptsOk = parsePtsFile(fileNamePts, s);
-                cv::Mat cvImg = cv::imread(fileNameImg, cv::IMREAD_GRAYSCALE);
+                cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
                 
                 if(ptsOk && !cvImg.empty()) {
 
