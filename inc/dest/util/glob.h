@@ -23,9 +23,10 @@ namespace dest {
             \param Directory to search in.
             \param extension Necessary file extension.
             \param stripExtension Whether or not to strip extension in results.
+            \param recursive Traverse sub-directories too.
             \returns List of found files.
         */
-        std::vector<std::string> findFilesInDir(const std::string &directory, const std::string &extension, bool stripExtension);
+        std::vector<std::string> findFilesInDir(const std::string &directory, const std::string &extension, bool stripExtension, bool recursive);
         
     }
 }
