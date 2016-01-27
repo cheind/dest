@@ -27,14 +27,13 @@ namespace dest {
                 std::string dirPath = dirsLeft.top(); dirsLeft.pop();
 
                 // Try to open directory
-                if (tinydir_open(&dir, dirPath.c_str()) != 0)
+                if (tinydir_open_sorted(&dir, dirPath.c_str()) != 0)
                     continue;
-
-                while (dir.has_next) {
+                
+                for (unsigned i = 0; i < dir.n_files; i++) {
                     tinydir_file file;
 
-                    if (tinydir_readfile(&dir, &file) != 0) {
-                        tinydir_next(&dir);
+                    if (tinydir_readfile_n(&dir, &file, i) != 0) {
                         continue;
                     }
 
@@ -42,12 +41,10 @@ namespace dest {
                         if (recursive && file.name != std::string(".") && file.name != std::string("..")) {
                             dirsLeft.push(file.path);
                         }
-                        tinydir_next(&dir);
                         continue;
                     }
 
                     if (extension != file.extension) {
-                        tinydir_next(&dir);
                         continue;
                     }
 
@@ -61,8 +58,6 @@ namespace dest {
                     else {
                         files.push_back(path);
                     }
-
-                    tinydir_next(&dir);
                 }
 
                 tinydir_close(&dir);
