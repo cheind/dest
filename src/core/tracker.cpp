@@ -129,12 +129,15 @@ namespace dest {
             rt.training = &t;
             rt.numLandmarks = static_cast<int>(t.samples.front().estimate.cols());
             rt.input = t.input;
+            rt.meanShape = t.input->meanShape;
             
+            /*
             rt.meanShape = Shape::Zero(2, rt.numLandmarks);
             for (int i = 0; i < numSamples; ++i) {
                 rt.meanShape += t.samples[i].estimate;
             }
             rt.meanShape /= static_cast<float>(numSamples);
+            */
 
             // Build cascade
             data.cascade.resize(t.params.numCascades);

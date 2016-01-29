@@ -85,6 +85,18 @@ namespace dest {
             }
         }
         
+        void InputData::computeMeanShape(InputData &input)
+        {
+            const int numShapes = static_cast<int>(input.shapes.size());
+            const int numLandmarks = static_cast<int>(input.shapes.front().cols());
+            
+            input.meanShape = Shape::Zero(2, numLandmarks);
+            for (int i = 0; i < numShapes; ++i) {
+                input.meanShape += input.shapes[i];
+            }
+            input.meanShape /= static_cast<float>(numShapes);
+        }
+        
         void InputData::randomPartition(InputData &train, InputData &validate, float validatePercent)
         {
             int numValidate = static_cast<int>((float)train.shapes.size() * validatePercent);

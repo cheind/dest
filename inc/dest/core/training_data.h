@@ -101,6 +101,11 @@ namespace dest {
                 Use normalizeShapes to fill with defaults based on rectangles and unit rectangles.
             */
             ShapeTransformVector shapeToImage;
+            
+            /**
+                The mean shape of normalized shapes.
+            */
+            Shape meanShape;
 
             /**
                 Random number generator used during training.
@@ -123,6 +128,16 @@ namespace dest {
                 Transforms shape and stores inverse transformation in shapeToImage.
             */
             static void normalizeShapes(InputData &input);
+            
+            /**
+                Computes the mean shape of all shapes.
+             
+                Shapes should be normalized before computing the mean shape. Otherwise global transformations
+                will largely impact the mean shape. The mean shape is being used by the tracker as starting shape
+                for regression.
+            */
+            static void computeMeanShape(InputData &input);
+            
         };
 
         /**

@@ -93,8 +93,7 @@ int main(int argc, char **argv)
     }
 
     dest::core::InputData::normalizeShapes(inputs);
-    dest::core::InputData validation;
-    dest::core::InputData::randomPartition(inputs, validation, 0.01f);
+    dest::core::InputData::computeMeanShape(inputs);
     
     dest::core::SampleData td(inputs);
     td.params = opts.trainingParams;
@@ -126,25 +125,6 @@ int main(int argc, char **argv)
     
     std::cout << "Saving tracker to " << opts.output << std::endl;
     t.save(opts.output);
-    
-    dest::core::SampleData tdValidation(validation);
-    dest::core::SampleCreationParameters validationCreateParams;
-    validationCreateParams.numShapesPerImage = 1;
-    validationCreateParams.numTransformPertubationsPerShape = 1;
-    validationCreateParams.useLinearCombinationsOfShapes = false;
-    
-    dest::core::SampleData::createTrainingSamples(tdValidation, validationCreateParams);
-    for (size_t i = 0; i < tdValidation.samples.size(); ++i) {
-        dest::core::SampleData::Sample &s = tdValidation.samples[i];
-        
-        dest::core::Shape shape = t.predict(validation.images[s.inputIdx], s.shapeToImage);
-        
-        
-        cv::Mat tmp = dest::util::drawShape(validation.images[s.inputIdx], shape, cv::Scalar(0, 255, 0));
-        cv::imshow("result", tmp);
-        cv::waitKey();
-    }
-
 
     return 0;
 }
