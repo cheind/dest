@@ -185,13 +185,13 @@ Successfully loaded 330 entries from database.
 Average normalized error: 0.0451457  
 ```
 
-#### dest_generate_rects_viola_jones
-`dest_generate_rects_viola_jones` is a utility to generate face rectangles for a training
+#### dest_gen_rects
+`dest_gen_rects` is a utility to generate face rectangles for a training
 database using OpenCVs Viola Jones algorithm. These rectangles can be fed into `dest_train`
 for learning. Note, if your application comes with a face detector built in, you may want
 to use your face detector to generate these rectangles.
 
-Type `dest_generate_rects_viola_jones --help` for detailed help.
+Type `dest_gen_rects --help` for detailed help.
 
 ## References
 

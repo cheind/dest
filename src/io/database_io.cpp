@@ -252,8 +252,9 @@ namespace dest {
                 core::Rect r;
                 bool asfOk = parseAsfFile(fileNameAsf, s);
                 cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
+                const bool validRect = loadedRects.empty() || !loadedRects[i].isZero();
                 
-                if(asfOk && !cvImg.empty()) {
+                if(asfOk && !cvImg.empty() && validRect) {
                     
                     // Scale to image dimensions
                     s.row(0) *= static_cast<float>(cvImg.cols);
@@ -264,6 +265,7 @@ namespace dest {
                     } else {
                         r = loadedRects[i];
                     }
+                    
                     
                     float f;
                     if (imageNeedsScaling(cvImg.size(), opts, f)) {
@@ -443,8 +445,9 @@ namespace dest {
                 core::Rect r;
                 bool ptsOk = parsePtsFile(fileNamePts, s);
                 cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
+                const bool validRect = loadedRects.empty() || !loadedRects[i].isZero();
                 
-                if(ptsOk && !cvImg.empty()) {
+                if(ptsOk && !cvImg.empty() && validRect) {
 
                     if (loadedRects.empty()) {
                         r = core::shapeBounds(s);

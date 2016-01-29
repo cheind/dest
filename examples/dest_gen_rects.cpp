@@ -40,32 +40,40 @@ float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &
 /**
     Generate face rectangles for tracker training using OpenCV face detector.
 
-    dest::Tracker training requires initial bounding rectangles to be learnt. Use this
+    dest::Tracker training requires initial bounding rectangles to learn from. Use this
     tool to generate rectangles for an exisiting face/shape database.
 */
 int main(int argc, char **argv)
 {
+    enum FallbackMode {
+        Fallback_SimulateOpenCV,
+        Fallback_TightBounds,
+        Fallback_Skip
+    };
+    
     struct {
         std::vector<std::string> detectors;
         std::string db;
         std::string output;
+        FallbackMode fbm;
         dest::io::ImportParameters importParams;
-        bool matchCV;
     } opts;
 
     try {
         TCLAP::CmdLine cmd("Generate initial bounding boxes for face detection using Viola-Jones algorithm in OpenCV.", ' ', "0.9");
         TCLAP::MultiArg<std::string> detectorsArg("d", "detector", "OpenCV classifier to load", true, "string");
         TCLAP::ValueArg<std::string> outputArg("o", "output", "CSV output file", false, "rectangles.csv", "string");
+        TCLAP::ValueArg<std::string> fallbackArg("", "fallback", "What to do when OpenCV detector fails. Default is skip", false, "skip", "simulatecv, tightbounds, skip");
+        
         TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int");
-        TCLAP::SwitchArg noMatchCVArg("", "no-match-opencv", "Match tight rectangles to OpenCV detector rectangles", false);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string");
 
         cmd.add(&detectorsArg);
         cmd.add(&outputArg);
         cmd.add(&maxImageSizeArg);
-        cmd.add(&noMatchCVArg);
+        cmd.add(&fallbackArg);
         cmd.add(&databaseArg);
+        
 
         cmd.parse(argc, argv);
 
@@ -73,7 +81,17 @@ int main(int argc, char **argv)
         opts.db = databaseArg.getValue();
         opts.output = outputArg.getValue();
         opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
-        opts.matchCV = !noMatchCVArg.getValue();
+        
+        if (fallbackArg.getValue() == "simulatecv") {
+            opts.fbm = Fallback_SimulateOpenCV;
+        } else if (fallbackArg.getValue() == "tightbounds") {
+            opts.fbm = Fallback_TightBounds;
+        } else if (fallbackArg.getValue() == "skip") {
+            opts.fbm = Fallback_Skip;
+        } else {
+            throw TCLAP::ArgException("Unknwon fallback method", fallbackArg.getName());
+        }
+        
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -125,20 +143,36 @@ int main(int argc, char **argv)
                 bestOverlap = o;
             }
         }
+        
+        const bool detectionSuccess = (bestId != std::numeric_limits<size_t>::max() && bestOverlap >= 0.3f);
 
 
-        if ((bestId == std::numeric_limits<size_t>::max()) || bestOverlap < 0.3f) {
-
-            dest::core::Rect r = dest::core::shapeBounds(inputs.shapes[i]);
-            // Match CV detector
-            if (opts.matchCV) {
-                Eigen::AffineCompact2f t;
-                t.setIdentity();
-                t = Eigen::Translation2f(txToCV * inputs.images[i].cols(), tyToCV * inputs.images[i].rows()) * Eigen::Scaling(scaleToCV);
-                r = t * r.colwise().homogeneous();
+        if (!detectionSuccess) {
+            
+            switch(opts.fbm) {
+                case Fallback_SimulateOpenCV: {
+                    dest::core::Rect r = dest::core::shapeBounds(inputs.shapes[i]);
+                    // Match CV detector
+                    
+                    Eigen::AffineCompact2f t;
+                    t.setIdentity();
+                    t = Eigen::Translation2f(txToCV * inputs.images[i].cols(), tyToCV * inputs.images[i].rows()) * Eigen::Scaling(scaleToCV);
+                    r = t * r.colwise().homogeneous();
+                    // Match original image size.
+                    rects[i] =  r / scalings[i];
+                    break;
+                }
+                case Fallback_TightBounds: {
+                    dest::core::Rect r = dest::core::shapeBounds(inputs.shapes[i]);
+                    rects[i] = r / scalings[i];
+                    break;
+                }
+                case Fallback_Skip: {
+                    rects[i] = dest::core::Rect::Zero(2, 4);
+                    break;
+                }
             }
-            // Match original image size.
-            rects[i] =  r / scalings[i];
+
             
         } else {
             ++countDetectionSuccess;
