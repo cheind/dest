@@ -42,12 +42,8 @@ namespace dest {
         SampleCreationParameters::SampleCreationParameters()
         {
             numShapesPerImage = 20;
-            numTransformPertubationsPerShape = 1;
-            useLinearCombinationsOfShapes = true;
-            transformRotateRange = std::pair<float, float>(0.f,0.f);
-            transformScaleRange = std::pair<float, float>(0.85f, 1.15f);
-            transformTranslateRangeX = std::pair<float, float>(-10.f, -10.f);
-            transformTranslateRangeY = std::pair<float, float>(-10.f, 10.f);
+            linearWeight = 0.8f;
+            includeMeanShape = true;
         }
         
         std::ostream& operator<<(std::ostream &stream, const std::pair<float,float> &obj) {
@@ -56,13 +52,9 @@ namespace dest {
         }
         
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj) {
-            stream  << std::setw(40) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
-                    << std::setw(40) << std::left << "Number of transforms per shape" << std::setw(10) << obj.numTransformPertubationsPerShape << std::endl
-                    << std::setw(40) << std::left << "Random rotate angle range" << std::setw(10) << obj.transformRotateRange << std::endl
-                    << std::setw(40) << std::left << "Random scale factor range" << std::setw(10) << obj.transformScaleRange << std::endl
-                    << std::setw(40) << std::left << "Random translate x range" << std::setw(10) << obj.transformTranslateRangeX << std::endl
-                    << std::setw(40) << std::left << "Random translate y range" << std::setw(10) << obj.transformTranslateRangeY << std::endl
-                    << std::setw(40) << std::left << "Use linear combination" << std::setw(10) << (obj.useLinearCombinationsOfShapes ? "true" : "false");
+            stream  << std::setw(30) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
+                    << std::setw(30) << std::left << "Linear weight" << std::setw(10) << obj.linearWeight << std::endl
+                    << std::setw(40) << std::left << "Include mean shape" << std::setw(10) << (obj.includeMeanShape ? "true" : "false");
             
             return stream;
         }
@@ -149,63 +141,33 @@ namespace dest {
             
             SampleCreationParameters validatedParams = params;
             validatedParams.numShapesPerImage = std::max<int>(validatedParams.numShapesPerImage, 1);
-            validatedParams.numTransformPertubationsPerShape = std::max<int>(validatedParams.numTransformPertubationsPerShape, 1);
+            validatedParams.linearWeight = std::max<float>(0.f, std::min<float>(1.f, params.linearWeight));
             
             DEST_LOG("Creating training samples. " << std::endl);
             DEST_LOG(validatedParams << std::endl);
             
             const int numShapes = static_cast<int>(td.input->shapes.size());
-            const int numSamples = numShapes * validatedParams.numShapesPerImage * validatedParams.numTransformPertubationsPerShape;
-            const int numShapesTimesShapesPerImage = numShapes * validatedParams.numShapesPerImage;
+            int numSamples = numShapes * validatedParams.numShapesPerImage;
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
-            std::uniform_real_distribution<float> zeroOne(0, 1);
-            std::uniform_real_distribution<float> rotate(validatedParams.transformRotateRange.first, validatedParams.transformRotateRange.second);
-            std::uniform_real_distribution<float> scale(validatedParams.transformScaleRange.first, validatedParams.transformScaleRange.second);
-            std::uniform_real_distribution<float> tx(validatedParams.transformTranslateRangeX.first, validatedParams.transformTranslateRangeX.second);
-            std::uniform_real_distribution<float> ty(validatedParams.transformTranslateRangeY.first, validatedParams.transformTranslateRangeY.second);
             
             td.samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
                 
-                td.samples[i].inputIdx = i % numShapes;
-                td.samples[i].target = td.input->shapes[td.samples[i].inputIdx];
-                
-                if (params.useLinearCombinationsOfShapes) {
-                    float a = zeroOne(td.input->rnd);
-                    float b = zeroOne(td.input->rnd);
-                    float c = zeroOne(td.input->rnd);
-                    float sum = a + b + c;
-                    
-                    a /= sum;
-                    b /= sum;
-                    c /= sum;
-                    
-                    
-                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)] * a +
-                                             td.input->shapes[dist(td.input->rnd)] * b +
-                                             td.input->shapes[dist(td.input->rnd)] * c;
+                if (i < numShapes && validatedParams.includeMeanShape) {
+                    td.samples[i].inputIdx = i;
+                    td.samples[i].target = td.input->shapes[i];
+                    td.samples[i].shapeToImage = td.input->shapeToImage[i];
+                    td.samples[i].estimate = td.input->meanShape;
                 } else {
-                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)];
-                }
-                
-                if (i < numShapesTimesShapesPerImage) {
-                    td.samples[i].shapeToImage = td.input->shapeToImage[td.samples[i].inputIdx];
-                } else {
-                    // Note, the following code works well when the shapeToImage transform was generated
-                    // with respect to centered unit rectangle. See normalizeShapes and unitRectangle()
-                    ShapeTransform trans = td.input->shapeToImage[td.samples[i].inputIdx];
+                    int idx = i % numShapes;
+                    td.samples[i].inputIdx = idx;
+                    td.samples[i].target = td.input->shapes[idx];
+                    td.samples[i].shapeToImage = td.input->shapeToImage[idx];
                     
-                    ShapeTransform t;
-                    t = Eigen::Translation2f(tx(td.input->rnd), ty(td.input->rnd)) *
-                        Eigen::Translation2f(trans.translation()) *
-                        Eigen::Rotation2Df(rotate(td.input->rnd)) *
-                        Eigen::Scaling(scale(td.input->rnd)) *
-                        Eigen::Translation2f(-trans.translation()) *
-                        trans;
-                    
-                    td.samples[i].target = t.inverse() * trans * td.samples[i].target.colwise().homogeneous();
-                    td.samples[i].shapeToImage = t;
+                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)] * validatedParams.linearWeight +
+                                             td.input->shapes[dist(td.input->rnd)] * (1.f - validatedParams.linearWeight);
+
                 }
             }
         }

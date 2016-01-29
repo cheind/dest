@@ -147,41 +147,22 @@ namespace dest {
 
             /** Number of shapes to generate per image. Defaults to 20. */
             int numShapesPerImage;
+            
+            /** 
+                Include mean shape as separate sample.
+                When set to true, the mean shape will be added once per image
+                as sample. Defaults to true. */
+            bool includeMeanShape;
 
-            /**
-                Number of rectangle perturbations to generate per shape.
-                Defaults to 1.
-                This is a rather experimental feature and at this point not enough experiments
-                have been carried out to validate its usefulness.
+
+            /** 
+                To increase the shape space, linear combination of two shapes
+                are added to the sample space. The linearWeight specifies how
+                much the the first selected shape contributes. The second shape
+                selected is weighted by 1.f - linearWeight. Defaults to 0.8.
             */
-            int numTransformPertubationsPerShape;
+            float linearWeight;
 
-            /** Whether or not to extend shape space by linearly combining training shapes. Defaults to true. */
-            bool useLinearCombinationsOfShapes;
-
-            /** Scale perturbation range. Only applicable if numTransformPertubationsPerShape > 1. */
-            std::pair<float, float> transformScaleRange;
-
-            /**
-                Translate in x perturbation range.
-                Only applicable if numTransformPertubationsPerShape > 1.
-                Measured in image dimensions. Set to empty range to prevent random perturbations of this category.
-            */
-            std::pair<float, float> transformTranslateRangeX;
-
-            /**
-                Translate in y perturbation range.
-                Only applicable if numTransformPertubationsPerShape > 1.
-                Measured in image dimensions. Set to empty range to prevent random perturbations of this category.
-            */
-            std::pair<float, float> transformTranslateRangeY;
-
-            /**
-                Rotation range range.
-                Only applicable if numTransformPertubationsPerShape > 1.
-                Measured in angles of radians.
-            */
-            std::pair<float, float> transformRotateRange;
 
             SampleCreationParameters();
         };

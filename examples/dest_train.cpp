@@ -45,9 +45,6 @@ int main(int argc, char **argv)
         TCLAP::ValueArg<float> learnArg("", "train-learn", "Learning rate of each tree.", false, 0.08f, "float", cmd);
         
         TCLAP::ValueArg<int> numShapesPerImageArg("", "create-num-shapes", "Number of shapes per image to create.", false, 20, "int", cmd);
-        TCLAP::ValueArg<int> numTransformsPerShapeArg("", "create-num-transforms", "Number of transform perturbation per shape", false, 1, "int", cmd);
-        
-        TCLAP::SwitchArg noCombinationsArg("", "create-no-combinations", "Disable linear combinations of shapes.", cmd, false);
         
         TCLAP::SwitchArg showInitialSamplesArg("", "show-samples", "Show generated samples", cmd, false);
         TCLAP::ValueArg<std::string> rectsArg("", "rectangles", "Initial detection rectangles to train on.", false, "rectangles.csv", "string", cmd);
@@ -60,8 +57,6 @@ int main(int argc, char **argv)
         cmd.parse(argc, argv);
         
         opts.createParams.numShapesPerImage = numShapesPerImageArg.getValue();
-        opts.createParams.numTransformPertubationsPerShape = numTransformsPerShapeArg.getValue();
-        opts.createParams.useLinearCombinationsOfShapes = !noCombinationsArg.getValue();
 
         opts.trainingParams.numCascades = numCascadesArg.getValue();
         opts.trainingParams.numTrees = numTreesArg.getValue();
