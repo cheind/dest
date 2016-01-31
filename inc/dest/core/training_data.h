@@ -101,11 +101,6 @@ namespace dest {
                 Use normalizeShapes to fill with defaults based on rectangles and unit rectangles.
             */
             ShapeTransformVector shapeToImage;
-            
-            /**
-                The mean shape of normalized shapes.
-            */
-            Shape meanShape;
 
             /**
                 Random number generator used during training.
@@ -129,15 +124,6 @@ namespace dest {
             */
             static void normalizeShapes(InputData &input);
             
-            /**
-                Computes the mean shape of all shapes.
-             
-                Shapes should be normalized before computing the mean shape. Otherwise global transformations
-                will largely impact the mean shape. The mean shape is being used by the tracker as starting shape
-                for regression.
-            */
-            static void computeMeanShape(InputData &input);
-            
         };
 
         /**
@@ -154,14 +140,13 @@ namespace dest {
                 as sample. Defaults to true. */
             bool includeMeanShape;
 
-
             /** 
                 To increase the shape space, linear combination of two shapes
-                are added to the sample space. The linearWeight specifies how
-                much the the first selected shape contributes. The second shape
-                selected is weighted by 1.f - linearWeight. Defaults to 0.8.
+                are added to the sample space. The linearWeightRage specifies the
+                interval to draw a random weight from assigned to the first shape.
+                The second shape selected is weighted by 1.f - weight. Defaults to [0.65, 0.9].
             */
-            float linearWeight;
+            std::pair<float,float> linearWeightRange;
 
 
             SampleCreationParameters();
@@ -193,6 +178,7 @@ namespace dest {
             InputData *input;
             SampleVector samples;
             TrainingParameters params;
+            Shape meanShape;
 
             /**
                 Create training samples.

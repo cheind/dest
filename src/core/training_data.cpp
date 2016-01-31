@@ -42,7 +42,7 @@ namespace dest {
         SampleCreationParameters::SampleCreationParameters()
         {
             numShapesPerImage = 20;
-            linearWeight = 0.8f;
+            linearWeightRange = std::pair<float, float>(0.65f, 0.8f);
             includeMeanShape = true;
         }
         
@@ -53,8 +53,8 @@ namespace dest {
         
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj) {
             stream  << std::setw(30) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
-                    << std::setw(30) << std::left << "Linear weight" << std::setw(10) << obj.linearWeight << std::endl
-                    << std::setw(40) << std::left << "Include mean shape" << std::setw(10) << (obj.includeMeanShape ? "true" : "false");
+                    << std::setw(30) << std::left << "Linear weight range" << std::setw(10) << "[" << std::setw(1) << obj.linearWeightRange.first << "," << obj.linearWeightRange.second << "]" << std::endl
+                    << std::setw(30) << std::left << "Include mean shape" << std::setw(10) << (obj.includeMeanShape ? "true" : "false");
             
             return stream;
         }
@@ -75,18 +75,6 @@ namespace dest {
                 input.shapes[i] = t * input.shapes[i].colwise().homogeneous();
                 input.shapeToImage[i] = t.inverse();
             }
-        }
-        
-        void InputData::computeMeanShape(InputData &input)
-        {
-            const int numShapes = static_cast<int>(input.shapes.size());
-            const int numLandmarks = static_cast<int>(input.shapes.front().cols());
-            
-            input.meanShape = Shape::Zero(2, numLandmarks);
-            for (int i = 0; i < numShapes; ++i) {
-                input.meanShape += input.shapes[i];
-            }
-            input.meanShape /= static_cast<float>(numShapes);
         }
         
         void InputData::randomPartition(InputData &train, InputData &validate, float validatePercent)
@@ -125,6 +113,19 @@ namespace dest {
         : input(&input_)
         {}
         
+        Shape computeMeanShape(const SampleData &td)
+        {
+            const int numSamples = static_cast<int>(td.samples.size());
+            const int numLandmarks = static_cast<int>(td.samples.front().estimate.cols());
+            
+            Shape meanShape = Shape::Zero(2, numLandmarks);
+            for (int i = 0; i < numSamples; ++i) {
+                meanShape += td.samples[i].estimate;
+            }
+            meanShape /= static_cast<float>(numSamples);
+            return meanShape;
+        }
+        
         void SampleData::createTestingSamples(SampleData &td) {
             const int numSamples = static_cast<int>(td.input->shapes.size());
             td.samples.resize(numSamples);
@@ -135,13 +136,16 @@ namespace dest {
                 td.samples[i].shapeToImage = td.input->shapeToImage[i];
                 // Note, estimate is not set by this method as it is not used during testing.
             }
+            
+            td.meanShape = computeMeanShape(td);
         }
         
         void SampleData::createTrainingSamples(SampleData &td, const SampleCreationParameters &params) {
             
             SampleCreationParameters validatedParams = params;
             validatedParams.numShapesPerImage = std::max<int>(validatedParams.numShapesPerImage, 1);
-            validatedParams.linearWeight = std::max<float>(0.f, std::min<float>(1.f, params.linearWeight));
+            validatedParams.linearWeightRange.first = std::max<float>(0.f, std::min<float>(1.f, params.linearWeightRange.first));
+            validatedParams.linearWeightRange.second = std::max<float>(0.f, std::min<float>(1.f, params.linearWeightRange.second));
             
             DEST_LOG("Creating training samples. " << std::endl);
             DEST_LOG(validatedParams << std::endl);
@@ -150,23 +154,32 @@ namespace dest {
             int numSamples = numShapes * validatedParams.numShapesPerImage;
             
             std::uniform_int_distribution<int> dist(0, numShapes - 1);
+            std::uniform_real_distribution<float> zeroone(params.linearWeightRange.first, params.linearWeightRange.second);
             
             td.samples.resize(numSamples);
             for (int i = 0; i < numSamples; ++i) {
                 
-                if (i < numShapes && validatedParams.includeMeanShape) {
-                    td.samples[i].inputIdx = i;
-                    td.samples[i].target = td.input->shapes[i];
-                    td.samples[i].shapeToImage = td.input->shapeToImage[i];
-                    td.samples[i].estimate = td.input->meanShape;
-                } else {
-                    int idx = i % numShapes;
-                    td.samples[i].inputIdx = idx;
-                    td.samples[i].target = td.input->shapes[idx];
-                    td.samples[i].shapeToImage = td.input->shapeToImage[idx];
+                int idx = i % numShapes;
+                td.samples[i].inputIdx = idx;
+                td.samples[i].target = td.input->shapes[idx];
+                td.samples[i].shapeToImage = td.input->shapeToImage[idx];
+                
+                float w = zeroone(td.input->rnd);
+                td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)] * w +
+                                         td.input->shapes[dist(td.input->rnd)] * (1.f - w);
+            }
+            td.meanShape = computeMeanShape(td);
+            
+            if (validatedParams.includeMeanShape) {
+                for (int i = 0; i < numShapes; ++i) {
+                    SampleData::Sample s;
                     
-                    td.samples[i].estimate = td.input->shapes[dist(td.input->rnd)] * validatedParams.linearWeight +
-                                             td.input->shapes[dist(td.input->rnd)] * (1.f - validatedParams.linearWeight);
+                    s.inputIdx = i;
+                    s.target = td.input->shapes[i];
+                    s.shapeToImage = td.input->shapeToImage[i];
+                    s.estimate = td.meanShape;
+                    
+                    td.samples.push_back(s);
 
                 }
             }
