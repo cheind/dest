@@ -88,11 +88,9 @@ int main(int argc, char **argv)
     }
 
     dest::core::InputData::normalizeShapes(inputs);
-    dest::core::InputData::computeMeanShape(inputs);
     
     dest::core::SampleData td(inputs);
     td.params = opts.trainingParams;
-    
     dest::core::SampleData::createTrainingSamples(td, opts.createParams);
     
     if (opts.showInitialSamples) {
