@@ -35,6 +35,10 @@ namespace dest {
             Usually DEST is trained on results produced by a face detector. The face detector is used as helper tool
             to estimate a coarse global transformation (translation, scaling and rotation (unsupported by this detector)).
             DEST then reports the optimal landmark positions given the initial transformation.
+         
+            Note that OpenCV 3.0 / CascadeClassifier seems to have troubles when being reused.
+            Current solution is to disable OpenCL
+            See https://github.com/Itseez/opencv/issues/5475
         */
         class FaceDetector {
         public:

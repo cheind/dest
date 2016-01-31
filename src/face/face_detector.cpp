@@ -16,6 +16,7 @@
 #include <dest/util/convert.h>
 #include <opencv2/opencv.hpp>
 
+
 namespace dest {
     namespace face {
         
@@ -28,7 +29,8 @@ namespace dest {
 
         FaceDetector::FaceDetector()
             :_data(new data())
-        {}
+        {
+        }
 
         FaceDetector::~FaceDetector()
         {}
@@ -52,6 +54,7 @@ namespace dest {
 
         
         bool FaceDetector::detectFaces(const cv::Mat &img, std::vector<cv::Rect> &faces) const {
+            
             FaceDetector::data &data = *_data;
             
             if (img.channels() == 3 || img.channels() == 4) {
@@ -65,7 +68,6 @@ namespace dest {
             //-- Detect faces
             data.classifierFace.detectMultiScale(data.gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(10, 10));
             if (data.withEyes) {
-                    
                     std::vector<cv::Rect> finalFaces;
                     for (size_t i = 0; i < faces.size(); ++i) {
                         cv::Mat roi = data.gray(faces[i]);
@@ -92,9 +94,11 @@ namespace dest {
             }
             
             faces.clear();
+            core::Rect face;
             for (size_t i = 0; i < cvFaces.size(); ++i) {
                 cv::Rect r = cvFaces[i];
-                faces.push_back(core::createRectangle(Eigen::Vector2f(r.tl().x, r.tl().y), Eigen::Vector2f(r.br().x, r.br().y)));
+                util::toDest(r, face);
+                faces.push_back(face);
             }
             
             return true;
