@@ -10,6 +10,7 @@
 
 #include <dest/dest.h>
 #include <tclap/CmdLine.h>
+#include <opencv2/opencv.hpp>
 
 /**
     Evaluate a trained tracker based on some test data.
@@ -24,19 +25,23 @@ int main(int argc, char **argv)
         std::string tracker;
         std::string database;
         std::string rectangles;
+        dest::io::ImportParameters importParams;
     } opts;
 
     try {
         TCLAP::CmdLine cmd("Evaluate regressor on test database.", ' ', "0.9");
         TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Trained tracker to load", true, "dest.bin", "file", cmd);
         TCLAP::ValueArg<std::string> rectanglesArg("r", "rectangles", "Initial rectangles to provide to tracker", false, "rectangles.csv", "file", cmd);
+        TCLAP::ValueArg<int> maxImageSizeArg("", "load-max-size", "Maximum size of images in the database", false, 2048, "int", cmd);
         TCLAP::UnlabeledValueArg<std::string> databaseArg("database", "Path to database directory to load", true, "./db", "string", cmd);
+        
 
         cmd.parse(argc, argv);
 
         opts.rectangles = rectanglesArg.isSet() ? rectanglesArg.getValue() : "";
         opts.database = databaseArg.getValue();
         opts.tracker = trackerArg.getValue();
+        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -50,7 +55,7 @@ int main(int argc, char **argv)
     }
     
     dest::core::InputData inputs;
-    dest::io::DatabaseType dbt = dest::io::importDatabase(opts.database, opts.rectangles, inputs.images, inputs.shapes, inputs.rects);
+    dest::io::DatabaseType dbt = dest::io::importDatabase(opts.database, opts.rectangles, inputs.images, inputs.shapes, inputs.rects, opts.importParams);
     if (dbt == dest::io::DATABASE_ERROR) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
@@ -75,6 +80,9 @@ int main(int argc, char **argv)
     
     dest::core::TestResult tr = dest::core::testTracker(td, t, ldn);
 
-    std::cout << "Average normalized error: " << tr.meanNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Average normalized error: " << tr.meanNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Stddev normalized error: " << tr.stddevNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Median normalized error: " << tr.medianNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Worst normalized error: " << tr.worstNormalizedDistance << std::endl;
     return 0;
 }

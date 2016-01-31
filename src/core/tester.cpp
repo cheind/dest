@@ -52,24 +52,44 @@ namespace dest {
         TestResult testTracker(SampleData &td, const Tracker &t, const DistanceNormalizer &norm) {
             TestResult r;
             r.meanNormalizedDistance = 0.f;
+            r.medianNormalizedDistance = 0.f;
+            r.stddevNormalizedDistance = 0.f;
+            r.worstNormalizedDistance = 0.f;
             
-            double sumDevs = 0.0;
-            long elements = 0;
+            const int nLandmarks = static_cast<int>(td.samples.front().target.cols());
+            std::vector<float> d;
+            
             for (size_t i = 0; i < td.samples.size(); ++i) {
                 
                 dest::core::Shape estimateInImageSpace = t.predict(td.input->images[td.samples[i].inputIdx], td.samples[i].shapeToImage);
                 td.samples[i].estimate = td.samples[i].shapeToImage.inverse() * estimateInImageSpace.colwise().homogeneous();
                 
-                double dev = (td.samples[i].target - td.samples[i].estimate).colwise().norm().sum();
-                sumDevs += dev * norm(td.samples[i]);
-                elements += static_cast<long>(td.samples[i].target.cols());
-                
-                
+                const float normalizer = norm(td.samples[i]);
+                Eigen::VectorXf dev = (td.samples[i].target - td.samples[i].estimate).colwise().norm() * normalizer;
+                for (int j  = 0; j < nLandmarks; ++j) {
+                    if (dev(j) > 1.9f)
+                        std::cout << i << std::endl;
+                    d.push_back(dev(j));
+                }
+            
                 if (i % 100 == 0)
                     DEST_LOG("Processing " << i << "/" << td.samples.size() << " elements.\r" << std::flush);
             }
             
-            r.meanNormalizedDistance = static_cast<float>(sumDevs / (double)elements);
+            std::sort(d.begin(), d.end());
+            
+            r.meanNormalizedDistance = std::accumulate(d.begin(), d.end(), 0.f) / (float)(d.size());
+            r.medianNormalizedDistance = (d.size() % 2 == 0) ? d[d.size() / 2] : (d[d.size()/2-1] + d[d.size()/2]) * 0.5f;
+            
+            
+            float var = 0.f;
+            for (size_t i = 0; i < d.size(); ++i) {
+                var += (d[i] - r.meanNormalizedDistance) * (d[i] - r.meanNormalizedDistance);
+            }
+            r.stddevNormalizedDistance = std::sqrt(var / (float)(d.size()));
+            
+            r.worstNormalizedDistance = d.back();
+            
             return r;
         }
         

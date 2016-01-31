@@ -53,6 +53,9 @@ namespace dest {
         
         struct TestResult {
             float meanNormalizedDistance;
+            float stddevNormalizedDistance;
+            float medianNormalizedDistance;
+            float worstNormalizedDistance;
         };
         
         /** 
