@@ -20,6 +20,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <tclap/CmdLine.h>
+#include <opencv2/core/ocl.hpp>
 
 float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &s) {
     Eigen::Vector2f minC = r.col(0);
@@ -97,6 +98,11 @@ int main(int argc, char **argv)
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
         return -1;
     }
+    
+    // Note that OpenCV 3.0 / CascadeClassifier seems to have troubles when being reused.
+    // Current solution is to disable OpenCL
+    // See https://github.com/Itseez/opencv/issues/5475
+    cv::ocl::setUseOpenCL(false);
    
     dest::core::InputData inputs;
     std::vector<dest::core::Rect> rects;
@@ -124,12 +130,13 @@ int main(int argc, char **argv)
     float tyToCV = -0.05f;   // Translation in y normalized by image height
 
     for (size_t i = 0; i < rects.size(); ++i) {
+        
 
         std::vector<dest::core::Rect> faces;
         for (size_t j = 0; j < detectors.size(); ++j) {
-            std::vector<dest::core::Rect> rects;
-            detectors[j].detectFaces(inputs.images[i], rects);
-            faces.insert(faces.end(), rects.begin(), rects.end());
+            std::vector<dest::core::Rect> myrects;
+            detectors[j].detectFaces(inputs.images[i], myrects);
+            faces.insert(faces.end(), myrects.begin(), myrects.end());
         }
         
         // Find the face rect with a meaningful shape overlap
@@ -144,7 +151,7 @@ int main(int argc, char **argv)
             }
         }
         
-        const bool detectionSuccess = (bestId != std::numeric_limits<size_t>::max() && bestOverlap >= 0.3f);
+        const bool detectionSuccess = (bestId != std::numeric_limits<size_t>::max() && bestOverlap >= 0.5f);
 
 
         if (!detectionSuccess) {
@@ -172,7 +179,6 @@ int main(int argc, char **argv)
                     break;
                 }
             }
-
             
         } else {
             ++countDetectionSuccess;
