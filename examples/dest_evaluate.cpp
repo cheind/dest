@@ -80,9 +80,27 @@ int main(int argc, char **argv)
     
     dest::core::TestResult tr = dest::core::testTracker(td, t, ldn);
 
-    std::cout << std::setw(40) << std::left << "Average normalized error: " << tr.meanNormalizedDistance << std::endl;
-    std::cout << std::setw(40) << std::left << "Stddev normalized error: " << tr.stddevNormalizedDistance << std::endl;
-    std::cout << std::setw(40) << std::left << "Median normalized error: " << tr.medianNormalizedDistance << std::endl;
-    std::cout << std::setw(40) << std::left << "Worst normalized error: " << tr.worstNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Average normalized error:" << tr.meanNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Stddev normalized error:" << tr.stddevNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Median normalized error:" << tr.medianNormalizedDistance << std::endl;
+    std::cout << std::setw(40) << std::left << "Worst normalized error:" << tr.worstNormalizedDistance << std::endl;
+    
+    
+
+    const int bins = static_cast<int>(tr.histNormalizedDistance.size() - 1);
+    const float binSize = 1.f / bins;
+    std::cout << "Error histogram (bin size " << std::setprecision(3) << binSize << "):" << std::endl;
+    for (size_t i = 0; i < tr.histNormalizedDistance.size(); ++i) {
+        std::stringstream str;
+        if (i < tr.histNormalizedDistance.size() - 1) {
+            str << std::fixed << std::setprecision(3) << i * binSize + binSize * 0.5f << "/" << std::setprecision(1) << tr.histNormalizedDistance[i] * 100.f << "%";
+        } else {
+            str << std::fixed << std::setprecision(3) << " >1.0/" << std::setprecision(1) << tr.histNormalizedDistance[i] * 100.f << "%";
+        }
+        
+        std::cout << std::setw(12) << str.str() << "|" << std::setw((int)(60 * tr.histNormalizedDistance[i])) << std::setfill('*') << "" << std::setfill(' ') << std::endl;
+    }
+
+
     return 0;
 }

@@ -79,18 +79,29 @@ namespace dest {
             
             std::sort(d.begin(), d.end());
             
-            r.meanNormalizedDistance = std::accumulate(d.begin(), d.end(), 0.f) / (float)(d.size());
-            r.medianNormalizedDistance = (d.size() % 2 == 0) ? d[d.size() / 2] : (d[d.size()/2-1] + d[d.size()/2]) * 0.5f;
-            
-            
+            r.meanNormalizedDistance = std::accumulate(d.begin(), d.end(), 0.f) / (float)(d.size());                        
             float var = 0.f;
             for (size_t i = 0; i < d.size(); ++i) {
                 var += (d[i] - r.meanNormalizedDistance) * (d[i] - r.meanNormalizedDistance);
             }
-            r.stddevNormalizedDistance = std::sqrt(var / (float)(d.size()));
-            
+            r.medianNormalizedDistance = (d.size() % 2 == 0) ? d[d.size() / 2] : (d[d.size() / 2 - 1] + d[d.size() / 2]) * 0.5f;
+            r.stddevNormalizedDistance = std::sqrt(var / (float)(d.size()));            
             r.worstNormalizedDistance = d.back();
             
+            const int nbins = 20;
+            const float binSize = 1.f / nbins;
+            r.histNormalizedDistance = std::vector<float>(nbins + 1, 0.f);
+            for (size_t i = 0; i < d.size(); ++i) {
+                int bin = static_cast<int>(floor(d[i] / binSize));
+                if (bin < nbins)
+                    r.histNormalizedDistance[bin] += 1.f;
+                else
+                    r.histNormalizedDistance.back() += 1.f; // extra large values
+            }            
+            for (size_t i = 0; i < r.histNormalizedDistance.size(); ++i) {
+                r.histNormalizedDistance[i] /= (float)(d.size());
+            }
+             
             return r;
         }
         

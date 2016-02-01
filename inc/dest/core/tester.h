@@ -13,6 +13,7 @@
 
 #include <dest/core/training_data.h>
 #include <dest/core/tracker.h>
+#include <vector>
 
 namespace dest {
     namespace core {
@@ -56,6 +57,7 @@ namespace dest {
             float stddevNormalizedDistance;
             float medianNormalizedDistance;
             float worstNormalizedDistance;
+            std::vector<float> histNormalizedDistance;
         };
         
         /** 
