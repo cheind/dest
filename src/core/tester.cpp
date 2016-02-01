@@ -10,6 +10,7 @@
 
 #include <dest/core/tester.h>
 #include <dest/util/log.h>
+#include <numeric>
 
 namespace dest {
     namespace core {
