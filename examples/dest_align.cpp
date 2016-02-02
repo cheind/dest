@@ -63,6 +63,11 @@ int main(int argc, char **argv)
     }
 
     cv::Mat imgCV = cv::imread(opts.image, cv::IMREAD_GRAYSCALE);
+    if (imgCV.empty()) {
+        std::cout << "Failed to load image." << std::endl;
+        return 0;
+    }
+
     dest::core::Image img;
     dest::util::toDest(imgCV, img);
 
@@ -91,12 +96,11 @@ int main(int argc, char **argv)
     dest::core::Shape s = t.predict(img, shapeToImage, &steps);
 
     bool done = false;
-    int id = 0;
+    size_t id = 0;
     while (!done) {
         
-        cv::Scalar color = (id == 0) ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 255, 255);
+        cv::Scalar color = (id == steps.size() - 1) ? cv::Scalar(255, 0, 102) : cv::Scalar(255, 255, 255);
         cv::Mat tmp = dest::util::drawShape(img, steps[id], color);
-        cv::rectangle(tmp, cv::Rect_<float>(r(0, 0), r(1, 0), r(0, 3) - r(0, 0), r(1, 3) - r(1, 0)), color);
         cv::imshow("prediction", tmp);
 
         id = (id + 1) % steps.size();
