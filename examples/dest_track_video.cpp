@@ -80,6 +80,7 @@ int main(int argc, char **argv)
     if (opts.device.size() == 1 && isdigit(opts.device[0])) {
         // Open capture device by index
         cap.open(atoi(opts.device.c_str()));
+        cap.set(CV_CAP_PROP_SETTINGS, 1);
     } else {
         // Open video video
         cap.open(opts.device.c_str());
