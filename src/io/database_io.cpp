@@ -353,12 +353,15 @@ namespace dest {
             const std::string fileName = _data->paths[index] + ".land";
             std::ifstream file(fileName);
 
+            if (!file.is_open())
+                return false;
+
             std::string line;
             std::getline(file, line); // Number of landmarks
 
             int numPoints;
             std::stringstream str(line);
-            str >> line >> numPoints;
+            str >> numPoints;
 
             dst.resize(2, numPoints);
             dst.fill(0);
