@@ -107,14 +107,14 @@ int main(int argc, char **argv)
     dest::io::ShapeDatabase sd;
     sd.setMaxImageLoadSize(opts.loadMaxSize);
 
+    std::vector<dest::core::Rect> rects;
     std::vector<float> scalings;
     dest::core::InputData inputs;
-    if (!sd.load(opts.db, inputs.images, inputs.shapes, inputs.rects, &scalings)) {
+    if (!sd.load(opts.db, inputs.images, inputs.shapes, rects, &scalings)) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
     }
-
-    std::vector<dest::core::Rect> rects;
+    
     std::vector<dest::face::FaceDetector> detectors(opts.detectors.size());
     for (size_t i = 0; i < opts.detectors.size(); ++i) {
         if (!detectors[i].loadClassifiers(opts.detectors[i])) {
