@@ -25,85 +25,6 @@
 namespace dest {
     namespace io {
         
-        ImportParameters::ImportParameters() {
-            maxImageSideLength = std::numeric_limits<int>::max();
-            generateVerticallyMirrored = false;
-        }
-
-        DatabaseType importDatabase(const std::string & directory,
-                                    const std::string &rectangleFile,
-                                    std::vector<core::Image>& images,
-                                    std::vector<core::Shape>& shapes,
-                                    std::vector<core::Rect>& rects,
-                                    const ImportParameters & opts,
-                                    std::vector<float> *scaleFactors)
-        {
-            const bool isIMM = util::findFilesInDir(directory, "asf", true, true).size() > 0;
-            const bool isIBUG = util::findFilesInDir(directory, "pts", true, true).size() > 0;
-
-            if (isIMM) {
-                bool ok = importIMMFaceDatabase(directory, rectangleFile, images, shapes, rects, opts, scaleFactors);
-                return ok ? DATABASE_IMM : DATABASE_ERROR;
-            } else if (isIBUG) {
-                bool ok = importIBugAnnotatedFaceDatabase(directory, rectangleFile, images, shapes, rects, opts, scaleFactors);
-                return ok ? DATABASE_IBUG : DATABASE_ERROR;
-            } else {
-                DEST_LOG("Unknown database format." << std::endl);
-                return DATABASE_ERROR;
-            }
-        }
-        
-        bool imageNeedsScaling(cv::Size s, const ImportParameters &p, float &factor) {
-            int maxLen = std::max<int>(s.width, s.height);
-            if (maxLen > p.maxImageSideLength) {
-                factor = static_cast<float>(p.maxImageSideLength) / static_cast<float>(maxLen);
-                return true;
-            } else {
-                factor = 1.f;
-                return false;
-            }
-        }
-        
-        void scaleImageShapeAndRect(cv::Mat &img, core::Shape &s, core::Rect &r, float factor) {
-            cv::resize(img, img, cv::Size(0,0), factor, factor, CV_INTER_CUBIC);
-            s *= factor;
-            r *= factor;
-        }
-
-        cv::Mat loadImageFromFilePrefix(const std::string &prefix) {
-            const std::string extensions[] = { ".png", ".jpg", ".jpeg", ".bmp", ""};
-
-            cv::Mat img;
-            const std::string *ext = extensions;
-
-            do {
-                img = cv::imread(prefix + *ext, cv::IMREAD_GRAYSCALE);
-                ++ext;
-            } while (*ext != "" && img.empty());
-
-            return img;
-        }
-        
-        void mirrorImageShapeAndRectVertically(cv::Mat &img,
-                                               core::Shape &s,
-                                               core::Rect &r,
-                                               const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> &permLandmarks,
-                                               const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> &permRectangle)
-        {
-            cv::flip(img, img, 1);
-            for (core::Shape::Index i = 0; i < s.cols(); ++i) {
-                s(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
-            }
-            s = (s * permLandmarks).eval();
-            
-            
-            for (core::Rect::Index i = 0; i < r.cols(); ++i) {
-                r(0, i) = static_cast<float>(img.cols - 1) - r(0, i);
-            }
-            
-            r = (r * permRectangle).eval();
-        }
-        
         Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredRectangle() {
             Eigen::PermutationMatrix<Eigen::Dynamic> perm(4);
             perm.setIdentity();
@@ -113,11 +34,6 @@ namespace dest {
             std::swap(ids(2), ids(3));
             
             return perm;
-        }
-        
-        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredRectangle() {
-            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredRectangle();
-            return _instance;
         }
         
         Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredIMM() {
@@ -171,149 +87,15 @@ namespace dest {
             
             return perm;
         }
-        
-        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredIMM() {
-            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredIMM();
-            return _instance;
-        }
 
-        
-        bool parseAsfFile(const std::string& fileName, core::Shape &s) {
-            
-            int landmarkCount = 0;
-            
-            std::ifstream file(fileName);
-            
-            std::string line;
-            while (std::getline(file, line)) {
-                if (line.size() > 0 && line[0] != '#') {
-                    if (line.find(".jpg") != std::string::npos) {
-                        // ignored: file name of jpg image
-                    }
-                    else if (line.size() < 10) {
-                        int nbPoints = atol(line.c_str());
-                        
-                        s.resize(2, nbPoints);
-                        s.fill(0);
-                    }
-                    else {
-                        std::stringstream stream(line);
-                        
-                        std::string path;
-                        std::string type;
-                        float x, y;
-                        
-                        stream >> path;
-                        stream >> type;
-                        stream >> x;
-                        stream >> y;
-                        
-                        s(0, landmarkCount) = x;
-                        s(1, landmarkCount) = y;
-                        
-                        ++landmarkCount;
-                    }
-                }
-            }
-            
-            return s.rows() > 0 && s.cols() > 0;
-        }
-        
-        bool importIMMFaceDatabase(const std::string &directory,
-                                   const std::string &rectangleFile,
-                                   std::vector<core::Image> &images,
-                                   std::vector<core::Shape> &shapes,
-                                   std::vector<core::Rect>& rects,
-                                   const ImportParameters &opts,
-                                   std::vector<float> *scaleFactors)
-        {
-                                    
-            std::vector<std::string> paths = util::findFilesInDir(directory, "asf", true, true);
-            DEST_LOG("Loading IMM database. Found " << paths.size() << " candidate entries." << std::endl);
-
-            std::vector<core::Rect> loadedRects;
-            io::importRectangles(rectangleFile, loadedRects);
-
-            if (loadedRects.empty()) {
-                DEST_LOG("No rectangles found, using tight axis aligned bounds." << std::endl);
-            } else {
-                if (paths.size() != loadedRects.size()) {
-                    DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
-                    return false;
-                }
-            }
-            
-            size_t initialSize = images.size();
-            
-            for (size_t i = 0; i < paths.size(); ++i) {
-                const std::string fileNameAsf = paths[i] + ".asf";
-                
-                core::Shape s;
-                core::Rect r;
-                bool asfOk = parseAsfFile(fileNameAsf, s);
-                cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
-                const bool validRect = loadedRects.empty() || !loadedRects[i].isZero();
-                
-                if(asfOk && !cvImg.empty() && validRect) {
-                    
-                    // Scale to image dimensions
-                    s.row(0) *= static_cast<float>(cvImg.cols);
-                    s.row(1) *= static_cast<float>(cvImg.rows);
-
-                    if (loadedRects.empty()) {
-                        r = core::shapeBounds(s);
-                    } else {
-                        r = loadedRects[i];
-                    }
-                    
-                    
-                    float f;
-                    if (imageNeedsScaling(cvImg.size(), opts, f)) {
-                        scaleImageShapeAndRect(cvImg, s, r, f);
-                    }
-                    
-                    if (scaleFactors) {
-                        scaleFactors->push_back(f);
-                    }
-                        
-                    
-                    core::Image img;
-                    util::toDest(cvImg, img);
-                    
-                    images.push_back(img);
-                    shapes.push_back(s);
-                    rects.push_back(r);
-                    
-                    if (opts.generateVerticallyMirrored) {
-                        cv::Mat cvFlipped = cvImg.clone();
-                        mirrorImageShapeAndRectVertically(cvFlipped, s, r, permutationMatrixForMirroredIMM(), permutationMatrixForMirroredRectangle());
-                        
-                        core::Image imgFlipped;
-                        util::toDest(cvFlipped, imgFlipped);
-                         
-                        images.push_back(imgFlipped);
-                        shapes.push_back(s);
-                        rects.push_back(r);
-                        
-                        if (scaleFactors) {
-                            scaleFactors->push_back(f);
-                        }
-                    }
-                }
-            }
-            
-            DEST_LOG("Successfully loaded " << (shapes.size() - initialSize) << " entries from database." << std::endl);
-            return shapes.size() > 0;
-        }
-        
         Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredIBug() {
             Eigen::PermutationMatrix<Eigen::Dynamic> perm(68);
             perm.setIdentity();
-            //return perm;
+
             Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
-            
+
             // http://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
-            
+
             // Contour
             std::swap(ids(0), ids(16));
             std::swap(ids(1), ids(15));
@@ -324,24 +106,24 @@ namespace dest {
             std::swap(ids(6), ids(10));
             std::swap(ids(7), ids(9));
             std::swap(ids(8), ids(8));
-            
+
             // Eyebrow
             std::swap(ids(17), ids(26));
             std::swap(ids(18), ids(25));
             std::swap(ids(19), ids(24));
             std::swap(ids(20), ids(23));
             std::swap(ids(21), ids(22));
-            
+
             // Nose
             std::swap(ids(27), ids(27));
             std::swap(ids(28), ids(28));
             std::swap(ids(29), ids(29));
             std::swap(ids(30), ids(30));
-            
+
             std::swap(ids(31), ids(35));
             std::swap(ids(32), ids(34));
             std::swap(ids(33), ids(33));
-            
+
             // Eye
             std::swap(ids(39), ids(42));
             std::swap(ids(38), ids(43));
@@ -349,153 +131,380 @@ namespace dest {
             std::swap(ids(36), ids(45));
             std::swap(ids(40), ids(47));
             std::swap(ids(41), ids(46));
-            
+
             // Mouth
             std::swap(ids(48), ids(54));
             std::swap(ids(49), ids(53));
             std::swap(ids(50), ids(52));
             std::swap(ids(51), ids(51));
-            
+
             std::swap(ids(59), ids(55));
             std::swap(ids(58), ids(56));
             std::swap(ids(57), ids(57));
-            
+
             std::swap(ids(60), ids(64));
             std::swap(ids(61), ids(63));
             std::swap(ids(62), ids(62));
-            
+
             std::swap(ids(67), ids(65));
             std::swap(ids(66), ids(66));
-            
+
             return perm;
         }
         
-        const Eigen::PermutationMatrix<Eigen::Dynamic> &permutationMatrixForMirroredIBug() {
-            const static Eigen::PermutationMatrix<Eigen::Dynamic> _instance = createPermutationMatrixForMirroredIBug();
-            return _instance;
+
+        cv::Mat DatabaseLoader::loadImageFromFilePrefix(const std::string & prefix) const
+        {
+            const std::string extensions[] = { ".png", ".jpg", ".jpeg", ".bmp", "" };
+
+            cv::Mat img;
+            const std::string *ext = extensions;
+
+            do {
+                img = cv::imread(prefix + *ext, cv::IMREAD_GRAYSCALE);
+                ++ext;
+            } while (*ext != "" && img.empty());
+
+            return img;
+        }
+
+        struct DatabaseLoaderIMM::data {
+            std::vector<std::string> paths;
+        };
+        
+        DatabaseLoaderIMM::DatabaseLoaderIMM()
+            :_data(new data())
+        {
+        }
+
+        DatabaseLoaderIMM::~DatabaseLoaderIMM()
+        {
+        }
+
+        std::string DatabaseLoaderIMM::identifier() const
+        {
+            return std::string("imm");
+        }
+
+        size_t DatabaseLoaderIMM::glob(const std::string & directory)
+        {
+            _data->paths = util::findFilesInDir(directory, "asf", true, true);
+            return _data->paths.size();
+        }
+
+        bool DatabaseLoaderIMM::loadImage(size_t index, cv::Mat & dst)
+        {
+            dst = this->loadImageFromFilePrefix(_data->paths[index]);
+            return !dst.empty();
+        }
+
+        bool DatabaseLoaderIMM::loadShape(size_t index, core::Shape & dst)
+        {
+
+            dst = core::Shape();
+            int landmarkCount = 0;
+
+            const std::string fileName = _data->paths[index] + ".asf";
+            std::ifstream file(fileName);
+
+            std::string line;
+            while (std::getline(file, line)) {
+                if (line.size() > 0 && line[0] != '#') {
+                    if (line.find(".jpg") != std::string::npos) {
+                        // ignored: file name of jpg image
+                    }
+                    else if (line.size() < 10) {
+                        int nbPoints = atol(line.c_str());
+
+                        dst.resize(2, nbPoints);
+                        dst.fill(0);
+                    }
+                    else {
+                        std::stringstream stream(line);
+
+                        std::string path;
+                        std::string type;
+                        float x, y;
+
+                        stream >> path;
+                        stream >> type;
+                        stream >> x;
+                        stream >> y;
+
+                        dst(0, landmarkCount) = x;
+                        dst(1, landmarkCount) = y;
+
+                        ++landmarkCount;
+                    }
+                }                
+            }
+            return dst.rows() > 0 && dst.cols() > 0;
+
+        }
+
+        Eigen::PermutationMatrix<Eigen::Dynamic> DatabaseLoaderIMM::shapeMirrorMatrix()
+        {
+            return createPermutationMatrixForMirroredIMM();
+        }
+
+        struct DatabaseLoaderIBug::data {
+            std::vector<std::string> paths;
+        };
+
+        DatabaseLoaderIBug::DatabaseLoaderIBug()
+            :_data(new data())
+        {
         }
         
-        bool parsePtsFile(const std::string& fileName, core::Shape &s) {
-            
+        DatabaseLoaderIBug::~DatabaseLoaderIBug()
+        {
+        }
+        
+        std::string DatabaseLoaderIBug::identifier() const
+        {
+            return std::string("ibug");
+        }
+        
+        size_t DatabaseLoaderIBug::glob(const std::string & directory)
+        {
+            _data->paths = util::findFilesInDir(directory, "pts", true, true);
+            return _data->paths.size();
+        }
+
+        bool DatabaseLoaderIBug::loadImage(size_t index, cv::Mat & dst)
+        {
+            dst = this->loadImageFromFilePrefix(_data->paths[index]);
+            return !dst.empty();
+        }
+
+        bool DatabaseLoaderIBug::loadShape(size_t index, core::Shape & dst)
+        {
+            const std::string fileName = _data->paths[index] + ".pts";
             std::ifstream file(fileName);
-            
+
             std::string line;
             std::getline(file, line); // Version
             std::getline(file, line); // NPoints
-            
+
             int numPoints;
             std::stringstream str(line);
             str >> line >> numPoints;
-            
+
             std::getline(file, line); // {
-            
-            s.resize(2, numPoints);
-            s.fill(0);
-            
+
+            dst.resize(2, numPoints);
+            dst.fill(0);
+
             for (int i = 0; i < numPoints; ++i) {
                 if (!std::getline(file, line)) {
                     DEST_LOG("Failed to read points." << std::endl);
                     return false;
                 }
                 str = std::stringstream(line);
-                
+
                 float x, y;
                 str >> x >> y;
-                
-                s(0, i) = x - 1.f; // Matlab to C++ offset
-                s(1, i) = y - 1.f;
-                
+
+                dst(0, i) = x - 1.f; // Matlab to C++ offset
+                dst(1, i) = y - 1.f;
+
             }
-            
-            return true;
-            
+
+            return numPoints > 0;
         }
-        
-        bool importIBugAnnotatedFaceDatabase(const std::string &directory,
-                                             const std::string &rectangleFile,
-                                             std::vector<core::Image> &images,
-                                             std::vector<core::Shape> &shapes,
-                                             std::vector<core::Rect> &rects,
-                                             const ImportParameters &opts,
-                                             std::vector<float> *scaleFactors)
+
+        Eigen::PermutationMatrix<Eigen::Dynamic> DatabaseLoaderIBug::shapeMirrorMatrix()
         {
-            
-            std::vector<std::string> paths = util::findFilesInDir(directory, "pts", true, true);
-            DEST_LOG("Loading ibug database. Found " << paths.size() << " candidate entries." << std::endl);
+            return createPermutationMatrixForMirroredIBug();
+        }
 
-            std::vector<core::Rect> loadedRects;
-            io::importRectangles(rectangleFile, loadedRects);
+        struct ShapeDatabase::data 
+        {
+            std::vector< std::shared_ptr<DatabaseLoader> > loaders;
+            std::vector<core::Rect> rects;
+            bool mirror;
+            int maxLoadSize;
+            std::string type, lastType;
+        };
 
-            if (loadedRects.empty()) {
-                DEST_LOG("No rectangles found, using tight axis aligned bounds." << std::endl);
-            }
-            else {
-                if (paths.size() != loadedRects.size()) {
-                    DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
-                    return false;
+        ShapeDatabase::ShapeDatabase()
+            :_data(new data())
+        {
+            _data->loaders.push_back(std::make_shared<DatabaseLoaderIMM>());
+            _data->loaders.push_back(std::make_shared<DatabaseLoaderIBug>());
+
+            _data->mirror = false;
+            _data->maxLoadSize = std::numeric_limits<int>::max();
+            _data->type = std::string("auto");
+        }
+
+        ShapeDatabase::~ShapeDatabase()
+        {
+        }
+
+        void ShapeDatabase::enableMirroring(bool enable)
+        {
+            _data->mirror = enable;
+        }
+
+        void ShapeDatabase::setMaxImageLoadSize(int size)
+        {
+            _data->maxLoadSize = size;
+        }
+
+        void ShapeDatabase::setLoaderType(const std::string & type)
+        {
+            _data->type = type;
+        }
+
+        void ShapeDatabase::setRectangles(const std::vector<core::Rect>& rects)
+        {
+            _data->rects = rects;
+        }
+
+        void ShapeDatabase::addLoader(std::shared_ptr<DatabaseLoader> l)
+        {
+            _data->loaders.insert(_data->loaders.begin(), l);
+        }
+
+        std::string ShapeDatabase::lastLoaderType() const
+        {
+            return _data->lastType;
+        }
+
+        bool ShapeDatabase::load(const std::string & directory, std::vector<core::Image>& images, std::vector<core::Shape>& shapes, std::vector<core::Rect>& rects, std::vector<float>* scaleFactors)
+        {
+            std::shared_ptr<DatabaseLoader> loader;
+            size_t candidates = 0;
+            if (_data->type == std::string("auto")) {
+                for (size_t i = 0; i < _data->loaders.size(); ++i) {
+                    loader = _data->loaders[i];
+                    candidates = loader->glob(directory);
+                    if (candidates > 0)
+                        break;
+                }                
+            } else {
+                std::string type = _data->type;
+                auto iter = std::find_if(_data->loaders.begin(), _data->loaders.end(), [type](std::shared_ptr<DatabaseLoader> &l) {
+                    return l->identifier() == type;
+                });
+                if (iter != _data->loaders.end()) {
+                    loader = *iter;
+                    candidates = loader->glob(directory);
                 }
             }
-            
+
+            if (candidates == 0) {
+                DEST_LOG("Could not find any loadable items.");
+                return false;
+            }
+            _data->lastType = loader->identifier();
+
+            DEST_LOG("Loading " << loader->identifier() << " database. Found " << candidates << " candidate entries." << std::endl);
+
+            std::vector<core::Rect> &loadedRects = _data->rects;
+            if (loadedRects.empty()) {
+                DEST_LOG("No rectangles found, using tight shape bounds." << std::endl);
+            } else if (candidates != loadedRects.size()) {
+                DEST_LOG("Mismatch between number of shapes in database and rectangles found." << std::endl);
+                return false;
+            }
+
             size_t initialSize = images.size();
-            
-            for (size_t i = 0; i < paths.size(); ++i) {
-                const std::string fileNamePts = paths[i] + ".pts";
-                
+            cv::Mat img;
+            Eigen::PermutationMatrix<Eigen::Dynamic> permutShape = loader->shapeMirrorMatrix();
+            Eigen::PermutationMatrix<Eigen::Dynamic> permutRect = createPermutationMatrixForMirroredRectangle();
+
+            if (permutShape.size() == 0 && _data->mirror) {
+                DEST_LOG("Mirroring will be skipped. Requested but database loader does not support it." << std::endl);
+            }
+
+            for (size_t i = 0; i < candidates; ++i) {
                 core::Shape s;
                 core::Rect r;
-                bool ptsOk = parsePtsFile(fileNamePts, s);
-                cv::Mat cvImg = loadImageFromFilePrefix(paths[i]);
-                const bool validRect = loadedRects.empty() || !loadedRects[i].isZero();
                 
-                if(ptsOk && !cvImg.empty() && validRect) {
+                bool shapeOk = loader->loadShape(i, s);
+                bool imageOk = loader->loadImage(i, img);
+                bool rectOk = loadedRects.empty() || !loadedRects[i].isZero();
 
-                    if (loadedRects.empty()) {
-                        r = core::shapeBounds(s);
-                    }
-                    else {
-                        r = loadedRects[i];
-                    }
-                    
-                    float f;
-                    if (imageNeedsScaling(cvImg.size(), opts, f)) {
-                        scaleImageShapeAndRect(cvImg, s, r, f);
-                    }
-                    
-                    core::Image img;
-                    util::toDest(cvImg, img);
-                    
-                    images.push_back(img);
+                if (!shapeOk || !imageOk || !rectOk)
+                    continue;
+
+                r = loadedRects.empty() ? core::shapeBounds(s) : loadedRects[i];
+
+                float f;
+                if (imageNeedsScaling(img.size(), _data->maxLoadSize, f)) {
+                    scaleImageShapeAndRect(img, s, r, f);
+                }
+
+                core::Image destImg;
+                util::toDest(img, destImg);
+
+                images.push_back(destImg);
+                shapes.push_back(s);
+                rects.push_back(r);
+
+                if (scaleFactors) {
+                    scaleFactors->push_back(f);
+                }
+
+                if (_data->mirror && permutShape.size() > 0) {
+                    cv::Mat cvFlipped = img.clone();
+                    mirrorImageShapeAndRectVertically(cvFlipped, s, r, permutShape, permutRect);
+
+                    core::Image destImgFlipped;
+                    util::toDest(cvFlipped, destImgFlipped);
+
+                    images.push_back(destImgFlipped);
                     shapes.push_back(s);
                     rects.push_back(r);
-                    
+
                     if (scaleFactors) {
                         scaleFactors->push_back(f);
                     }
-                    
-                    
-                    if (opts.generateVerticallyMirrored) {
-                        cv::Mat cvFlipped = cvImg.clone();
-                        mirrorImageShapeAndRectVertically(cvFlipped, s, r, permutationMatrixForMirroredIBug(), permutationMatrixForMirroredRectangle());
-                        
-                        core::Image imgFlipped;
-                        util::toDest(cvFlipped, imgFlipped);
-                        
-                        images.push_back(imgFlipped);
-                        shapes.push_back(s);
-                        rects.push_back(r);
-                        
-                        if (scaleFactors) {
-                            scaleFactors->push_back(f);
-                        }
-                    }
                 }
+
             }
-            
+
             DEST_LOG("Successfully loaded " << (shapes.size() - initialSize) << " entries from database." << std::endl);
             return (shapes.size() - initialSize) > 0;
-
         }
-        
+
+        bool ShapeDatabase::imageNeedsScaling(cv::Size s, int maxImageSize, float & factor) const
+        {
+            int maxLen = std::max<int>(s.width, s.height);
+            if (maxLen > maxImageSize) {
+                factor = static_cast<float>(maxImageSize) / static_cast<float>(maxLen);
+                return true;
+            }
+            else {
+                factor = 1.f;
+                return false;
+            }
+        }
+
+        void ShapeDatabase::scaleImageShapeAndRect(cv::Mat &img, core::Shape & s, core::Rect & r, float factor) const
+        {
+            cv::resize(img, img, cv::Size(0, 0), factor, factor, CV_INTER_CUBIC);
+            s *= factor;
+            r *= factor;
+        }
+
+        void ShapeDatabase::mirrorImageShapeAndRectVertically(cv::Mat & img, core::Shape & s, core::Rect & r, const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>& permLandmarks, const Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic>& permRectangle) const
+        {
+            cv::flip(img, img, 1);
+            for (core::Shape::Index i = 0; i < s.cols(); ++i) {
+                s(0, i) = static_cast<float>(img.cols - 1) - s(0, i);
+            }
+            s = (s * permLandmarks).eval();
+
+
+            for (core::Rect::Index i = 0; i < r.cols(); ++i) {
+                r(0, i) = static_cast<float>(img.cols - 1) - r(0, i);
+            }
+
+            r = (r * permRectangle).eval();
+        }
     }
 }
 

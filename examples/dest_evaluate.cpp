@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         std::string tracker;
         std::string database;
         std::string rectangles;
-        dest::io::ImportParameters importParams;
+        int loadMaxSize;
     } opts;
 
     try {
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         opts.rectangles = rectanglesArg.isSet() ? rectanglesArg.getValue() : "";
         opts.database = databaseArg.getValue();
         opts.tracker = trackerArg.getValue();
-        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
+        opts.loadMaxSize = maxImageSizeArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -54,9 +54,18 @@ int main(int argc, char **argv)
         return -1;
     }
     
-    dest::core::InputData inputs;
-    dest::io::DatabaseType dbt = dest::io::importDatabase(opts.database, opts.rectangles, inputs.images, inputs.shapes, inputs.rects, opts.importParams);
-    if (dbt == dest::io::DATABASE_ERROR) {
+    std::vector<dest::core::Rect> rects;
+    if (!opts.rectangles.empty() && !dest::io::importRectangles(opts.rectangles, rects)) {
+        std::cerr << "Failed to load rectangles." << std::endl;
+        return -1;
+    }
+
+    dest::io::ShapeDatabase sd;
+    sd.setMaxImageLoadSize(opts.loadMaxSize);
+    sd.setRectangles(rects);
+
+    dest::core::InputData inputs;    
+    if (!sd.load(opts.database, inputs.images, inputs.shapes, inputs.rects)) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
     }
@@ -66,16 +75,15 @@ int main(int argc, char **argv)
     dest::core::SampleData::createTestingSamples(td);
     
     dest::core::LandmarkDistanceNormalizer ldn;
-    switch (dbt) {
-        case dest::io::DATABASE_IMM:
-            ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerIMM();
-            break;
-        case dest::io::DATABASE_IBUG:
-            ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerIBug();
-            break;
-        default:
-            std::cerr << "Unknown database type" << std::endl;
-            return -1;
+    if (sd.lastLoaderType() == "imm") {
+        ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerIMM();
+    }
+    else if (sd.lastLoaderType() == "ibug") {
+        ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerIBug();
+    }
+    else {
+        std::cerr << "Unknown database type" << std::endl;
+        return -1;
     }
     
     dest::core::TestResult tr = dest::core::testTracker(td, t, ldn);
@@ -83,9 +91,7 @@ int main(int argc, char **argv)
     std::cout << std::setw(40) << std::left << "Average normalized error:" << tr.meanNormalizedDistance << std::endl;
     std::cout << std::setw(40) << std::left << "Stddev normalized error:" << tr.stddevNormalizedDistance << std::endl;
     std::cout << std::setw(40) << std::left << "Median normalized error:" << tr.medianNormalizedDistance << std::endl;
-    std::cout << std::setw(40) << std::left << "Worst normalized error:" << tr.worstNormalizedDistance << std::endl;
-    
-    
+    std::cout << std::setw(40) << std::left << "Worst normalized error:" << tr.worstNormalizedDistance << std::endl;    
 
     const int bins = static_cast<int>(tr.histNormalizedDistance.size() - 1);
     const float binSize = 1.f / bins;

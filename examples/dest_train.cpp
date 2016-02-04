@@ -24,7 +24,8 @@ int main(int argc, char **argv)
     struct {
         dest::core::TrainingParameters trainingParams;
         dest::core::SampleCreationParameters createParams;
-        dest::io::ImportParameters importParams;
+        int loadMaxSize;
+        bool mirror;
         std::string db;
         std::string rects;
         std::string output;
@@ -67,8 +68,8 @@ int main(int argc, char **argv)
         opts.trainingParams.learningRate = learnArg.getValue();
         opts.randomSeed = randomSeedArg.getValue();
         
-        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
-        opts.importParams.generateVerticallyMirrored = mirrorImageArg.getValue();
+        opts.loadMaxSize = maxImageSizeArg.getValue();
+        opts.mirror = mirrorImageArg.getValue();
         
         opts.showInitialSamples = showInitialSamplesArg.getValue();
         opts.db = databaseArg.getValue();
@@ -80,9 +81,19 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    std::vector<dest::core::Rect> rects;
+    if (!opts.rects.empty() && !dest::io::importRectangles(opts.rects, rects)) {
+        std::cerr << "Failed to load rectangles." << std::endl;
+        return -1;
+    }
+
+    dest::io::ShapeDatabase sd;
+    sd.setMaxImageLoadSize(opts.loadMaxSize);
+    sd.enableMirroring(opts.mirror);
+    sd.setRectangles(rects);
+
     dest::core::InputData inputs;
-    inputs.rnd.seed(static_cast<unsigned int>(opts.randomSeed));
-    if (!dest::io::importDatabase(opts.db, opts.rects, inputs.images, inputs.shapes, inputs.rects, opts.importParams)) {
+    if (!sd.load(opts.db, inputs.images, inputs.shapes, inputs.rects)) {
         std::cerr << "Failed to load database." << std::endl;
         return -1;
     }

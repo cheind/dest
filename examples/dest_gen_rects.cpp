@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         std::string db;
         std::string output;
         FallbackMode fbm;
-        dest::io::ImportParameters importParams;
+        int loadMaxSize;
     } opts;
 
     try {
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         opts.detectors.insert(opts.detectors.end(), detectorsArg.begin(), detectorsArg.end());
         opts.db = databaseArg.getValue();
         opts.output = outputArg.getValue();
-        opts.importParams.maxImageSideLength = maxImageSizeArg.getValue();
+        opts.loadMaxSize = maxImageSizeArg.getValue();
         
         if (fallbackArg.getValue() == "simulatecv") {
             opts.fbm = Fallback_SimulateOpenCV;
@@ -103,15 +103,18 @@ int main(int argc, char **argv)
     // Current solution is to disable OpenCL
     // See https://github.com/Itseez/opencv/issues/5475
     cv::ocl::setUseOpenCL(false);
-   
-    dest::core::InputData inputs;
-    std::vector<dest::core::Rect> rects;
+
+    dest::io::ShapeDatabase sd;
+    sd.setMaxImageLoadSize(opts.loadMaxSize);
+
     std::vector<float> scalings;
-    if (!dest::io::importDatabase(opts.db, "", inputs.images, inputs.shapes, rects, opts.importParams, &scalings)) {
-        std::cout << "Failed to load database" << std::endl;
+    dest::core::InputData inputs;
+    if (!sd.load(opts.db, inputs.images, inputs.shapes, inputs.rects, &scalings)) {
+        std::cerr << "Failed to load database." << std::endl;
         return -1;
     }
 
+    std::vector<dest::core::Rect> rects;
     std::vector<dest::face::FaceDetector> detectors(opts.detectors.size());
     for (size_t i = 0; i < opts.detectors.size(); ++i) {
         if (!detectors[i].loadClassifiers(opts.detectors[i])) {
