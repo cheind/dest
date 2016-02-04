@@ -153,6 +153,70 @@ namespace dest {
         }
         
 
+        Eigen::PermutationMatrix<Eigen::Dynamic> createPermutationMatrixForMirroredLAND() {
+            Eigen::PermutationMatrix<Eigen::Dynamic> perm(74);
+            perm.setIdentity();
+
+            Eigen::PermutationMatrix<Eigen::Dynamic>::IndicesType &ids = perm.indices();
+
+            // Contour
+            std::swap(ids(0), ids(14));
+            std::swap(ids(1), ids(13));
+            std::swap(ids(2), ids(12));
+            std::swap(ids(3), ids(11));
+            std::swap(ids(4), ids(10));
+            std::swap(ids(5), ids(9));
+            std::swap(ids(6), ids(8));
+            std::swap(ids(7), ids(7));
+            
+            // Eyebrow
+            std::swap(ids(15), ids(21));
+            std::swap(ids(16), ids(22));
+            std::swap(ids(17), ids(23));
+            std::swap(ids(18), ids(24));
+            std::swap(ids(19), ids(25));
+            std::swap(ids(20), ids(26));
+
+            // Eye
+            std::swap(ids(27), ids(31));
+            std::swap(ids(28), ids(32));
+            std::swap(ids(29), ids(33));
+            std::swap(ids(30), ids(34));
+            std::swap(ids(66), ids(73));
+            std::swap(ids(69), ids(70));
+            std::swap(ids(68), ids(71));
+            std::swap(ids(67), ids(72));
+
+            // Nose
+            std::swap(ids(35), ids(43));
+            std::swap(ids(36), ids(42));
+            std::swap(ids(37), ids(41));
+            std::swap(ids(38), ids(40));
+            std::swap(ids(39), ids(39));
+            std::swap(ids(44), ids(45));
+            std::swap(ids(65), ids(65));
+
+            // Mouth
+            std::swap(ids(46), ids(52));
+            std::swap(ids(47), ids(51));
+            std::swap(ids(48), ids(50));
+            std::swap(ids(49), ids(49));
+
+            std::swap(ids(57), ids(53));
+            std::swap(ids(56), ids(54));
+            std::swap(ids(55), ids(55));
+
+            std::swap(ids(58), ids(60));
+            std::swap(ids(59), ids(59));
+
+            std::swap(ids(63), ids(61));
+            std::swap(ids(62), ids(62));
+
+            std::swap(ids(64), ids(64));
+
+            return perm;
+        }
+
         cv::Mat DatabaseLoader::loadImageFromFilePrefix(const std::string & prefix) const
         {
             const std::string extensions[] = { ".png", ".jpg", ".jpeg", ".bmp", "" };
@@ -386,7 +450,7 @@ namespace dest {
 
         Eigen::PermutationMatrix<Eigen::Dynamic> DatabaseLoaderLAND::shapeMirrorMatrix()
         {
-            return Eigen::PermutationMatrix<Eigen::Dynamic>();
+            return createPermutationMatrixForMirroredLAND();
         }
 
         struct ShapeDatabase::data 
@@ -394,7 +458,8 @@ namespace dest {
             std::vector< std::shared_ptr<DatabaseLoader> > loaders;
             std::vector<core::Rect> rects;
             bool mirror;
-            int maxLoadSize;
+            int maxLoadSize, minLoadSize;
+            size_t maxElementsToLoad;
             std::string type, lastType;
         };
 
@@ -407,6 +472,8 @@ namespace dest {
 
             _data->mirror = false;
             _data->maxLoadSize = std::numeric_limits<int>::max();
+            _data->minLoadSize = 0;
+            _data->maxElementsToLoad = std::numeric_limits<size_t>::max();
             _data->type = std::string("auto");
         }
 
@@ -422,6 +489,16 @@ namespace dest {
         void ShapeDatabase::setMaxImageLoadSize(int size)
         {
             _data->maxLoadSize = size;
+        }
+
+        void ShapeDatabase::setMinImageLoadSize(int size)
+        {
+            _data->minLoadSize = size;
+        }
+
+        void ShapeDatabase::setMaxElementsToLoad(size_t count)
+        {
+            _data->maxElementsToLoad = count;
         }
 
         void ShapeDatabase::setLoaderType(const std::string & type)
@@ -491,6 +568,7 @@ namespace dest {
                 DEST_LOG("Mirroring will be skipped. Requested but database loader does not support it." << std::endl);
             }
 
+            candidates = std::min<size_t>(candidates, _data->maxElementsToLoad);
             for (size_t i = 0; i < candidates; ++i) {
                 core::Shape s;
                 core::Rect r;
@@ -505,7 +583,7 @@ namespace dest {
                 r = loadedRects.empty() ? core::shapeBounds(s) : loadedRects[i];
 
                 float f;
-                if (imageNeedsScaling(img.size(), _data->maxLoadSize, f)) {
+                if (imageNeedsScaling(img.size(), _data->maxLoadSize, _data->minLoadSize, f)) {
                     scaleImageShapeAndRect(img, s, r, f);
                 }
 
@@ -542,14 +620,18 @@ namespace dest {
             return (shapes.size() - initialSize) > 0;
         }
 
-        bool ShapeDatabase::imageNeedsScaling(cv::Size s, int maxImageSize, float & factor) const
+        bool ShapeDatabase::imageNeedsScaling(cv::Size s, int maxImageSize, int minImageSize, float & factor) const
         {
             int maxLen = std::max<int>(s.width, s.height);
+            int minLen = std::min<int>(s.width, s.height);
+
             if (maxLen > maxImageSize) {
                 factor = static_cast<float>(maxImageSize) / static_cast<float>(maxLen);
                 return true;
-            }
-            else {
+            } else if (minLen < minImageSize) {
+                factor = static_cast<float>(minImageSize) / static_cast<float>(minLen);
+                return true;
+            } else {
                 factor = 1.f;
                 return false;
             }

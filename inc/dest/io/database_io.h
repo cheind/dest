@@ -167,6 +167,8 @@ namespace dest {
 
             void enableMirroring(bool enable);
             void setMaxImageLoadSize(int size);
+            void setMinImageLoadSize(int size);
+            void setMaxElementsToLoad(size_t count);
             void setLoaderType(const std::string &type);
             void setRectangles(const std::vector<core::Rect> &rects);
             void addLoader(std::shared_ptr<DatabaseLoader> l);
@@ -189,7 +191,7 @@ namespace dest {
 
         private:
 
-            bool imageNeedsScaling(cv::Size s, int maxImageSize, float &factor) const;
+            bool imageNeedsScaling(cv::Size s, int maxImageSize, int minImageSize, float &factor) const;
             void scaleImageShapeAndRect(cv::Mat &img, core::Shape &s, core::Rect &r, float factor) const;
             void mirrorImageShapeAndRectVertically(cv::Mat &img,
                 core::Shape &s,
