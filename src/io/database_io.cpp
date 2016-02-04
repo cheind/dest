@@ -318,6 +318,74 @@ namespace dest {
             return createPermutationMatrixForMirroredIBug();
         }
 
+        struct DatabaseLoaderLAND::data {
+            std::vector<std::string> paths;
+        };
+
+        DatabaseLoaderLAND::DatabaseLoaderLAND()
+            :_data(new data())
+        {
+        }
+
+        DatabaseLoaderLAND::~DatabaseLoaderLAND()
+        {
+        }
+
+        std::string DatabaseLoaderLAND::identifier() const
+        {
+            return std::string("land");
+        }
+
+        size_t DatabaseLoaderLAND::glob(const std::string & directory)
+        {
+            _data->paths = util::findFilesInDir(directory, "land", true, true);
+            return _data->paths.size();
+        }
+
+        bool DatabaseLoaderLAND::loadImage(size_t index, cv::Mat & dst)
+        {
+            dst = this->loadImageFromFilePrefix(_data->paths[index]);
+            return !dst.empty();
+        }
+
+        bool DatabaseLoaderLAND::loadShape(size_t index, core::Shape & dst)
+        {
+            const std::string fileName = _data->paths[index] + ".land";
+            std::ifstream file(fileName);
+
+            std::string line;
+            std::getline(file, line); // Number of landmarks
+
+            int numPoints;
+            std::stringstream str(line);
+            str >> line >> numPoints;
+
+            dst.resize(2, numPoints);
+            dst.fill(0);
+
+            for (int i = 0; i < numPoints; ++i) {
+                if (!std::getline(file, line)) {
+                    DEST_LOG("Failed to read points." << std::endl);
+                    return false;
+                }
+                str = std::stringstream(line);
+
+                float x, y;
+                str >> x >> y;
+
+                dst(0, i) = x;
+                dst(1, i) = y;
+
+            }
+
+            return numPoints > 0;
+        }
+
+        Eigen::PermutationMatrix<Eigen::Dynamic> DatabaseLoaderLAND::shapeMirrorMatrix()
+        {
+            return Eigen::PermutationMatrix<Eigen::Dynamic>();
+        }
+
         struct ShapeDatabase::data 
         {
             std::vector< std::shared_ptr<DatabaseLoader> > loaders;
@@ -332,6 +400,7 @@ namespace dest {
         {
             _data->loaders.push_back(std::make_shared<DatabaseLoaderIMM>());
             _data->loaders.push_back(std::make_shared<DatabaseLoaderIBug>());
+            _data->loaders.push_back(std::make_shared<DatabaseLoaderLAND>());
 
             _data->mirror = false;
             _data->maxLoadSize = std::numeric_limits<int>::max();
@@ -505,7 +574,8 @@ namespace dest {
 
             r = (r * permRectangle).eval();
         }
-    }
+       
+}
 }
 
 #endif

@@ -121,6 +121,43 @@ namespace dest {
         };
 
         /**
+            Load the databases annoted by DDE authors using .LAND file format.
+            
+            Quoting the authors:
+            "We used 14,460 facial images from three public image datasets. For each image, 74 landmarks were labelled to describe 
+            positions of a set of facial features, e.g., the mouth corner, the nose tip, the face contour etc. The landmark files 
+            can be directly downloaded from this website. You can get the image files from the corresponding website."
+
+            Landmarks are provided for
+
+                - FaceWarehouse (5,904 images)
+                - Labeled Faces in the Wild (7,258 images)
+                - GTAV Face Database (1,298 images)
+
+            References:
+                Cao Chen, Qiming Hou, Kun Zhou: 
+                "Displaced Dynamic Expression Regression for Real-time Facial Tracking and Animation", 
+                ACM Transactions on Graphics (SIGGRAPH), 2014.
+                http://gaps-zju.org/DDE/
+        */
+        class DatabaseLoaderLAND : public DatabaseLoader {
+        public:
+            DatabaseLoaderLAND();
+            ~DatabaseLoaderLAND();
+
+            std::string identifier() const;
+            virtual size_t glob(const std::string &directory);
+            virtual bool loadImage(size_t index, cv::Mat &dst);
+            virtual bool loadShape(size_t index, core::Shape &dst);
+            virtual Eigen::PermutationMatrix<Eigen::Dynamic> shapeMirrorMatrix();
+
+        private:
+            struct data;
+            std::unique_ptr<data> _data;
+        };
+
+
+        /**
             Generic base class for loading shapes and images from existing databases.
         */
         class ShapeDatabase {
