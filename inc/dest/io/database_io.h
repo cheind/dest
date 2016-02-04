@@ -52,7 +52,7 @@ namespace dest {
             /**
                 Load shape of n-th item.
             */
-            virtual bool loadShape(size_t index, core::Shape &dst) = 0;
+            virtual bool loadShape(size_t index, cv::Size imageSize, core::Shape &dst) = 0;
 
             /**
                 Access the shape permutation matrix for vertical mirroring.
@@ -82,7 +82,7 @@ namespace dest {
             std::string identifier() const;
             virtual size_t glob(const std::string &directory);
             virtual bool loadImage(size_t index, cv::Mat &dst);
-            virtual bool loadShape(size_t index, core::Shape &dst);
+            virtual bool loadShape(size_t index, cv::Size imageSize, core::Shape &dst);
             virtual Eigen::PermutationMatrix<Eigen::Dynamic> shapeMirrorMatrix();
 
         private:
@@ -112,7 +112,7 @@ namespace dest {
             std::string identifier() const;
             virtual size_t glob(const std::string &directory);
             virtual bool loadImage(size_t index, cv::Mat &dst);
-            virtual bool loadShape(size_t index, core::Shape &dst);
+            virtual bool loadShape(size_t index, cv::Size imageSize, core::Shape &dst);
             virtual Eigen::PermutationMatrix<Eigen::Dynamic> shapeMirrorMatrix();
 
         private:
@@ -148,7 +148,7 @@ namespace dest {
             std::string identifier() const;
             virtual size_t glob(const std::string &directory);
             virtual bool loadImage(size_t index, cv::Mat &dst);
-            virtual bool loadShape(size_t index, core::Shape &dst);
+            virtual bool loadShape(size_t index, cv::Size imageSize, core::Shape &dst);
             virtual Eigen::PermutationMatrix<Eigen::Dynamic> shapeMirrorMatrix();
 
         private:

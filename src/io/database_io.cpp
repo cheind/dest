@@ -198,7 +198,7 @@ namespace dest {
             return !dst.empty();
         }
 
-        bool DatabaseLoaderIMM::loadShape(size_t index, core::Shape & dst)
+        bool DatabaseLoaderIMM::loadShape(size_t index, cv::Size imageSize, core::Shape & dst)
         {
 
             dst = core::Shape();
@@ -277,7 +277,7 @@ namespace dest {
             return !dst.empty();
         }
 
-        bool DatabaseLoaderIBug::loadShape(size_t index, core::Shape & dst)
+        bool DatabaseLoaderIBug::loadShape(size_t index, cv::Size imageSize, core::Shape & dst)
         {
             const std::string fileName = _data->paths[index] + ".pts";
             std::ifstream file(fileName);
@@ -348,7 +348,7 @@ namespace dest {
             return !dst.empty();
         }
 
-        bool DatabaseLoaderLAND::loadShape(size_t index, core::Shape & dst)
+        bool DatabaseLoaderLAND::loadShape(size_t index, cv::Size imageSize, core::Shape & dst)
         {
             const std::string fileName = _data->paths[index] + ".land";
             std::ifstream file(fileName);
@@ -377,7 +377,7 @@ namespace dest {
                 str >> x >> y;
 
                 dst(0, i) = x;
-                dst(1, i) = y;
+                dst(1, i) = imageSize.height - y - 1;
 
             }
 
@@ -495,8 +495,8 @@ namespace dest {
                 core::Shape s;
                 core::Rect r;
                 
-                bool shapeOk = loader->loadShape(i, s);
                 bool imageOk = loader->loadImage(i, img);
+                bool shapeOk = loader->loadShape(i, img.size(), s);                
                 bool rectOk = loadedRects.empty() || !loadedRects[i].isZero();
 
                 if (!shapeOk || !imageOk || !rectOk)
