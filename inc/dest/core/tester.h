@@ -48,6 +48,7 @@ namespace dest {
             
             static LandmarkDistanceNormalizer createInterocularNormalizerIMM();
             static LandmarkDistanceNormalizer createInterocularNormalizerIBug();
+            static LandmarkDistanceNormalizer createInterocularNormalizerLAND();
         private:
             int _l0, _l1;
         };

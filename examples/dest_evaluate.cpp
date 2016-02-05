@@ -11,6 +11,7 @@
 #include <dest/dest.h>
 #include <tclap/CmdLine.h>
 #include <opencv2/opencv.hpp>
+#include "dest_evaluate.h"
 
 /**
     Evaluate a trained tracker based on some test data.
@@ -80,6 +81,9 @@ int main(int argc, char **argv)
     }
     else if (sd.lastLoaderType() == "ibug") {
         ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerIBug();
+    }
+    else if (sd.lastLoaderType() == "land") {
+        ldn = dest::core::LandmarkDistanceNormalizer::createInterocularNormalizerLAND();
     }
     else {
         std::cerr << "Unknown database type" << std::endl;

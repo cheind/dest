@@ -43,6 +43,11 @@ namespace dest {
              */
             return LandmarkDistanceNormalizer(36, 45);
         }
+
+        LandmarkDistanceNormalizer LandmarkDistanceNormalizer::createInterocularNormalizerLAND()
+        {
+            return LandmarkDistanceNormalizer(27, 31);
+        }
         
         LandmarkDistanceNormalizer LandmarkDistanceNormalizer::createInterocularNormalizerIMM() {
             // http://doi.ieeecomputersociety.org/cms/Computer.org/dl/trans/tp/2008/03/figures/ttp20080305411.gif
