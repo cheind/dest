@@ -18,6 +18,17 @@ namespace dest {
     namespace util {
         
         /**
+         Find all files in directory with options.
+         
+         \param Directory to search in.
+         \param extensions Acceptable file extensions.
+         \param stripExtension Whether or not to strip extension in results.
+         \param recursive Traverse sub-directories too.
+         \returns List of found files.
+         */
+        std::vector<std::string> findFilesInDir(const std::string &directory, const std::vector<std::string> &extensions, bool stripExtension, bool recursive);
+        
+        /**
             Find all files in directory with options.
 
             \param Directory to search in.

@@ -15,7 +15,7 @@
 namespace dest {
     namespace util {
         
-        std::vector<std::string> findFilesInDir(const std::string &directory, const std::string &extension, bool stripExtension, bool recursive)
+        std::vector<std::string> findFilesInDir(const std::string &directory, const std::vector<std::string> &extensions, bool stripExtension, bool recursive)
         {
             std::vector<std::string> files;
             
@@ -44,7 +44,8 @@ namespace dest {
                         continue;
                     }
 
-                    if (extension != file.extension) {
+                    std::vector<std::string>::const_iterator eiter = std::find(extensions.begin(), extensions.end(), file.extension);
+                    if (eiter == extensions.end()) {
                         continue;
                     }
 
@@ -65,6 +66,13 @@ namespace dest {
             
             return files;
             
+        }
+        
+        std::vector<std::string> findFilesInDir(const std::string &directory, const std::string &extension, bool stripExtension, bool recursive)
+        {
+            std::vector<std::string> extensions;
+            extensions.push_back(extension);
+            return findFilesInDir(directory, extensions, stripExtension, recursive);
         }
         
     }
