@@ -13,6 +13,7 @@
 #include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
+#include <dest/util/glob.h>
 #include <random>
 #include <opencv2/opencv.hpp>
 #include <tclap/CmdLine.h>
@@ -45,7 +46,7 @@ int main(int argc, char **argv)
         TCLAP::CmdLine cmd("Test regressor on a single image.", ' ', "0.9");
         TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Trained tracler to load", true, "dest.bin", "file");
         TCLAP::ValueArg<std::string> detectorArg("d", "detector", "OpenCV face detector to load", true, "cascade.xml", "string");        
-        TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align", true, "img.png", "file");
+        TCLAP::UnlabeledValueArg<std::string> imageArg("image", "Image to align or directory of images.", true, "img.png", "file");
 
         cmd.add(&detectorArg);
         cmd.add(&trackerArg);
@@ -61,16 +62,18 @@ int main(int argc, char **argv)
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
         return -1;
     }
-
-    cv::Mat imgCV = cv::imread(opts.image, cv::IMREAD_GRAYSCALE);
-    if (imgCV.empty()) {
-        std::cout << "Failed to load image." << std::endl;
-        return 0;
+    
+    std::vector<std::string> extensions;
+    extensions.push_back("png");
+    extensions.push_back("jpg");
+    extensions.push_back("jpeg");
+    extensions.push_back("bmp");
+    std::vector<std::string> paths = dest::util::findFilesInDir(opts.image, extensions, false, true);
+    
+    if (paths.empty()) {
+        paths.push_back(opts.image);
     }
-
-    dest::core::Image img;
-    dest::util::toDest(imgCV, img);
-
+    
     dest::face::FaceDetector fd;
     if (!fd.loadClassifiers(opts.detector)) {
         std::cout << "Failed to load classifiers." << std::endl;
@@ -83,33 +86,50 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    dest::core::Rect r;
-    if (!fd.detectSingleFace(img, r)) {
-        std::cout << "Failed to detect face" << std::endl;
-        return 0;
-    }
-
-    // Default inverse shape normalization. Needs to be equivalent to training.
-    dest::core::ShapeTransform shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
-
-    std::vector<dest::core::Shape> steps;
-    dest::core::Shape s = t.predict(img, shapeToImage, &steps);
-
+    std::cout << "Found " << paths.size() << " images." << std::endl;
     bool done = false;
-    size_t id = 0;
-    while (!done) {
+    for (size_t i = 0; i < paths.size() && !done; ++i) {
         
-        cv::Scalar color = (id == steps.size() - 1) ? cv::Scalar(255, 0, 102) : cv::Scalar(255, 255, 255);
-        cv::Mat tmp = dest::util::drawShape(img, steps[id], color);
-        cv::imshow("prediction", tmp);
+        cv::Mat imgCV = cv::imread(paths[i], cv::IMREAD_GRAYSCALE);
+        if (imgCV.empty()) {
+            std::cout << "Failed to load image " << paths[i] << std::endl;
+            continue;
+        }
+        
+        dest::core::Image img;
+        dest::util::toDest(imgCV, img);
+        
+        dest::core::Rect r;
+        if (!fd.detectSingleFace(img, r)) {
+            std::cout << "Failed to detect face" << std::endl;
+            continue;
+        }
+        
+        // Default inverse shape normalization. Needs to be equivalent to training.
+        dest::core::ShapeTransform shapeToImage = dest::core::estimateSimilarityTransform(dest::core::unitRectangle(), r);
+        
+        std::vector<dest::core::Shape> steps;
+        dest::core::Shape s = t.predict(img, shapeToImage, &steps);
+        
+        
+        size_t id = 0;
+        while (id < steps.size()) {
+            
+            cv::Scalar color = (id == steps.size() - 1) ? cv::Scalar(255, 0, 102) : cv::Scalar(255, 255, 255);
+            cv::Mat tmp = dest::util::drawShape(img, steps[id], color);
+            cv::imshow("prediction", tmp);
+            
+            id = (id + 1);
+            
+            int key = cv::waitKey();
+            if (key == 'x')
+                done = true;
+        }
 
-        id = (id + 1) % steps.size();
 
-        int key = cv::waitKey();
-        if (key == 'x')
-            done = true;
     }
-
+    
+    
 
     
     return 0;
