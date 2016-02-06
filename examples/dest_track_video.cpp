@@ -39,6 +39,7 @@ int main(int argc, char **argv)
         std::string device;
         int detectRate;
         bool drawRect;
+        float imageScale;
     } opts;
     
     try {
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
         
         TCLAP::ValueArg<std::string> detectorArg("d", "detector", "Detector to provide initial bounds.", true, "classifier.xml", "XML file", cmd);
         TCLAP::ValueArg<std::string> trackerArg("t", "tracker", "Tracker to align landmarks based initial bounds", true, "dest.bin", "Tracker file", cmd);
+        TCLAP::ValueArg<float> imageScaleArg("", "image-scale", "Scale factor to be applied to input image.", false, 1.f, "float", cmd);
         TCLAP::UnlabeledValueArg<std::string> deviceArg("device", "Device to be opened. Either filename of video or camera device id.", true, "0", "string", cmd);
         TCLAP::SwitchArg drawRectArg("", "draw-rect", "Draw face detector rectangle", cmd, false);
         TCLAP::ValueArg<int> detectInNthFrameArg("", "detect-rate", "Use detector in every n-th frame. If false tries to mimick detector for fast tracking.", false, 5, "int", cmd);
@@ -57,6 +59,7 @@ int main(int argc, char **argv)
         opts.device = deviceArg.getValue();
         opts.detectRate = detectInNthFrameArg.getValue();
         opts.drawRect = drawRectArg.getValue();
+        opts.imageScale = imageScaleArg.getValue();
     }
     catch (TCLAP::ArgException &e) {
         std::cerr << "Error: " << e.error() << " for arg " << e.argId() << std::endl;
@@ -97,7 +100,7 @@ int main(int argc, char **argv)
     float txToCV = -0.01f; // Translation in x normalized by image width
     float tyToCV = -0.05f; // Translation in y normalized by image height
     
-    cv::Mat imgCV, grayCV;
+    cv::Mat imgCV, imgCVScaled, grayCV;
     cv::Rect cvRect;
     dest::core::Image img;
     dest::core::Rect r;
@@ -113,7 +116,9 @@ int main(int argc, char **argv)
         if (imgCV.empty())
             break;
         
-        cv::cvtColor(imgCV, grayCV, CV_BGR2GRAY);
+        cv::resize(imgCV, imgCVScaled, cv::Size(), opts.imageScale, opts.imageScale);
+        cv::cvtColor(imgCVScaled, grayCV, CV_BGR2GRAY);
+        
         dest::util::toDest(grayCV, img);
         
         const bool isDetectFrame = (frameCount % opts.detectRate == 0);
@@ -149,12 +154,12 @@ int main(int argc, char **argv)
             s = t.predict(img, shapeToImage);
         }
 
-        dest::util::drawShape(imgCV, s, cv::Scalar(255, 0, 102));
+        dest::util::drawShape(imgCVScaled, s, cv::Scalar(255, 0, 102));
        
         if (opts.drawRect)
-            dest::util::drawRect(imgCV, r, cv::Scalar(0, 255, 0));
+            dest::util::drawRect(imgCVScaled, r, cv::Scalar(0, 255, 0));
 
-        cv::imshow("DEST Tracking", imgCV);
+        cv::imshow("DEST Tracking", imgCVScaled);
         int key = cv::waitKey(1);
         if (key == 'x')
             done = true;
