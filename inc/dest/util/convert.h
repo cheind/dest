@@ -21,6 +21,18 @@
 
 namespace dest {
     namespace util {
+        
+        /**
+            Convert OpenCV image to DEST reusing memory.
+         */
+        inline core::MappedImage toDestHeaderOnly(const cv::Mat &src) {
+            eigen_assert(src.channels() == 1);
+            eigen_assert(src.type() == CV_8UC1);
+            
+            const int outerStride = static_cast<int>(src.step[0] / sizeof(unsigned char));
+            
+            return core::MappedImage(src.ptr<unsigned char>(), src.rows, src.cols, Eigen::OuterStride<Eigen::Dynamic>(outerStride));
+        }
 
         /**
             Convert OpenCV image to DEST.
@@ -34,12 +46,8 @@ namespace dest {
             } else {
                 singleChannel = src;
             }
-
-            const int outerStride = static_cast<int>(singleChannel.step[0] / sizeof(unsigned char));
-
-            typedef Eigen::Map<const core::Image, 0, Eigen::OuterStride<Eigen::Dynamic> > MapType;
-
-            MapType map(singleChannel.ptr<unsigned char>(), singleChannel.rows, singleChannel.cols, Eigen::OuterStride<Eigen::Dynamic>(outerStride));
+            
+            core::MappedImage map = toDestHeaderOnly(singleChannel);
             dst = map;
         }
 

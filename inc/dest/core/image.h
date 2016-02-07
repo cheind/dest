@@ -22,6 +22,11 @@ namespace dest {
             Memory order is row-major to provide non-copy mapping with OpenCV matrices.
         */
         typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Image;
+        
+        /**
+            Type of single channel intensity image using externally provided memory.
+        */
+        typedef Eigen::Map<const core::Image, 0, Eigen::OuterStride<Eigen::Dynamic> > MappedImage;
 
         /** Type of list of image coordinates in columns. */
         typedef Eigen::Matrix<float, 2, Eigen::Dynamic> PixelCoordinates;
@@ -39,7 +44,7 @@ namespace dest {
             \param coords Sub-pixel coordinates to sample at.
             \param intentsities Bilinear interpolated intensities for all coordintes.
          */
-        void readImage(const Image &img, const PixelCoordinates &coords, PixelIntensities &intensities);
+        void readImage(const Eigen::Ref<const Image> &img, const PixelCoordinates &coords, PixelIntensities &intensities);
         
     }
 }

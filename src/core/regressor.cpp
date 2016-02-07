@@ -185,7 +185,7 @@ namespace dest {
             readImage(img, coords, intensities);
         }
         
-        ShapeResidual Regressor::predict(const Image &img, const Shape &shape, const ShapeTransform &shapeToImage) const
+        ShapeResidual Regressor::predict(const Eigen::Ref<const Image> &img, const Shape &shape, const ShapeTransform &shapeToImage) const
         {
             Regressor::data &data = *_data;
             

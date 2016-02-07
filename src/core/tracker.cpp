@@ -164,7 +164,7 @@ namespace dest {
 
         }
         
-        Shape Tracker::predict(const Image &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults) const
+        Shape Tracker::predict(const Eigen::Ref<const Image> &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults) const
         {
             Tracker::data &data = *_data;
 

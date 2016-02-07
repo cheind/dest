@@ -64,7 +64,7 @@ namespace dest {
                 \param stepResults If not null, contains the results from each regression cascade.
                 \returns the computed landmark positions in image space.
             */
-            Shape predict(const Image &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults = 0) const;
+            Shape predict(const Eigen::Ref<const Image> &img, const ShapeTransform &shapeToImage, std::vector<Shape> *stepResults = 0) const;
 
             /**
                 Save trained tracker to flatbuffers.

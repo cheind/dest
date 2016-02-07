@@ -17,7 +17,7 @@ namespace dest {
             return std::min<int>(static_cast<int>(len) - 1, std::max<int>(0, v));
         }
         
-        inline float bilinearSample(const Image &img, float x, float y) {
+        inline float bilinearSample(const Eigen::Ref<const Image> &img, float x, float y) {
             
             const int ix = static_cast<int>(std::floor(x));
             const int iy = static_cast<int>(std::floor(y));
@@ -42,7 +42,7 @@ namespace dest {
                    (f2 * (float(1) - a) + f3 * a) * b;
         }
         
-        void readImage(const Image &img, const PixelCoordinates &coords, PixelIntensities &intensities) {
+        void readImage(const Eigen::Ref<const Image> &img, const PixelCoordinates &coords, PixelIntensities &intensities) {
             const int numCoords = static_cast<int>(coords.cols());
             
             intensities.resize(coords.cols());

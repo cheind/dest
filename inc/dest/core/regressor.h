@@ -41,7 +41,7 @@ namespace dest {
                 \param shape Current shape estimate
                 \param shapeToImage Global similarity transform from normalized shape space to image.
             */
-            ShapeResidual predict(const Image &img, const Shape &shape, const ShapeTransform &shapeToImage) const;
+            ShapeResidual predict(const Eigen::Ref<const Image> &img, const Shape &shape, const ShapeTransform &shapeToImage) const;
 
             /**
                 Save trained regressor to flatbuffers.

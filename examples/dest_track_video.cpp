@@ -102,7 +102,6 @@ int main(int argc, char **argv)
     
     cv::Mat imgCV, imgCVScaled, grayCV;
     cv::Rect cvRect;
-    dest::core::Image img;
     dest::core::Rect r;
     dest::core::Shape s;
     dest::core::ShapeTransform shapeToImage;
@@ -119,7 +118,7 @@ int main(int argc, char **argv)
         cv::resize(imgCV, imgCVScaled, cv::Size(), opts.imageScale, opts.imageScale);
         cv::cvtColor(imgCVScaled, grayCV, CV_BGR2GRAY);
         
-        dest::util::toDest(grayCV, img);
+        dest::core::MappedImage img = dest::util::toDestHeaderOnly(grayCV);
         
         const bool isDetectFrame = (frameCount % opts.detectRate == 0);
 
