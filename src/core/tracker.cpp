@@ -144,7 +144,7 @@ namespace dest {
             float initialLambda = rt.training->params.exponentialLambda;
             
             for (int i = 0; i < t.params.numCascades; ++i) {
-                DEST_LOG("Building cascade " << i + 1 << "...");
+                DEST_LOG("Building cascade " << i + 1 << std::endl);
                 
                 // Fit gradient boosted trees.
                 data.cascade[i].fit(rt);
@@ -160,7 +160,7 @@ namespace dest {
                     error += (t.samples[s].target - t.samples[s].estimate).colwise().norm().sum();
                 }
                 error /= rt.numLandmarks * numSamples;
-                DEST_LOG("done. Average error " << std::setprecision(3) << std::fixed << error << std::endl);
+                DEST_LOG("Average error " << std::setprecision(3) << std::fixed << error << std::endl);
                 
                 rt.training->params.exponentialLambda *= rt.training->params.exponentialLambdaDecreaseFactor;
             }
