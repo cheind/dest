@@ -48,9 +48,16 @@ namespace dest {
             /**
                 Exponential lambda. Determines to which extend closer pixel coordinates are preferred.
                 Measured in normalized shape space units. Larger values tend to allow bigger distances.
-                Defaults to 0.1
+                Defaults to 0.15
             */
             float exponentialLambda;
+            
+            /**
+                Decrease the exponential lambda in each cascade. Setting the factor to a value less than
+                one will decrease the exponential lambda in each cascade more, leading to closer pixel
+                pairs in later cascades. Defaults to 0.9
+            */
+            float exponentialLambdaDecreaseFactor;
 
             /** Shrinks the contribution of each tree by a factor of learningRate. Defaults to 0.1.*/
             float learningRate;

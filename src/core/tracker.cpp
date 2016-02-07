@@ -141,20 +141,30 @@ namespace dest {
             // Build cascade
             data.cascade.resize(t.params.numCascades);
             
+            float initialLambda = rt.training->params.exponentialLambda;
+            
             for (int i = 0; i < t.params.numCascades; ++i) {
-                DEST_LOG("Building cascade " << i + 1 << std::endl);
+                DEST_LOG("Building cascade " << i + 1 << "...");
                 
                 // Fit gradient boosted trees.
                 data.cascade[i].fit(rt);
                 
                 // Update shape estimate
+                double error = 0.0;
                 for (int s = 0; s < numSamples; ++s) {
                     t.samples[s].estimate +=
                         data.cascade[i].predict(t.input->images[t.samples[s].inputIdx],
                                                 t.samples[s].estimate,
                                                 t.samples[s].shapeToImage);
+                    
+                    error += (t.samples[s].target - t.samples[s].estimate).colwise().norm().sum();
                 }
+                error /= rt.numLandmarks * numSamples;
+                DEST_LOG("done. Average error " << std::setprecision(3) << std::fixed << error << std::endl);
+                
+                rt.training->params.exponentialLambda *= rt.training->params.exponentialLambdaDecreaseFactor;
             }
+            rt.training->params.exponentialLambda = initialLambda;
 
             // Update internal data
             data.meanShape = rt.meanShape;

@@ -22,7 +22,8 @@ namespace dest {
             maxTreeDepth = 5;
             numRandomPixelCoordinates = 400;
             numRandomSplitTestsPerNode = 20;
-            exponentialLambda = 0.1f;
+            exponentialLambda = 0.15f;
+            exponentialLambdaDecreaseFactor = 0.9f;
             learningRate = 0.05f;
             expansionRandomPixelCoordinates = 0.05f;
         }
@@ -35,6 +36,7 @@ namespace dest {
                    << std::setw(30) << std::left << "Random split tests" << std::setw(10) << obj.numRandomSplitTestsPerNode << std::endl
                    << std::setw(30) << std::left << "Random pixel expansion" << std::setw(10) << obj.expansionRandomPixelCoordinates << std::endl
                    << std::setw(30) << std::left << "Exponential lambda" << std::setw(10) << obj.exponentialLambda << std::endl
+                   << std::setw(30) << std::left << "Exponential lambda decrease" << std::setw(10) << obj.exponentialLambdaDecreaseFactor << std::endl
                    << std::setw(30) << std::left << "Learning rate" << std::setw(10) << obj.learningRate;
             return stream;
         }
@@ -52,8 +54,11 @@ namespace dest {
         }
         
         std::ostream& operator<<(std::ostream &stream, const SampleCreationParameters &obj) {
+            std::stringstream wrange;
+            wrange << "[" << obj.linearWeightRange.first << "," << obj.linearWeightRange.second << "]";
+            
             stream  << std::setw(30) << std::left << "Number shapes per image" << std::setw(10) << obj.numShapesPerImage << std::endl
-                    << std::setw(30) << std::left << "Linear weight range" << std::setw(10) << "[" << std::setw(1) << obj.linearWeightRange.first << "," << obj.linearWeightRange.second << "]" << std::endl
+                    << std::setw(30) << std::left << "Linear weight range" << std::setw(10) << wrange.str() << std::endl
                     << std::setw(30) << std::left << "Include mean shape" << std::setw(10) << (obj.includeMeanShape ? "true" : "false");
             
             return stream;
