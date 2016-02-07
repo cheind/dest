@@ -103,6 +103,9 @@ if(DEST_WITH_OPENCV)
     add_executable(dest_show_landmarks examples/dest_show_landmarks.cpp)
     target_link_libraries(dest_show_landmarks dest ${DEST_LINK_TARGETS})
 
+    add_executable(dest_expression_transfer examples/dest_expression_transfer.cpp)
+    target_link_libraries(dest_expression_transfer dest ${DEST_LINK_TARGETS})
+
 endif()
 
 
