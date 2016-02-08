@@ -22,6 +22,7 @@
 #ifdef DEST_WITH_OPENCV
 #include <dest/util/convert.h>
 #include <dest/util/draw.h>
+#include <dest/util/triangulate.h>
 #include <dest/io/database_io.h>
 #include <dest/face/face_detector.h>
 #endif

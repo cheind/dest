@@ -18,10 +18,8 @@ of the BSD license.See the LICENSE file for details.
 #include <dest/core/tester.h>
 #include <random>
 
-
-std::vector<int> triangulateShape(const dest::core::Shape &s);
 void drawTriangulation(cv::Mat img, const dest::core::Shape &s, const std::vector<int> &tris, cv::Scalar color);
-void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const std::vector<int> &tris);
+void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const  std::vector<dest::core::Shape::Index> &tris);
 
 /**
     Transfer expressions from one face to another.
@@ -122,7 +120,7 @@ int main(int argc, char **argv)
     const int landmarkIdsNormalize[] = {27, 31}; // eyes
     const float unnormalizeTarget = (targetShapeRef.col(landmarkIdsNormalize[0]) - targetShapeRef.col(landmarkIdsNormalize[1])).norm();
     
-    std::vector<int> tris = triangulateShape(targetShapeRef);
+    std::vector<dest::core::Shape::Index> tris = dest::util::triangulateShape(targetShapeRef);
     
     cv::Mat target = targetRef.clone();
     cv::Mat source, sourceGray, sourceCopy;
@@ -174,58 +172,6 @@ int main(int argc, char **argv)
     return 0;
 }
 
-std::vector<int> triangulateShape(const dest::core::Shape &s)
-{
-    Eigen::Vector2f minC = s.rowwise().minCoeff();
-    Eigen::Vector2f maxC = s.rowwise().maxCoeff();
-    
-    // Don't make the bounds too tight.
-    cv::Rect_<float> bounds(std::floor(minC.x() - 1.f),
-                            std::floor(minC.y() - 1.f),
-                            std::ceil(maxC.x() - minC.x() + 2.f),
-                            std::ceil(maxC.y() - minC.y() + 2.f));
-    
-    cv::Subdiv2D subdiv(bounds);
-    
-    std::vector<cv::Point2f> controlPoints;
-    
-    for (dest::core::Shape::Index i = 0; i < s.cols(); ++i) {
-        cv::Point2f c(s(0, i), s(1, i));
-        subdiv.insert(c);
-        controlPoints.push_back(c);
-    }
-    
-    std::vector<cv::Vec6f> triangleList;
-    subdiv.getTriangleList(triangleList);
-    
-    std::vector<int> triangleIds(triangleList.size() * 3);
-    
-    int validTris = 0;
-    for (size_t i = 0; i < triangleList.size(); i++)
-    {
-        cv::Vec6f t = triangleList[i];
-        
-        cv::Point2f p0(t[0], t[1]);
-        cv::Point2f p1(t[2], t[3]);
-        cv::Point2f p2(t[4], t[5]);
-        
-        if (bounds.contains(p0) && bounds.contains(p1) && bounds.contains(p2)) {
-            
-            auto iter0 = std::find(controlPoints.begin(), controlPoints.end(), p0);
-            auto iter1 = std::find(controlPoints.begin(), controlPoints.end(), p1);
-            auto iter2 = std::find(controlPoints.begin(), controlPoints.end(), p2);
-            
-            triangleIds[validTris * 3 + 0] = (int)std::distance(controlPoints.begin(), iter0);
-            triangleIds[validTris * 3 + 1] = (int)std::distance(controlPoints.begin(), iter1);
-            triangleIds[validTris * 3 + 2] = (int)std::distance(controlPoints.begin(), iter2);
-            
-            ++validTris;
-        }
-    }
-    
-    return std::vector<int>(triangleIds.begin(), triangleIds.begin() + validTris * 3);
-}
-
 void drawTriangulation(cv::Mat img, const dest::core::Shape &s, const std::vector<int> &tris, cv::Scalar color)
 {
     for (size_t i = 0; i < tris.size() / 3; ++i) {
@@ -247,7 +193,7 @@ void drawTriangulation(cv::Mat img, const dest::core::Shape &s, const std::vecto
     }
 }
 
-void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const std::vector<int> &tris)
+void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const std::vector<dest::core::Shape::Index> &tris)
 {
     cv::Mat warp(2, 3, CV_32FC1);
     cv::Mat warpImg = cv::Mat::zeros(dst.rows, dst.cols, dst.type());

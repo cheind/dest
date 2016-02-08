@@ -66,6 +66,7 @@ add_library(dest
     inc/dest/util/log.h
     inc/dest/util/convert.h
     inc/dest/util/glob.h
+    inc/dest/util/triangulate.h
     src/core/shape.cpp
     src/core/image.cpp
     src/core/training_data.cpp
@@ -78,6 +79,7 @@ add_library(dest
     src/face/face_detector.cpp
     src/util/draw.cpp
     src/util/glob.cpp
+    src/util/triangulate.cpp
 )
 	
 target_link_libraries(dest ${DEST_LINK_TARGETS})
