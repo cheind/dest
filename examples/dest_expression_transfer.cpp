@@ -15,11 +15,6 @@ of the BSD license.See the LICENSE file for details.
 #include <dest/face/face_detector.h>
 #include <dest/util/draw.h>
 #include <dest/util/convert.h>
-#include <dest/core/tester.h>
-#include <random>
-
-void drawTriangulation(cv::Mat img, const dest::core::Shape &s, const std::vector<int> &tris, cv::Scalar color);
-void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const  std::vector<dest::core::Shape::Index> &tris);
 
 /**
     Transfer expressions from one face to another.
@@ -151,7 +146,7 @@ int main(int argc, char **argv)
         if (hasSourceRef) {
             dest::core::Shape r = targetShapeRef + (sourceShape - sourceShapeRef) * normalizeSource * unnormalizeTarget;
             target.setTo(0);
-            piecewiseWarp(targetRef, target, targetShapeRef, r, tris);
+            dest::util::pawShapeTexture(targetRef, target, targetShapeRef, r, tris);
             cv::imshow("Target", target);
         }
         
@@ -170,85 +165,4 @@ int main(int argc, char **argv)
     }
 
     return 0;
-}
-
-void drawTriangulation(cv::Mat img, const dest::core::Shape &s, const std::vector<int> &tris, cv::Scalar color)
-{
-    for (size_t i = 0; i < tris.size() / 3; ++i) {
-        
-        cv::line(img,
-                 cv::Point2f(s(0, tris[i*3+0]), s(1, tris[i*3+0])),
-                 cv::Point2f(s(0, tris[i*3+1]), s(1, tris[i*3+1])),
-                 color, 1, CV_AA);
-        
-        cv::line(img,
-                 cv::Point2f(s(0, tris[i*3+1]), s(1, tris[i*3+1])),
-                 cv::Point2f(s(0, tris[i*3+2]), s(1, tris[i*3+2])),
-                 color, 1, CV_AA);
-        
-        cv::line(img,
-                 cv::Point2f(s(0, tris[i*3+2]), s(1, tris[i*3+2])),
-                 cv::Point2f(s(0, tris[i*3+0]), s(1, tris[i*3+0])),
-                 color, 1, CV_AA);
-    }
-}
-
-void piecewiseWarp(const cv::Mat &src, cv::Mat &dst, const dest::core::Shape &srcShape, const dest::core::Shape &dstShape, const std::vector<dest::core::Shape::Index> &tris)
-{
-    cv::Mat warp(2, 3, CV_32FC1);
-    cv::Mat warpImg = cv::Mat::zeros(dst.rows, dst.cols, dst.type());
-    cv::Mat warpMask = cv::Mat::zeros(dst.rows, dst.cols, CV_8UC1);
-    
-    std::vector<cv::Point2f> sp(3), dp(3);
-    std::vector<cv::Point> dpi(3);
-    const int shift = 4;
-    const float multiplier = (float) (1 << shift);
-    for (size_t i = 0; i < tris.size() / 3; ++i) {
-        sp[0].x = srcShape(0, tris[i*3+0]);
-        sp[0].y = srcShape(1, tris[i*3+0]);
-        sp[1].x = srcShape(0, tris[i*3+1]);
-        sp[1].y = srcShape(1, tris[i*3+1]);
-        sp[2].x = srcShape(0, tris[i*3+2]);
-        sp[2].y = srcShape(1, tris[i*3+2]);
-
-        dp[0].x = dstShape(0, tris[i*3+0]);
-        dp[0].y = dstShape(1, tris[i*3+0]);
-        dp[1].x = dstShape(0, tris[i*3+1]);
-        dp[1].y = dstShape(1, tris[i*3+1]);
-        dp[2].x = dstShape(0, tris[i*3+2]);
-        dp[2].y = dstShape(1, tris[i*3+2]);
-        
-        cv::Rect roiSrc = cv::boundingRect(sp);
-        cv::Rect roiDst = cv::boundingRect(dp);
-        
-        roiSrc.x -= 1; roiSrc.y -= 1;
-        roiSrc.width += 2; roiSrc.height += 2;
-        
-        roiDst.x -= 1; roiDst.y -= 1;
-        roiDst.width += 2; roiDst.height += 2;
-        
-        // Correct offsets
-        sp[0].x -= roiSrc.x; sp[0].y -= roiSrc.y;
-        sp[1].x -= roiSrc.x; sp[1].y -= roiSrc.y;
-        sp[2].x -= roiSrc.x; sp[2].y -= roiSrc.y;
-        
-        dp[0].x -= roiDst.x; dp[0].y -= roiDst.y;
-        dp[1].x -= roiDst.x; dp[1].y -= roiDst.y;
-        dp[2].x -= roiDst.x; dp[2].y -= roiDst.y;
-        
-        warp = cv::getAffineTransform(sp, dp);
-        
-        cv::warpAffine(src(roiSrc), warpImg(roiDst), warp, roiDst.size());
-        
-        warpMask.setTo(0);
-        cv::Mat warpMaskRoi = warpMask(roiDst);
-        
-        dpi[0] = dp[0] * multiplier;
-        dpi[1] = dp[1] * multiplier;
-        dpi[2] = dp[2] * multiplier;
-        cv::fillConvexPoly(warpMaskRoi, &dpi[0], 3, cv::Scalar(255), -1, shift);
-        
-        warpImg(roiDst).copyTo(dst(roiDst), warpMaskRoi);
-    }
-
 }

@@ -69,6 +69,29 @@ namespace dest {
             \param color Color to use.
         */
         cv::Mat drawShape(const core::Image &img, const core::Shape &s, const cv::Scalar &color);
+
+        /**
+            Draw shape triangulation.
+
+            \param img Image to draw to.
+            \param s Shape to draw.
+            \param tris Triangles of shape.
+            \param color Color to use for lines.
+        */
+        void drawShapeTriangles(cv::Mat &img, const core::Shape &s, const std::vector<core::Shape::Index> &tris, cv::Scalar color);
+
+        /**
+            Piecewise affine warping of shape texture.
+
+            Warps triangulated source shape texture onto destination shape texture.
+
+            \param src Source image to copy texture from.
+            \param dst Destination image to copy warped texture to. Must be preallocated.
+            \param srcShape Source shape.
+            \param dstShape Destination shape.
+            \param tris Triangulation information for shape.
+        */
+        void pawShapeTexture(const cv::Mat &src, cv::Mat &dst, const core::Shape &srcShape, const core::Shape &dstShape, const std::vector<core::Shape::Index> &tris);
         
     }
 }
