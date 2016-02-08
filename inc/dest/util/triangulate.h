@@ -33,6 +33,19 @@ namespace dest {
         */
         std::vector<core::Shape::Index> triangulateShape(const core::Shape &s);
 
+        /**
+            Find boundary shape vertices given a triangulation.
+
+            Boundary shape vertices describe the outer contour of a shape. It's defined as those
+            points connected by edges that share only one triangle.
+
+            \param s Shape
+            \param tris Triangulation of shape
+            \param boundaryShape When not null, contains the extracted shape landmarks of boundary vertex indices.
+            \returns List of boundary vertices as indices. Ordered such that index i and i+1 form an egde.
+        */
+        std::vector<core::Shape::Index> boundaryShapeVertices(const core::Shape &s, const std::vector<core::Shape::Index> &tris, core::Shape *boundaryShape = 0);
+
     }
 }
 

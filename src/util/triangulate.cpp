@@ -14,6 +14,8 @@
 #include <dest/core/shape.h>
 #include <dest/util/triangulate.h>
 #include <opencv2/imgproc.hpp>
+#include <unordered_map>
+#include <set>
 
 namespace dest {
     namespace util {
@@ -68,6 +70,75 @@ namespace dest {
             }
 
             return std::vector<core::Shape::Index>(triangleIds.begin(), triangleIds.begin() + validTris * 3);
+        }
+
+
+        typedef std::pair<core::Shape::Index, core::Shape::Index> Edge;
+
+        inline Edge createEdge(core::Shape::Index a, core::Shape::Index b) {
+            if (a > b) {
+                std::swap(a, b);
+            }
+            return Edge(a, b);
+        }
+
+        /**
+            Hash edge.
+        */
+        class EdgeHasher
+        {
+        public:
+            EdgeHasher(core::Shape::Index nVertices)
+                :_n(nVertices)
+            {}
+
+            size_t operator()(const Edge & p) const
+            {
+                return p.first * _n + p.second;
+            }
+
+        private:
+            core::Shape::Index _n;
+        };
+
+        std::vector<core::Shape::Index> boundaryShapeVertices(const core::Shape & s, const std::vector<core::Shape::Index>& tris, core::Shape *boundaryShape)
+        {
+            // Find the outer shape boundary. That is all triangle edges sharing belonging to just one triangle.
+
+            typedef std::unordered_map<Edge, int, EdgeHasher> EdgeCountMap;
+            EdgeCountMap edgeCount(10, EdgeHasher(s.size()));
+
+            for (size_t i = 0; i < tris.size() / 3; ++i) {
+                std::pair<EdgeCountMap::iterator, bool> r0 = edgeCount.insert(std::make_pair(createEdge(tris[i * 3 + 0], tris[i * 3 + 1]), 1));
+                std::pair<EdgeCountMap::iterator, bool> r1 = edgeCount.insert(std::make_pair(createEdge(tris[i * 3 + 1], tris[i * 3 + 2]), 1));
+                std::pair<EdgeCountMap::iterator, bool> r2 = edgeCount.insert(std::make_pair(createEdge(tris[i * 3 + 2], tris[i * 3 + 0]), 1));
+
+                if (!r0.second) r0.first->second++;
+                if (!r1.second) r1.first->second++;
+                if (!r2.second) r2.first->second++;
+            }
+
+            // Collect boundary edges
+
+            std::set<Edge> boundaryEdges;
+            for (EdgeCountMap::iterator i = edgeCount.begin(); i != edgeCount.end(); ++i) {
+                if (i->second == 1)
+                    boundaryEdges.insert(i->first);
+            }
+            
+            std::vector<core::Shape::Index> orderedIndices;
+            for (std::set<Edge>::iterator i = boundaryEdges.begin(); i != boundaryEdges.end(); ++i) {
+                orderedIndices.push_back(i->first);
+            }
+
+            if (boundaryShape) {
+                boundaryShape->resize(2, orderedIndices.size());
+                for (size_t i = 0; i < orderedIndices.size(); ++i) {
+                    boundaryShape->col(i) = s.col(orderedIndices[i]);
+                }
+            }
+
+            return orderedIndices;
         }
     }
 }
