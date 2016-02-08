@@ -108,6 +108,9 @@ if(DEST_WITH_OPENCV)
     add_executable(dest_expression_transfer examples/dest_expression_transfer.cpp)
     target_link_libraries(dest_expression_transfer dest ${DEST_LINK_TARGETS})
 
+    add_executable(dest_face_swap examples/dest_face_swap.cpp)
+    target_link_libraries(dest_face_swap dest ${DEST_LINK_TARGETS})
+
 endif()
 
 
