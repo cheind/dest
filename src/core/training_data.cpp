@@ -88,7 +88,11 @@ namespace dest {
             
             std::vector<int> ids(train.shapes.size());
             std::generate(ids.begin(), ids.end(), Generator());
+#if __cplusplus >= 201103L
             std::shuffle(ids.begin(), ids.end(), train.rnd);
+#else
+			std::random_shuffle(ids.begin(), ids.end());
+#endif
             
             validate.shapes.clear();
             validate.shapeToImage.clear();
