@@ -11,6 +11,7 @@
 #include <dest/util/glob.h>
 #include <tinydir/tinydir.h>
 #include <stack>
+#include <algorithm>
 
 namespace dest {
     namespace util {
