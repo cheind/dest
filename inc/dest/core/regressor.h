@@ -28,6 +28,7 @@ namespace dest {
             Regressor();
             Regressor(const Regressor &other);
             ~Regressor();
+			Regressor &operator=(const Regressor &other);
             
             /**
                 Fit to training data.

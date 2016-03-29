@@ -83,6 +83,12 @@ namespace dest {
         Regressor::~Regressor()
         {}
 
+		Regressor &Regressor::operator=(const Regressor &other)
+		{
+			*_data = *other._data;
+			return *this;
+		}
+
         flatbuffers::Offset<io::Regressor> Regressor::save(flatbuffers::FlatBufferBuilder &fbb) const {
             return _data->save(fbb);
         }

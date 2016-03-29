@@ -47,6 +47,7 @@ namespace dest {
             Tree();
             Tree(const Tree &other);
             ~Tree();
+			Tree &operator=(const Tree &other);
 
             /**
                 Fit tree to training data.

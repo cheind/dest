@@ -143,6 +143,12 @@ namespace dest {
         
         Tree::~Tree()
         {}
+
+		Tree &Tree::operator=(const Tree &other)
+		{
+			*_data = *other._data;
+			return *this;
+		}
         
         flatbuffers::Offset<io::Tree> Tree::save(flatbuffers::FlatBufferBuilder &fbb) const {
             return _data->save(fbb);
