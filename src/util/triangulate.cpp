@@ -13,7 +13,7 @@
 
 #include <dest/core/shape.h>
 #include <dest/util/triangulate.h>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <unordered_map>
 #include <set>
 
