@@ -20,7 +20,11 @@
 #include <opencv2/opencv.hpp>
 
 #include <tclap/CmdLine.h>
-#include <opencv2/core/ocl.hpp>
+
+#include <opencv2/core/version.hpp>
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR == 3)
+	#include <opencv2/core/ocl.hpp>
+#endif
 
 float ratioRectShapeOverlap(const dest::core::Rect &r, const dest::core::Shape &s) {
     Eigen::Vector2f minC = r.col(0);
@@ -102,8 +106,10 @@ int main(int argc, char **argv)
     // Note that OpenCV 3.0 / CascadeClassifier seems to have troubles when being reused.
     // Current solution is to disable OpenCL
     // See https://github.com/Itseez/opencv/issues/5475
-    cv::ocl::setUseOpenCL(false);
-
+	#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR == 3)
+		cv::ocl::setUseOpenCL(false);
+	#endif
+   
     dest::io::ShapeDatabase sd;
     sd.setMaxImageLoadSize(opts.loadMaxSize);
 
