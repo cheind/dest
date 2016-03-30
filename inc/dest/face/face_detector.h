@@ -44,6 +44,8 @@ namespace dest {
         public:
             FaceDetector();
             ~FaceDetector();
+			FaceDetector(const FaceDetector &other);
+			FaceDetector &operator=(const FaceDetector &other);
 
             /**
                 Load classifier from trained file.

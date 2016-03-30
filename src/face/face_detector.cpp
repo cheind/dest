@@ -35,6 +35,18 @@ namespace dest {
         FaceDetector::~FaceDetector()
         {}
 
+		FaceDetector::FaceDetector(const FaceDetector &other)
+			:_data(new data())
+		{
+			*_data = *other._data;
+		}
+
+		FaceDetector &FaceDetector::operator=(const FaceDetector &other)
+		{
+			*_data = *other._data;
+			return *this;
+		}
+
         bool FaceDetector::loadClassifiers(const std::string &frontalFaceClassifier, const std::string &eyeClassifier)
         {
             FaceDetector::data &data = *_data;
