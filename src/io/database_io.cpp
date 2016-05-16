@@ -302,6 +302,11 @@ namespace dest {
                     }
                 }                
             }
+            
+            dst.row(0) *= imageSize.width;
+            dst.row(1) *= imageSize.height;
+            
+            
             return dst.rows() > 0 && dst.cols() > 0;
 
         }
@@ -364,10 +369,10 @@ namespace dest {
                     DEST_LOG("Failed to read points." << std::endl);
                     return false;
                 }
-                str = std::stringstream(line);
+                std::stringstream linestr(line);
 
                 float x, y;
-                str >> x >> y;
+                linestr >> x >> y;
 
                 dst(0, i) = x - 1.f; // Matlab to C++ offset
                 dst(1, i) = y - 1.f;
@@ -435,10 +440,10 @@ namespace dest {
                     DEST_LOG("Failed to read points." << std::endl);
                     return false;
                 }
-                str = std::stringstream(line);
+                std::stringstream linestr(line);
 
                 float x, y;
-                str >> x >> y;
+                linestr >> x >> y;
 
                 dst(0, i) = x;
                 dst(1, i) = imageSize.height - y - 1;
