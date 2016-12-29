@@ -40,7 +40,8 @@ namespace dest {
             cv::applyColorMap(values, colors, colormap);
             
             for (core::Shape::Index i = 0; i < s.cols(); ++i) {
-                cv::Scalar color = colors.at<cv::Vec3b>(0, static_cast<int>(i));
+                cv::Vec3b temp = colors.at<cv::Vec3b>(0, static_cast<int>(i));
+                cv::Scalar color(temp[0], temp[1], temp[2]);
                 cv::circle(img, cv::Point2f(s(0, i), s(1 ,i)), 1.f, color, -1, CV_AA);
             }
         }
